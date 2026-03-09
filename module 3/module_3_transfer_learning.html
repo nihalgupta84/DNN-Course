@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transfer Learning & Fine-Tuning — Deep Neural Networks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);--hero-glow:rgba(56,189,248,0.08);--code-bg:#0a0f1a;--code-header:#1a2035;--hover-overlay:rgba(255,255,255,0.03);--card-hover-shadow:0 8px 24px rgba(0,0,0,.4);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0f9ff 100%);--hero-glow:rgba(56,189,248,0.12);--code-bg:#1e293b;--code-header:#0f172a;--hover-overlay:rgba(0,0,0,0.02);--card-hover-shadow:0 8px 24px rgba(0,0,0,.12);--p-color:#334155;}
+:root{--accent:#38bdf8;--accent2:#818cf8;--accent3:#34d399;--accent4:#fb923c;--accent5:#f472b6;--red:#f87171;--yellow:#fbbf24;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;}
+.progress-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent5));position:fixed;top:0;left:0;z-index:1000;transition:width .15s;}
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:56px 24px 44px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);}
+.hero-badge{display:inline-block;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;}
+.hero p{color:var(--text-muted);font-size:1rem;max-width:720px;margin:0 auto;line-height:1.7;}
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.toc-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100;}
+.toc-label{color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-right:4px;font-weight:700;flex-shrink:0;}
+.toc-link{color:var(--text-muted);font-size:.78rem;text-decoration:none;padding:3px 10px;border-radius:5px;transition:all .2s;border:1px solid transparent;white-space:nowrap;}
+.toc-link:hover{color:var(--accent);border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.07);}
+.page{max-width:1080px;margin:0 auto;padding:36px 16px 80px;}
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;transition:box-shadow .25s;}
+.section-block:hover{box-shadow:0 0 0 1px rgba(56,189,248,.22);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;gap:14px;transition:background .2s;}
+.section-header:hover{background:var(--hover-overlay);}
+.section-title-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.section-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;}
+.section-title{font-size:1.08rem;font-weight:700;color:var(--text);line-height:1.3;}
+.section-sub{font-size:.76rem;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.chevron{color:var(--text-dim);font-size:1rem;transition:transform .3s;flex-shrink:0;}
+.section-block.open .chevron{transform:rotate(180deg);}
+.section-body{display:none;padding:0 22px 28px;border-top:1px solid var(--border);}
+.section-block.open .section-body{display:block;}
+.inner{padding-top:24px;}
+h2.sub{font-size:1.02rem;font-weight:700;color:var(--accent);margin:28px 0 12px;padding-bottom:7px;border-bottom:1px solid rgba(56,189,248,.18);}
+p{margin-bottom:12px;color:var(--p-color);line-height:1.85;}
+strong{color:var(--text);}
+.callout{border-radius:9px;padding:15px 18px;margin:16px 0;border-left:4px solid;}
+.callout-title{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.callout-body{font-size:.92rem;color:var(--p-color);line-height:1.8;}
+.callout.insight{background:rgba(52,211,153,.08);border-color:var(--accent3);}.callout.insight .callout-title{color:var(--accent3);}
+.callout.warning{background:rgba(251,191,36,.08);border-color:var(--yellow);}.callout.warning .callout-title{color:var(--yellow);}
+.callout.important{background:rgba(56,189,248,.08);border-color:var(--accent);}.callout.important .callout-title{color:var(--accent);}
+.callout.novelty{background:rgba(244,114,182,.08);border-color:var(--accent5);}.callout.novelty .callout-title{color:var(--accent5);}
+.callout.problem{background:rgba(248,113,113,.08);border-color:var(--red);}.callout.problem .callout-title{color:var(--red);}
+.callout.analogy{background:rgba(251,146,60,.08);border-color:var(--accent4);}.callout.analogy .callout-title{color:var(--accent4);}
+.callout.definition{background:rgba(129,140,248,.08);border-color:var(--accent2);}.callout.definition .callout-title{color:var(--accent2);}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:16px 0;}
+.code-header{background:var(--code-header);padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.code-lang{font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.code-note{font-size:.72rem;color:var(--text-dim);font-family:'JetBrains Mono',monospace;}
+.code-body{padding:16px 18px;overflow-x:auto;}.code-body pre{margin:0;}
+.code-body code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.9;white-space:pre;}
+.kw{color:#c792ea;}.fn{color:#82aaff;}.st{color:#c3e88d;}.cm{color:#607080;font-style:italic;}.num{color:#f78c6c;}.cls{color:#ffcb6b;}.dec{color:#89ddff;}
+.tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:.84rem;}
+.tbl th{background:var(--surface2);color:var(--accent);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid rgba(56,189,248,.25);}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;line-height:1.6;}
+.tbl tr:hover td{background:var(--hover-overlay);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px;text-align:center;}
+.stat-val{font-size:1.35rem;font-weight:800;line-height:1.2;}.stat-lbl{font-size:.7rem;color:var(--text-dim);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;transition:all .2s;}
+.card:hover{border-color:rgba(56,189,248,.4);transform:translateY(-2px);box-shadow:var(--card-hover-shadow);}
+.card-icon{font-size:1.4rem;margin-bottom:8px;}.card-title{font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:5px;}.card-text{font-size:.81rem;color:var(--text-muted);line-height:1.6;}
+ic{font-family:'JetBrains Mono',monospace;font-size:.8em;background:rgba(56,189,248,.1);color:var(--accent);padding:1px 5px;border-radius:4px;}
+.viz{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:20px 16px;margin:16px 0;}
+.viz-title{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;font-weight:700;text-align:center;}
+.svg-wrap{overflow-x:auto;}
+/* Strategy cards */
+.strategy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:16px 0;}
+.strategy-card{border-radius:11px;padding:18px;border:1.5px solid;transition:all .2s;}
+.strategy-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3);}
+.sc-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+.sc-title{font-size:.95rem;font-weight:700;margin-bottom:6px;}
+.sc-text{font-size:.82rem;color:var(--text-muted);line-height:1.6;}
+.sc-when{font-size:.76rem;margin-top:10px;padding:6px 10px;border-radius:5px;background:rgba(0,0,0,.2);}
+/* Layer freeze visual */
+.layer-row{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap;}
+.layer-chip{padding:5px 12px;border-radius:6px;font-size:.78rem;font-weight:700;font-family:'JetBrains Mono',monospace;border:1px solid;}
+.frozen{background:rgba(100,116,139,.15);border-color:rgba(100,116,139,.4);color:#94a3b8;}
+.trainable{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.5);color:var(--accent3);}
+.new-head{background:rgba(56,189,248,.15);border-color:rgba(56,189,248,.5);color:var(--accent);}
+.freeze-label{font-size:.75rem;color:var(--text-dim);margin-left:4px;}
+/* LR schedule visual */
+.lr-bar{height:28px;border-radius:5px;margin:4px 0;display:flex;align-items:center;padding:0 10px;font-size:.78rem;font-weight:700;}
+.footer{text-align:center;padding:36px 16px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.8rem;margin-top:32px;}
+@media(max-width:700px){.toc-bar{overflow-x:auto;flex-wrap:nowrap;}.page{padding:20px 10px 60px;}.code-body code{font-size:.75rem;}.stats-row{grid-template-columns:1fr 1fr;}.card-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="prog" style="width: 95.8127%;"></div>
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+<div class="hero">
+  <div class="hero-badge">Module 5 · Transfer Learning</div>
+  <h1>Transfer Learning &amp; Fine-Tuning</h1>
+  <p>How to take a network trained on millions of images and adapt it to your task in hours — the most practically important skill in applied deep learning, and the reason you almost never train a CNN from scratch.</p>
+</div>
+<div class="toc-bar">
+  <span class="toc-label">Jump to</span>
+  <a class="toc-link" href="#s1">What &amp; Why</a>
+  <a class="toc-link" href="#s2">How Features Transfer</a>
+  <a class="toc-link" href="#s3">Strategies</a>
+  <a class="toc-link" href="#s4">Fine-Tuning Mechanics</a>
+  <a class="toc-link" href="#s5">Learning Rate Rules</a>
+  <a class="toc-link" href="#s6">Domain &amp; Task Matrix</a>
+  <a class="toc-link" href="#s7">Full PyTorch Workflow</a>
+  <a class="toc-link" href="#s8">Common Mistakes</a>
+  <a class="toc-link" href="#s9">When NOT to Transfer</a>
+</div>
+<div class="page">
+<!-- ══════ S1: WHAT & WHY ══════ -->
+<div class="section-block open" id="s1">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">01</div>
+      <div><div class="section-title">What Is Transfer Learning and Why Does It Work?</div>
+        <div class="section-sub">The core idea, the biological analogy, and why it is the default approach in all of applied deep learning</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition</div>
+    <div class="callout-body"><strong>Transfer learning</strong> is the process of taking a model trained on a large source task (e.g. classifying 1.2 million ImageNet images into 1000 categories) and reusing its learned representations as the starting point for a different target task (e.g. classifying 3000 chest X-rays into healthy vs. pneumonia). Instead of initialising weights randomly and training from scratch, you initialise from a model that already understands the world.</div>
+  </div>
+
+  <h2 class="sub">The Core Problem Transfer Learning Solves</h2>
+  <p>Training a deep CNN from scratch requires two things simultaneously: a <strong>very large labelled dataset</strong> (typically 100,000+ examples per class for ImageNet-scale tasks) and <strong>enormous compute</strong> (weeks on 8+ GPUs). In the real world, you almost never have either. A hospital might have 2,000 labelled CT scans. A startup might have 500 product photos. A researcher might be studying a rare species with 200 photos total. Training a ResNet-50 from scratch on 2,000 images would catastrophically overfit — the 25 million parameters would simply memorise the training set.</p>
+  <p>Transfer learning solves this by reframing the question. Instead of asking "can I train a good model on my 2,000 images?", you ask "can I <em>adapt</em> a model that has already seen 1.2 million diverse images to my specific task?" The answer is almost always yes — often with better results than you could ever achieve from scratch on the same small dataset.</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Analogy — The Medical Specialist</div>
+    <div class="callout-body">A doctor who has spent 6 years studying medicine already understands anatomy, physiology, pathology, how to read images, and how to think diagnostically. When they specialise in cardiology, they don't forget all of medicine — they <em>build on</em> that foundation. It takes 2–3 years to specialise, not 9 years to start over. A CNN is the same: a network trained on ImageNet has already learned to understand visual structure. You are specialising it, not retraining it.</div>
+  </div>
+
+  <h2 class="sub">The Mathematical Motivation</h2>
+  <p>When you train a CNN from scratch on a small dataset, the optimiser must explore an enormous high-dimensional parameter space with very little signal. With 25 million parameters and 2,000 training examples, you have 12,500 parameters per example — the problem is massively underdetermined. The network can find thousands of equally good solutions on the training set, most of which generalise poorly.</p>
+  <p>When you start from pretrained weights, you are not in a random location of parameter space — you are starting from a point that already produces semantically meaningful representations. The fine-tuning process makes only small adjustments from this already-good point. The optimisation landscape around a pretrained model is much smoother and narrower, so even gradient descent on a small dataset can find a good local minimum.</p>
+
+  <div class="math-block">
+    <div class="math-label">Transfer learning as parameter space initialisation</div>
+    <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" display="true" tabindex="0" ctxtmenu_counter="0" style="font-size: 117.4%; position: relative;"><mjx-math display="true" class="MJX-TEX" aria-hidden="true" style="margin-left: 0px; margin-right: 0px;"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D703 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mtext class="mjx-n"><mjx-c class="mjx-c74"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c67"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c74"></mjx-c></mjx-mtext></mjx-texatom></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-munder space="4"><mjx-row><mjx-base><mjx-mrow><mjx-mi class="mjx-n"><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c67"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c2061"></mjx-c></mjx-mo><mjx-mo class="mjx-n" space="2"><mjx-c class="mjx-c6D"></mjx-c><mjx-c class="mjx-c69"></mjx-c><mjx-c class="mjx-c6E"></mjx-c></mjx-mo></mjx-mrow></mjx-base></mjx-row><mjx-row><mjx-under style="padding-top: 0.167em; padding-left: 1.447em;"><mjx-mi class="mjx-i" size="s"><mjx-c class="mjx-c1D703 TEX-I"></mjx-c></mjx-mi></mjx-under></mjx-row></mjx-munder><mjx-mtext class="mjx-n"><mjx-c class="mjx-cA0"></mjx-c></mjx-mtext><mjx-msub><mjx-texatom texclass="ORD"><mjx-mi class="mjx-cal mjx-i"><mjx-c class="mjx-c4C TEX-C"></mjx-c></mjx-mi></mjx-texatom><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mtext class="mjx-n"><mjx-c class="mjx-c74"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c67"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c74"></mjx-c></mjx-mtext></mjx-texatom></mjx-script></mjx-msub><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D703 TEX-I"></mjx-c></mjx-mi><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo><mjx-mstyle><mjx-mspace style="width: 1em;"></mjx-mspace></mjx-mstyle><mjx-mtext class="mjx-n"><mjx-c class="mjx-c73"></mjx-c><mjx-c class="mjx-c74"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c74"></mjx-c><mjx-c class="mjx-c69"></mjx-c><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c67"></mjx-c><mjx-c class="mjx-c20"></mjx-c><mjx-c class="mjx-c66"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c6F"></mjx-c><mjx-c class="mjx-c6D"></mjx-c><mjx-c class="mjx-cA0"></mjx-c></mjx-mtext><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D703 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c3D"></mjx-c></mjx-mo><mjx-msub space="4"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D703 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-texatom size="s" texclass="ORD"><mjx-mtext class="mjx-n"><mjx-c class="mjx-c70"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c74"></mjx-c><mjx-c class="mjx-c72"></mjx-c><mjx-c class="mjx-c61"></mjx-c><mjx-c class="mjx-c69"></mjx-c><mjx-c class="mjx-c6E"></mjx-c><mjx-c class="mjx-c65"></mjx-c><mjx-c class="mjx-c64"></mjx-c></mjx-mtext></mjx-texatom></mjx-script></mjx-msub></mjx-math><mjx-assistive-mml unselectable="on" display="block"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><msub><mi>θ</mi><mrow data-mjx-texclass="ORD"><mtext>target</mtext></mrow></msub><mo>=</mo><munder><mrow><mi>arg</mi><mo data-mjx-texclass="NONE">⁡</mo><mo data-mjx-texclass="OP" movablelimits="true">min</mo></mrow><mi>θ</mi></munder><mtext>&nbsp;</mtext><msub><mrow data-mjx-texclass="ORD"><mi data-mjx-variant="-tex-calligraphic" mathvariant="script">L</mi></mrow><mrow data-mjx-texclass="ORD"><mtext>target</mtext></mrow></msub><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo><mstyle scriptlevel="0"><mspace width="1em"></mspace></mstyle><mtext>starting from&nbsp;</mtext><msub><mi>θ</mi><mn>0</mn></msub><mo>=</mo><msub><mi>θ</mi><mrow data-mjx-texclass="ORD"><mtext>pretrained</mtext></mrow></msub></math></mjx-assistive-mml></mjx-container>
+    <div style="margin-top:8px;font-size:.83rem;color:var(--text-muted)">vs. training from scratch: starting from <mjx-container class="MathJax CtxtMenu_Attached_0" jax="CHTML" tabindex="0" ctxtmenu_counter="1" style="font-size: 117.3%; position: relative;"><mjx-math class="MJX-TEX" aria-hidden="true"><mjx-msub><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D703 TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: -0.15em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c30"></mjx-c></mjx-mn></mjx-script></mjx-msub><mjx-mo class="mjx-n" space="4"><mjx-c class="mjx-c223C"></mjx-c></mjx-mo><mjx-texatom space="4" texclass="ORD"><mjx-mi class="mjx-cal mjx-i"><mjx-c class="mjx-c4E TEX-C"></mjx-c></mjx-mi></mjx-texatom><mjx-mo class="mjx-n"><mjx-c class="mjx-c28"></mjx-c></mjx-mo><mjx-mn class="mjx-n"><mjx-c class="mjx-c30"></mjx-c></mjx-mn><mjx-mo class="mjx-n"><mjx-c class="mjx-c2C"></mjx-c></mjx-mo><mjx-msup space="2"><mjx-mi class="mjx-i"><mjx-c class="mjx-c1D70E TEX-I"></mjx-c></mjx-mi><mjx-script style="vertical-align: 0.363em;"><mjx-mn class="mjx-n" size="s"><mjx-c class="mjx-c32"></mjx-c></mjx-mn></mjx-script></mjx-msup><mjx-mo class="mjx-n"><mjx-c class="mjx-c29"></mjx-c></mjx-mo></mjx-math><mjx-assistive-mml unselectable="on" display="inline"><math xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>θ</mi><mn>0</mn></msub><mo>∼</mo><mrow data-mjx-texclass="ORD"><mi data-mjx-variant="-tex-calligraphic" mathvariant="script">N</mi></mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo stretchy="false">)</mo></math></mjx-assistive-mml></mjx-container>. The pretrained initialisation is far closer to good solutions for vision tasks.</div>
+  </div>
+
+  <h2 class="sub">Why CNN Features Are So Transferable</h2>
+  <p>The reason transfer learning works so well for vision tasks is a deep empirical observation: <strong>CNNs learn a universal visual hierarchy</strong>. This has been confirmed by visualising what each layer's filters respond to in every major architecture trained on natural images. The pattern is remarkably consistent regardless of architecture:</p>
+
+  <div class="viz">
+    <div class="viz-title">What each layer of a pretrained CNN has learned — universal across all architectures</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 820 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto;">
+      <defs><marker id="ta" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"></path></marker></defs>
+
+      <!-- Layer blocks -->
+      <!-- Early layers -->
+      <rect x="10" y="30" width="140" height="120" rx="8" fill="rgba(56,189,248,.08)" stroke="rgba(56,189,248,.4)" stroke-width="1.5"></rect>
+      <text x="80" y="52" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">Early Layers</text>
+      <text x="80" y="67" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">(Conv1, Conv2)</text>
+      <text x="80" y="88" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Oriented edges</text>
+      <text x="80" y="103" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Colour blobs</text>
+      <text x="80" y="118" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Gabor-like filters</text>
+      <text x="80" y="133" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Contrast detectors</text>
+      <text x="80" y="160" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">Very general</text>
+      <text x="80" y="174" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Same in ALL vision nets</text>
+      <line x1="150" y1="90" x2="168" y2="90" stroke="#475569" stroke-width="1.3" marker-end="url(#ta)"></line>
+
+      <!-- Mid layers -->
+      <rect x="170" y="22" width="160" height="136" rx="8" fill="rgba(129,140,248,.08)" stroke="rgba(129,140,248,.4)" stroke-width="1.5"></rect>
+      <text x="250" y="46" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#818cf8">Middle Layers</text>
+      <text x="250" y="61" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">(Conv3, Conv4)</text>
+      <text x="250" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Textures (fur, grid, brick)</text>
+      <text x="250" y="97" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Parts (wheel, eye, leg)</text>
+      <text x="250" y="112" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Geometric shapes</text>
+      <text x="250" y="127" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Local compositions</text>
+      <text x="250" y="152" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">Moderately general</text>
+      <text x="250" y="166" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Transfer to similar domains</text>
+      <line x1="330" y1="90" x2="348" y2="90" stroke="#475569" stroke-width="1.3" marker-end="url(#ta)"></line>
+
+      <!-- Late layers -->
+      <rect x="350" y="14" width="160" height="152" rx="8" fill="rgba(251,146,60,.08)" stroke="rgba(251,146,60,.4)" stroke-width="1.5"></rect>
+      <text x="430" y="38" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#fb923c">Deep Layers</text>
+      <text x="430" y="53" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">(Conv5, deeper)</text>
+      <text x="430" y="74" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Object parts (head, leg)</text>
+      <text x="430" y="89" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Full object detectors</text>
+      <text x="430" y="104" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Scene-level context</text>
+      <text x="430" y="119" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Class-specific features</text>
+      <text x="430" y="144" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">Task-specific</text>
+      <text x="430" y="158" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Tuned for ImageNet classes</text>
+      <line x1="510" y1="90" x2="528" y2="90" stroke="#475569" stroke-width="1.3" marker-end="url(#ta)"></line>
+
+      <!-- Classifier -->
+      <rect x="530" y="30" width="130" height="120" rx="8" fill="rgba(244,114,182,.08)" stroke="rgba(244,114,182,.4)" stroke-width="1.5"></rect>
+      <text x="595" y="54" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#f472b6">Classifier Head</text>
+      <text x="595" y="69" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">(FC / GAP→FC)</text>
+      <text x="595" y="90" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• 1000-class weights</text>
+      <text x="595" y="105" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• ImageNet categories</text>
+      <text x="595" y="120" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">• Specific to source task</text>
+      <text x="595" y="145" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f87171">Always replaced</text>
+      <text x="595" y="159" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">for any new task</text>
+
+      <!-- generality arrow -->
+      <line x1="10" y1="192" x2="530" y2="192" stroke="#34d399" stroke-width="1.5" marker-end="url(#ta)"></line>
+      <text x="270" y="188" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">← More general / transferable</text>
+      <line x1="820" y1="192" x2="690" y2="192" stroke="#f87171" stroke-width="1.5" marker-end="url(#ta)"></line>
+      <text x="755" y="188" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">More task-specific →</text>
+    </svg>
+    </div>
+  </div>
+
+  <p>This hierarchy means that the early and middle layers of a ResNet trained on ImageNet are genuinely useful for almost any visual task — medical images, satellite imagery, paintings, microscopy slides — because edges, textures, and shapes are universal concepts in visual data. Only the deepest layers become strongly tied to the specific 1000 ImageNet categories, and those are the layers you replace or retrain.</p>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ The Empirical Proof — CheXNet (2017)</div>
+    <div class="callout-body">Stanford researchers took a DenseNet-121 pretrained on ImageNet and fine-tuned it on 112,120 chest X-rays. The resulting model surpassed the average performance of 4 practising radiologists at detecting pneumonia. The pretrained model had never seen an X-ray. Its weights had been learned entirely from natural photos of cats, cars, and kitchen utensils. And yet those weights, when adapted, produced a superhuman medical AI. This is the most dramatic demonstration of feature transferability in the literature — and it is routine, not exceptional.</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">10–100×</div><div class="stat-lbl">Less Data Needed</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">10–50×</div><div class="stat-lbl">Faster Training</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent3)">Usually Better</div><div class="stat-lbl">vs Training from Scratch</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent4)">1 GPU</div><div class="stat-lbl">Typical Hardware Needed</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent5)">Hours</div><div class="stat-lbl">Not Weeks, to Train</div></div>
+  </div>
+
+  </div></div>
+</div>
+
+<style>
+.math-block{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px 20px;margin:14px 0;overflow-x:auto;text-align:center;}
+.math-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:700;}
+</style>
+<!-- ══════ S2: HOW FEATURES TRANSFER ══════ -->
+<div class="section-block open" id="s2">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent2)">02</div>
+      <div><div class="section-title">How Features Transfer — The Feature Extraction View</div>
+        <div class="section-sub">What actually happens inside the network, and why the backbone is reusable</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Two Views of a Pretrained CNN</h2>
+  <p>It helps to think of a pretrained CNN as two distinct components with very different properties. The <strong>backbone</strong> (all layers except the final classifier) is a learned function that maps any image into a high-dimensional feature vector — a compact description of what is visually present. The <strong>head</strong> (the final FC layer or layers) maps that feature vector to class probabilities for the specific 1000 ImageNet categories. The backbone is general; the head is specific.</p>
+  <p>When you transfer to a new task, you keep the backbone — its features are rich and reusable — and replace the head with a new one appropriate for your task. This is the core of the feature extraction approach.</p>
+
+  <div class="viz">
+    <div class="viz-title">Backbone + Head view — the backbone is the reusable asset, the head is task-specific</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 780 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:780px;display:block;margin:0 auto;">
+      <defs><marker id="tb" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"></path></marker>
+      <marker id="tb2" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"></path></marker></defs>
+
+      <!-- Pretrained model (top) -->
+      <text x="290" y="18" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Pretrained Model (ImageNet)</text>
+
+      <!-- Backbone block -->
+      <rect x="30" y="26" width="380" height="72" rx="8" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="2"></rect>
+      <text x="220" y="52" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#34d399">Backbone — Convolutional Feature Extractor</text>
+      <text x="220" y="70" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Conv layers · Pooling · BatchNorm · ReLU  →  Feature vector (e.g. 2048-dim)</text>
+      <text x="220" y="86" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">⟵ LEARNED ON 1.2M images, understands ALL visual concepts ⟶</text>
+
+      <!-- Head block (ImageNet) -->
+      <rect x="420" y="26" width="150" height="72" rx="8" fill="rgba(248,113,113,.1)" stroke="#f87171" stroke-width="2"></rect>
+      <text x="495" y="52" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#f87171">Head</text>
+      <text x="495" y="67" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">FC → 1000 classes</text>
+      <text x="495" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">ImageNet-specific</text>
+      <text x="495" y="95" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">DISCARD THIS</text>
+
+      <!-- Arrow down: backbone continues -->
+      <line x1="220" y1="98" x2="220" y2="120" stroke="#34d399" stroke-width="2" marker-end="url(#tb2)"></line>
+      <text x="280" y="113" font-family="Sora" font-size="9" fill="#34d399">keep backbone weights</text>
+
+      <!-- New task setup (bottom) -->
+      <text x="290" y="142" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Your Target Task</text>
+
+      <!-- Backbone reused -->
+      <rect x="30" y="150" width="380" height="60" rx="8" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="2" stroke-dasharray="6,3"></rect>
+      <text x="220" y="176" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#34d399">Same Backbone — Reused / Adapted</text>
+      <text x="220" y="195" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Frozen OR fine-tuned with small LR  →  Feature vector</text>
+
+      <!-- New head block -->
+      <rect x="420" y="150" width="150" height="60" rx="8" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="2"></rect>
+      <text x="495" y="174" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">New Head</text>
+      <text x="495" y="189" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">FC → N classes</text>
+      <text x="495" y="202" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">Trained from scratch</text>
+
+      <!-- connection -->
+      <line x1="410" y1="180" x2="420" y2="180" stroke="#475569" stroke-width="1.3" marker-end="url(#tb)"></line>
+
+      <!-- Task examples on the right -->
+      <text x="600" y="150" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">Example tasks:</text>
+      <text x="600" y="165" font-family="Sora" font-size="9" fill="#38bdf8">• 3-class: {cat, dog, bird}</text>
+      <text x="600" y="178" font-family="Sora" font-size="9" fill="#818cf8">• 2-class: {tumour, no-tumour}</text>
+      <text x="600" y="191" font-family="Sora" font-size="9" fill="#34d399">• Regression: count objects</text>
+      <text x="600" y="204" font-family="Sora" font-size="9" fill="#fb923c">• Multi-label: any combo</text>
+
+      <!-- "replace" annotation -->
+      <line x1="570" y1="62" x2="570" y2="150" stroke="#f87171" stroke-width="1.5" stroke-dasharray="5,3"></line>
+      <text x="590" y="108" font-family="Sora" font-size="9" fill="#f87171">replaced</text>
+      <text x="590" y="120" font-family="Sora" font-size="9" fill="#f87171">with new</text>
+      <text x="590" y="132" font-family="Sora" font-size="9" fill="#f87171">head →</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">What the Feature Vector Actually Contains</h2>
+  <p>After the backbone processes an image through all its conv layers, pooling operations, and batch normalisation, the Global Average Pooling layer collapses the final feature map (e.g. 7×7×2048 for ResNet-50) into a 2048-dimensional vector. This vector is a learned "fingerprint" of the image — a coordinate in a 2048-dimensional space where images that look similar are close together, and images that look different are far apart.</p>
+  <p>This property — called <strong>representation quality</strong> — is the key asset of a pretrained backbone. Even if your target task is "is this skin lesion benign or malignant", the pretrained features capture high-level visual properties (colour, texture, boundary, shape) that are absolutely relevant to distinguishing those two categories. The network doesn't need to know what a skin lesion is to provide useful features about it.</p>
+
+  <h2 class="sub">Pure Feature Extraction — No Gradient Through Backbone</h2>
+  <p>In the simplest form of transfer learning, you freeze the entire backbone (set <ic>requires_grad=False</ic> for all backbone parameters), attach a new head, and only train the head. In this mode the backbone is acting exactly like a hand-crafted feature extractor — it transforms raw pixels into a rich feature representation, and you train a small classifier on top of those features. The backbone weights never change.</p>
+  <p>This approach is fastest, uses the least memory (no need to store gradients for the backbone), and is least prone to overfitting on small datasets. Its weakness is that if your domain is significantly different from ImageNet, the frozen backbone features might not be optimal for your task — which is where fine-tuning comes in.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Pure Feature Extraction — backbone frozen</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torchvision <span class="kw">import</span> models
+
+<span class="cm"># Load pretrained ResNet-50 — weights trained on ImageNet</span>
+model = models.<span class="fn">resnet50</span>(weights=<span class="st">'IMAGENET1K_V2'</span>)
+
+<span class="cm"># ── Step 1: Freeze ALL backbone parameters ────────────────────────</span>
+<span class="kw">for</span> param <span class="kw">in</span> model.<span class="fn">parameters</span>():
+    param.requires_grad = <span class="kw">False</span>   <span class="cm"># no gradient computed, no weight updates</span>
+
+<span class="cm"># ── Step 2: Replace the classifier head ───────────────────────────</span>
+<span class="cm"># model.fc was: Linear(2048 → 1000)  — for ImageNet 1000 classes</span>
+num_classes = <span class="num">3</span>   <span class="cm"># e.g. your task has 3 classes</span>
+in_features = model.fc.in_features   <span class="cm"># 2048 for ResNet-50</span>
+
+model.fc = nn.<span class="cls">Linear</span>(in_features, num_classes)
+<span class="cm"># model.fc is new → its requires_grad is True by default ✓</span>
+
+<span class="cm"># ── Verify: only 2048×3 + 3 = 6,147 trainable parameters ─────────</span>
+trainable = <span class="fn">sum</span>(p.numel() <span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>() <span class="kw">if</span> p.requires_grad)
+total     = <span class="fn">sum</span>(p.numel() <span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>())
+<span class="fn">print</span>(<span class="st">f"Trainable: {trainable:,} / {total:,}"</span>)
+<span class="cm"># → Trainable: 6,147 / 25,557,032</span>
+
+<span class="cm"># ── Optimiser only updates the new head ───────────────────────────</span>
+optimizer = torch.optim.<span class="cls">Adam</span>(
+    <span class="fn">filter</span>(<span class="kw">lambda</span> p: p.requires_grad, model.<span class="fn">parameters</span>()),
+    lr=<span class="num">1e-3</span>
+)</code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S3: STRATEGIES ══════ -->
+<div class="section-block open" id="s3">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">03</div>
+      <div><div class="section-title">The Four Transfer Learning Strategies</div>
+        <div class="section-sub">When to freeze, when to fine-tune, and how much — choosing the right strategy for your situation</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>There is no single "correct" approach to transfer learning. The right strategy depends on two factors: <strong>how much labelled data you have</strong> for the target task, and <strong>how similar your target domain is</strong> to the source domain (ImageNet). The combination of these two factors creates four distinct situations, each calling for a different strategy.</p>
+
+  <div class="viz">
+    <div class="viz-title">The 2×2 strategy decision matrix — your starting point for every transfer learning project</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;">
+      <!-- axes -->
+      <line x1="60" y1="270" x2="680" y2="270" stroke="#2d3748" stroke-width="1.5"></line>
+      <line x1="60" y1="270" x2="60" y2="20" stroke="#2d3748" stroke-width="1.5"></line>
+      <!-- axis labels -->
+      <text x="370" y="298" text-anchor="middle" font-family="Sora" font-size="11" fill="#64748b">← Small Dataset &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Large Dataset →</text>
+      <text x="20" y="148" text-anchor="middle" font-family="Sora" font-size="11" fill="#64748b" transform="rotate(-90,20,148)">← Similar Domain &nbsp;&nbsp; Different Domain →</text>
+
+      <!-- Quadrant borders -->
+      <line x1="370" y1="270" x2="370" y2="20" stroke="#2d3748" stroke-width="1" stroke-dasharray="6,3"></line>
+      <line x1="60" y1="145" x2="680" y2="145" stroke="#2d3748" stroke-width="1" stroke-dasharray="6,3"></line>
+
+      <!-- Q1: Small data, Similar domain — top-left -->
+      <rect x="65" y="25" width="300" height="115" rx="8" fill="rgba(56,189,248,.1)" stroke="rgba(56,189,248,.35)" stroke-width="1.5"></rect>
+      <text x="215" y="50" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">Strategy A</text>
+      <text x="215" y="66" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Small data + Similar domain</text>
+      <text x="215" y="86" text-anchor="middle" font-family="Sora" font-size="10" font-weight="600" fill="#38bdf8">Freeze ALL backbone</text>
+      <text x="215" y="101" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Train only new head</text>
+      <text x="215" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Risk of overfitting is high</text>
+      <text x="215" y="130" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">e.g. 500 photos of dogs → classify breeds</text>
+
+      <!-- Q2: Large data, Similar domain — top-right -->
+      <rect x="375" y="25" width="300" height="115" rx="8" fill="rgba(52,211,153,.1)" stroke="rgba(52,211,153,.35)" stroke-width="1.5"></rect>
+      <text x="525" y="50" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#34d399">Strategy B</text>
+      <text x="525" y="66" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Large data + Similar domain</text>
+      <text x="525" y="86" text-anchor="middle" font-family="Sora" font-size="10" font-weight="600" fill="#34d399">Fine-tune entire network</text>
+      <text x="525" y="101" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Small LR throughout</text>
+      <text x="525" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Best possible accuracy</text>
+      <text x="525" y="130" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">e.g. 50K natural images → classify objects</text>
+
+      <!-- Q3: Small data, Different domain — bottom-left -->
+      <rect x="65" y="150" width="300" height="115" rx="8" fill="rgba(251,146,60,.1)" stroke="rgba(251,146,60,.35)" stroke-width="1.5"></rect>
+      <text x="215" y="175" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#fb923c">Strategy C</text>
+      <text x="215" y="191" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Small data + Different domain</text>
+      <text x="215" y="211" text-anchor="middle" font-family="Sora" font-size="10" font-weight="600" fill="#fb923c">Freeze early layers only</text>
+      <text x="215" y="226" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Fine-tune later layers + head</text>
+      <text x="215" y="240" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Very careful — risk: catastrophic forgetting</text>
+      <text x="215" y="255" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">e.g. 1K chest X-rays → detect disease</text>
+
+      <!-- Q4: Large data, Different domain — bottom-right -->
+      <rect x="375" y="150" width="300" height="115" rx="8" fill="rgba(244,114,182,.1)" stroke="rgba(244,114,182,.35)" stroke-width="1.5"></rect>
+      <text x="525" y="175" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#f472b6">Strategy D</text></svg></div>
+      <text x="525" y="191" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Large data + Different domain</text>
+      <text x="525" y="211" text-anchor="middle" font-family="Sora" font-size="10" font-weight="600" fill="#f472b6">Fine-tune with progressive unfreeze</text>
+      <text x="525" y="226" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Unfreeze blocks gradually</text>
+      <text x="525" y="240" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Discriminative LR per block</text>
+      <text x="525" y="255" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">e.g. 50K satellite images → land use</text>
+    
+    </div>
+  </div>
+
+  <h2 class="sub">Strategy A — Freeze All, Train Head Only</h2>
+  <p>This is the safest and fastest strategy. Every parameter in the backbone is frozen — <ic>requires_grad=False</ic> — which means no gradients are computed for those parameters, no memory is allocated for their gradient buffers, and their weights never change. You attach a new classification head and train only that. Because your data is small and your domain is similar to ImageNet, the pretrained features are already a good representation of your data; you just need the network to learn which combination of features predicts your specific labels.</p>
+  <p>The extreme version of this — where you literally run the frozen backbone once on all your images to compute feature vectors, save them to disk, then train only a logistic regression on those features — is called <strong>offline feature extraction</strong>. It requires no GPU at training time and can be done in seconds with sklearn.</p>
+
+  <h2 class="sub">Strategy B — Fine-Tune Everything</h2>
+  <p>When you have enough data and your domain is similar, you can allow the entire network — both backbone and head — to update its weights during training. You initialise from pretrained weights but use a very small learning rate (typically 10–100× smaller than you would use for training from scratch) so that the pretrained weights are only nudged gently, not obliterated. The network adapts all its features slightly to your specific domain while retaining the general knowledge baked into the pretrained weights.</p>
+
+  <h2 class="sub">Strategy C — Partial Freeze (Most Common in Practice)</h2>
+  <p>This is the most nuanced and most commonly used strategy. You freeze the early layers of the backbone (which contain the universal low-level features that transfer well regardless of domain — edges, textures, blobs) and allow the later layers plus the new head to be trained. The intuition is: early features are already good and you do not want to destroy them with noisy gradients from a small dataset; later features are more specific to ImageNet classes and need to be adjusted to match your domain.</p>
+
+  <div class="viz">
+    <div class="viz-title">Visualising what is frozen vs trainable in Strategies A, B, and C for ResNet-50</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 700 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;">
+      <!-- Column headers -->
+      <text x="80" y="18" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">Layer Group</text>
+      <text x="240" y="18" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">Strategy A</text>
+      <text x="400" y="18" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">Strategy B</text>
+      <text x="570" y="18" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">Strategy C</text>
+
+      <!-- Row: Stem (Conv1 + Pool) -->
+      <rect x="10" y="28" width="140" height="30" rx="4" fill="rgba(100,116,139,.15)" stroke="#2d3748" stroke-width="1"></rect>
+      <text x="80" y="48" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Stem (Conv1 + Pool)</text>
+      <rect x="170" y="28" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="240" y="48" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+      <rect x="330" y="28" width="140" height="30" rx="4" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1"></rect>
+      <text x="400" y="48" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">✓ Trainable</text>
+      <rect x="500" y="28" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="570" y="48" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+
+      <!-- Row: Stage 1 -->
+      <rect x="10" y="62" width="140" height="30" rx="4" fill="rgba(100,116,139,.15)" stroke="#2d3748" stroke-width="1"></rect>
+      <text x="80" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Stage 1 (early feats)</text>
+      <rect x="170" y="62" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="240" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+      <rect x="330" y="62" width="140" height="30" rx="4" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1"></rect>
+      <text x="400" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">✓ Trainable</text>
+      <rect x="500" y="62" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="570" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+
+      <!-- Row: Stage 2 -->
+      <rect x="10" y="96" width="140" height="30" rx="4" fill="rgba(100,116,139,.15)" stroke="#2d3748" stroke-width="1"></rect>
+      <text x="80" y="116" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Stage 2 (mid feats)</text>
+      <rect x="170" y="96" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="240" y="116" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+      <rect x="330" y="96" width="140" height="30" rx="4" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1"></rect>
+      <text x="400" y="116" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">✓ Trainable</text>
+      <rect x="500" y="96" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="570" y="116" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+
+      <!-- Row: Stage 3 -->
+      <rect x="10" y="130" width="140" height="30" rx="4" fill="rgba(100,116,139,.15)" stroke="#2d3748" stroke-width="1"></rect>
+      <text x="80" y="150" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Stage 3 (deep feats)</text>
+      <rect x="170" y="130" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="240" y="150" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+      <rect x="330" y="130" width="140" height="30" rx="4" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1"></rect>
+      <text x="400" y="150" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">✓ Trainable</text>
+      <rect x="500" y="130" width="140" height="30" rx="4" fill="rgba(56,189,248,.2)" stroke="#38bdf8" stroke-width="1"></rect>
+      <text x="570" y="150" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">✓ Trainable (small LR)</text>
+
+      <!-- Row: Stage 4 -->
+      <rect x="10" y="164" width="140" height="30" rx="4" fill="rgba(100,116,139,.15)" stroke="#2d3748" stroke-width="1"></rect>
+      <text x="80" y="184" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">Stage 4 (task feats)</text>
+      <rect x="170" y="164" width="140" height="30" rx="4" fill="rgba(100,116,139,.25)" stroke="#475569" stroke-width="1"></rect>
+      <text x="240" y="184" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">❄ Frozen</text>
+      <rect x="330" y="164" width="140" height="30" rx="4" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1"></rect>
+      <text x="400" y="184" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">✓ Trainable</text>
+      <rect x="500" y="164" width="140" height="30" rx="4" fill="rgba(56,189,248,.2)" stroke="#38bdf8" stroke-width="1"></rect>
+      <text x="570" y="184" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">✓ Trainable (small LR)</text>
+
+      <!-- Row: New Head -->
+      <rect x="10" y="198" width="140" height="28" rx="4" fill="rgba(244,114,182,.15)" stroke="#f472b6" stroke-width="1.5"></rect>
+      <text x="80" y="217" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">New Head (yours)</text>
+      <rect x="170" y="198" width="140" height="28" rx="4" fill="rgba(244,114,182,.25)" stroke="#f472b6" stroke-width="1.5"></rect>
+      <text x="240" y="217" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">✓ Train (high LR)</text>
+      <rect x="330" y="198" width="140" height="28" rx="4" fill="rgba(244,114,182,.25)" stroke="#f472b6" stroke-width="1.5"></rect>
+      <text x="400" y="217" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">✓ Train (high LR)</text>
+      <rect x="500" y="198" width="140" height="28" rx="4" fill="rgba(244,114,182,.25)" stroke="#f472b6" stroke-width="1.5"></rect>
+      <text x="570" y="217" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">✓ Train (high LR)</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Strategy D — Progressive Unfreezing</h2>
+  <p>Progressive unfreezing, popularised by fast.ai, is the most sophisticated strategy and often achieves the best results when you have substantial data in a different domain. The idea is to unfreeze and train the network in stages rather than all at once. You start by training only the head for a few epochs until it converges. Then you unfreeze the last block of the backbone and train with a very small learning rate for another few epochs. Then you unfreeze the second-to-last block, and so on, working your way backwards through the network. Each time you unfreeze a new block, it immediately has a useful gradient signal from the already-trained layers above it, making its adaptation much more stable than unfreezing everything at once would be.</p>
+
+  </div></div>
+</div>
+<!-- ══════ S4: FINE-TUNING MECHANICS ══════ -->
+<div class="section-block open" id="s4">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">04</div>
+      <div><div class="section-title">Fine-Tuning Mechanics — What Exactly Happens During Fine-Tuning</div>
+        <div class="section-sub">BatchNorm modes, head architecture choices, the warm-up phase, and catastrophic forgetting</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Phase 1 — Train the Head First (Always)</h2>
+  <p>The single most important practical rule in fine-tuning is: <strong>always train only the new head for a few epochs before unfreezing anything else</strong>. Here is why. When you replace the final FC layer with a new randomly initialised head, that head's weights are random — they produce essentially random gradients. If you immediately allow those random gradients to flow into a carefully pretrained backbone, they will corrupt the backbone's weights before the head has learned anything useful. You would be destroying 1.2 million images worth of learning with pure noise in the first few gradient steps.</p>
+  <p>Training the head first for 3–10 epochs lets it converge to a reasonable state, so that by the time you unfreeze the backbone, the gradients flowing into it are meaningful and directed. Think of it as stabilising the top of a building before making changes to the foundation.</p>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ The Random Head Problem — Never Skip Phase 1</div>
+    <div class="callout-body">Suppose your new head has weights initialised from <ic>N(0, 0.01)</ic>. The loss on the first batch will be enormous (random predictions → large cross-entropy). The gradient of this large loss with respect to the backbone weights will be large and random. Even one gradient step with a large LR can destroy the delicate spatial relationships learned in the pretrained conv layers. Always: freeze backbone → train head → then unfreeze progressively.</div>
+  </div>
+
+  <h2 class="sub">BatchNorm Layers — A Critical Detail</h2>
+  <p>BatchNorm layers behave differently during training vs evaluation mode, and this creates an important subtlety when freezing layers. A BatchNorm layer has four components: learned scale (γ) and shift (β) parameters, plus running statistics (mean and variance) computed from training batches. When you freeze a layer by setting <ic>requires_grad=False</ic>, you prevent γ and β from updating — but unless you also call <ic>model.eval()</ic> on those layers, the running statistics will still update from your (small, possibly unrepresentative) fine-tuning batches, corrupting the normalisation statistics accumulated over 1.2 million ImageNet images.</p>
+  <p>The correct approach is to call <ic>layer.eval()</ic> explicitly on any frozen batch-norm layers so they use their stored running mean and variance (computed on ImageNet) rather than recomputing them from your data. If you unfreeze a layer, switch it back to <ic>train()</ic> mode.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Correctly handling BatchNorm when freezing layers</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torchvision <span class="kw">import</span> models
+
+model = models.<span class="fn">resnet50</span>(weights=<span class="st">'IMAGENET1K_V2'</span>)
+
+<span class="kw">def</span> <span class="fn">freeze_backbone</span>(model):
+    <span class="st">"""Freeze all layers except the final FC head.
+    Crucially: set frozen BN layers to eval() mode so their
+    running stats don't get corrupted by our small dataset."""</span>
+    <span class="kw">for</span> name, module <span class="kw">in</span> model.<span class="fn">named_modules</span>():
+        <span class="kw">if</span> name == <span class="st">'fc'</span>:
+            <span class="kw">continue</span>   <span class="cm"># skip head — leave it trainable</span>
+        <span class="kw">for</span> param <span class="kw">in</span> module.<span class="fn">parameters</span>(recurse=<span class="kw">False</span>):
+            param.requires_grad = <span class="kw">False</span>
+        <span class="cm"># ← KEY: put frozen BN layers in eval mode</span>
+        <span class="kw">if</span> <span class="fn">isinstance</span>(module, nn.<span class="cls">BatchNorm2d</span>):
+            module.<span class="fn">eval</span>()
+
+<span class="kw">def</span> <span class="fn">unfreeze_layer</span>(layer):
+    <span class="st">"""Unfreeze a specific layer block and put its BN back in train mode."""</span>
+    <span class="kw">for</span> module <span class="kw">in</span> layer.<span class="fn">modules</span>():
+        <span class="kw">for</span> param <span class="kw">in</span> module.<span class="fn">parameters</span>(recurse=<span class="kw">False</span>):
+            param.requires_grad = <span class="kw">True</span>
+        <span class="kw">if</span> <span class="fn">isinstance</span>(module, nn.<span class="cls">BatchNorm2d</span>):
+            module.<span class="fn">train</span>()   <span class="cm"># ← update running stats once unfrozen</span>
+
+<span class="cm"># Usage: after phase-1 head training, unfreeze layer4 only</span>
+<span class="fn">freeze_backbone</span>(model)
+model.fc = nn.<span class="cls">Linear</span>(model.fc.in_features, <span class="num">5</span>)  <span class="cm"># 5-class task</span>
+
+<span class="cm"># Phase 1: train head for N epochs (backbone frozen)</span>
+<span class="cm"># ... training loop ...</span>
+
+<span class="cm"># Phase 2: unfreeze last residual stage</span>
+<span class="fn">unfreeze_layer</span>(model.layer4)
+<span class="cm"># Now re-create optimiser with different LRs per group (see S5)</span></code></pre></div>
+  </div>
+
+  <h2 class="sub">Designing the New Head</h2>
+  <p>The simplest head is a single <ic>nn.Linear(backbone_features, num_classes)</ic> layer, which works well for most tasks. But for harder problems with limited data, a slightly richer head can help. A common pattern is a small MLP with dropout: Linear → ReLU → Dropout → Linear → output. The dropout regularises the head and reduces overfitting on small datasets. Some practitioners also add a batch normalisation layer at the start of the head — this normalises the backbone features before passing them to the classifier, which can help when fine-tuning on a very different domain.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Head design options for different scenarios</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># Option 1: Minimal — for simple tasks / large data</span>
+head_simple = nn.<span class="cls">Linear</span>(<span class="num">2048</span>, num_classes)
+
+<span class="cm"># Option 2: With dropout — for small datasets, prevents overfitting</span>
+head_dropout = nn.<span class="cls">Sequential</span>(
+    nn.<span class="cls">Dropout</span>(<span class="num">0.5</span>),
+    nn.<span class="cls">Linear</span>(<span class="num">2048</span>, num_classes)
+)
+
+<span class="cm"># Option 3: Small MLP — for harder tasks / noisy labels</span>
+head_mlp = nn.<span class="cls">Sequential</span>(
+    nn.<span class="cls">Linear</span>(<span class="num">2048</span>, <span class="num">512</span>),
+    nn.<span class="cls">ReLU</span>(),
+    nn.<span class="cls">Dropout</span>(<span class="num">0.3</span>),
+    nn.<span class="cls">Linear</span>(<span class="num">512</span>, num_classes)
+)
+
+<span class="cm"># Option 4: Normalise features first — best for very different domains</span>
+head_normed = nn.<span class="cls">Sequential</span>(
+    nn.<span class="cls">BatchNorm1d</span>(<span class="num">2048</span>),   <span class="cm"># normalise backbone features</span>
+    nn.<span class="cls">Linear</span>(<span class="num">2048</span>, <span class="num">256</span>),
+    nn.<span class="cls">ReLU</span>(),
+    nn.<span class="cls">Dropout</span>(<span class="num">0.4</span>),
+    nn.<span class="cls">Linear</span>(<span class="num">256</span>, num_classes)
+)
+
+<span class="cm"># Replace ResNet's FC with your chosen head</span>
+model.fc = head_dropout   <span class="cm"># or head_mlp, head_normed etc.</span></code></pre></div>
+  </div>
+
+  <h2 class="sub">Catastrophic Forgetting — The Hidden Enemy</h2>
+  <p>Catastrophic forgetting is what happens when fine-tuning destroys the pretrained knowledge. It occurs when you use a learning rate that is too large on the backbone — the large gradient steps overwrite the carefully learned weights with weights optimised only for your small dataset. The result is a model that performs well on your training set but has completely lost all its pretrained knowledge, effectively becoming a randomly initialised network trained on your tiny dataset.</p>
+  <p>The symptoms are: validation accuracy on your task is poor, the loss starts very low then shoots up, and the network seems to have "forgotten" even basic visual structure. The cure is always a smaller learning rate — typically 10–100× smaller on the backbone than on the head. This gives the backbone time to gently adapt without destroying its existing representations.</p>
+
+  <div class="callout problem">
+    <div class="callout-title">🔴 Catastrophic Forgetting Diagnosis</div>
+    <div class="callout-body">
+      <strong>Symptom 1:</strong> Training loss is low but val accuracy is barely above random chance.<br>
+      <strong>Symptom 2:</strong> Val loss was decreasing then suddenly spiked upward mid-training.<br>
+      <strong>Symptom 3:</strong> Your model performs worse than a linear SVM on the same features.<br><br>
+      <strong>Fix:</strong> Reduce backbone LR by 10×. Consider re-initialising from pretrained weights and using gradual unfreezing. Never use the same LR for backbone and head.
+    </div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S5: LEARNING RATES ══════ -->
+<div class="section-block open" id="s5">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(244,114,182,.15);color:var(--accent5)">05</div>
+      <div><div class="section-title">Learning Rate Rules for Fine-Tuning</div>
+        <div class="section-sub">Discriminative learning rates, LR schedules, the LR finder, and warm-up — the most important hyperparameter decisions</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Learning rate is the single most consequential hyperparameter in fine-tuning. Too large and you destroy pretrained knowledge (catastrophic forgetting). Too small and training is painfully slow or never converges. The key insight is that <strong>different parts of the network need different learning rates</strong> — a concept called discriminative learning rates.</p>
+
+  <h2 class="sub">Discriminative Learning Rates</h2>
+  <p>The principle is simple: the earlier a layer is in the network, the more general and well-learned its features are, so the smaller its learning rate should be. The new head, which starts from random weights and needs to learn from scratch, should have the largest learning rate. The earliest convolutional layers, whose edge and texture detectors are already perfect and universal, should barely move — or not move at all. The layers in between get intermediate rates.</p>
+
+  <div class="viz">
+    <div class="viz-title">Discriminative LR — each network block gets a progressively larger learning rate</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;">
+      <!-- Bars (horizontal) from left=network start to right=head -->
+      <!-- Stem -->
+      <rect x="10" y="20" width="500" height="28" rx="5" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1"></rect>
+      <text x="14" y="39" font-family="Sora" font-size="9" fill="#94a3b8">Stem · Conv1</text>
+      <rect x="520" y="20" width="60" height="28" rx="4" fill="rgba(100,116,139,.4)" stroke="#475569" stroke-width="1"></rect>
+      <text x="550" y="39" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0">1e-5</text>
+      <text x="590" y="39" font-family="Sora" font-size="9" fill="#64748b">← or frozen</text>
+
+      <!-- Stage 1 -->
+      <rect x="10" y="54" width="500" height="28" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1"></rect>
+      <text x="14" y="73" font-family="Sora" font-size="9" fill="#38bdf8">Stage 1 · Early features</text>
+      <rect x="520" y="54" width="70" height="28" rx="4" fill="rgba(56,189,248,.3)" stroke="#38bdf8" stroke-width="1"></rect>
+      <text x="555" y="73" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0">1e-5</text>
+
+      <!-- Stage 2 -->
+      <rect x="10" y="88" width="500" height="28" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1"></rect>
+      <text x="14" y="107" font-family="Sora" font-size="9" fill="#818cf8">Stage 2–3 · Mid features</text>
+      <rect x="520" y="88" width="80" height="28" rx="4" fill="rgba(129,140,248,.3)" stroke="#818cf8" stroke-width="1"></rect>
+      <text x="560" y="107" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0">1e-4</text>
+
+      <!-- Stage 3 -->
+      <rect x="10" y="122" width="500" height="28" rx="5" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1"></rect>
+      <text x="14" y="141" font-family="Sora" font-size="9" fill="#fb923c">Stage 4 · Deep / task features</text>
+      <rect x="520" y="122" width="90" height="28" rx="4" fill="rgba(251,146,60,.3)" stroke="#fb923c" stroke-width="1"></rect>
+      <text x="565" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#e2e8f0">1e-4</text>
+
+      <!-- New head -->
+      <rect x="10" y="156" width="500" height="30" rx="5" fill="rgba(244,114,182,.18)" stroke="#f472b6" stroke-width="2"></rect>
+      <text x="14" y="176" font-family="Sora" font-size="10" font-weight="700" fill="#f472b6">New Head · Classifier</text>
+      <rect x="520" y="156" width="130" height="30" rx="4" fill="rgba(244,114,182,.4)" stroke="#f472b6" stroke-width="2"></rect>
+      <text x="585" y="176" text-anchor="middle" font-family="JetBrains Mono" font-size="10" font-weight="700" fill="#e2e8f0">1e-3</text>
+
+      <!-- Rule of thumb annotation -->
+      <text x="10" y="198" font-family="Sora" font-size="9" fill="#64748b">Rule of thumb: each deeper group gets ~10× the LR of the group above it  (1e-5 → 1e-4 → 1e-3)</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Discriminative LRs with PyTorch parameter groups</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+<span class="kw">from</span> torchvision <span class="kw">import</span> models
+
+model = models.<span class="fn">resnet50</span>(weights=<span class="st">'IMAGENET1K_V2'</span>)
+model.fc = nn.<span class="cls">Linear</span>(model.fc.in_features, <span class="num">5</span>)
+
+<span class="cm"># ── Define parameter groups with different LRs ────────────────────
+# Each group is a dict: {'params': [...], 'lr': float}
+# PyTorch applies the group's LR to exactly those parameters.</span>
+
+param_groups = [
+    <span class="cm"># Earliest layers — almost frozen, tiny LR</span>
+    {<span class="st">'params'</span>: [*model.layer1.<span class="fn">parameters</span>(), *model.layer2.<span class="fn">parameters</span>()],
+     <span class="st">'lr'</span>: <span class="num">1e-5</span>},
+
+    <span class="cm"># Mid layers — moderate LR</span>
+    {<span class="st">'params'</span>: model.layer3.<span class="fn">parameters</span>(),
+     <span class="st">'lr'</span>: <span class="num">1e-4</span>},
+
+    <span class="cm"># Deep layers — larger LR, adapt more to new domain</span>
+    {<span class="st">'params'</span>: model.layer4.<span class="fn">parameters</span>(),
+     <span class="st">'lr'</span>: <span class="num">1e-4</span>},
+
+    <span class="cm"># New head — largest LR, learning from scratch</span>
+    {<span class="st">'params'</span>: model.fc.<span class="fn">parameters</span>(),
+     <span class="st">'lr'</span>: <span class="num">1e-3</span>},
+]
+
+<span class="cm"># Adam with weight decay — good default for fine-tuning</span>
+optimizer = optim.<span class="cls">AdamW</span>(param_groups, weight_decay=<span class="num">1e-4</span>)
+
+<span class="cm"># When the scheduler adjusts LR, it scales each group's LR
+# independently — so relative ratios are preserved.</span>
+scheduler = optim.lr_scheduler.<span class="cls">CosineAnnealingLR</span>(optimizer, T_max=<span class="num">20</span>)</code></pre></div>
+  </div>
+
+  <h2 class="sub">The Learning Rate Finder</h2>
+  <p>Choosing the right LR is hard, so a practical technique called the <strong>LR finder</strong> (popularised by the 1cycle paper and fast.ai) removes the guesswork. The idea is to run a short training loop where you start with a tiny LR (e.g. 1e-7) and increase it exponentially with each mini-batch, recording the loss at each step. You plot LR vs loss. Initially the loss decreases as the LR grows larger (good updates). Then at some point the LR becomes too large and the loss starts to increase (destructive updates). The optimal LR is typically just before the loss minimum — specifically the steepest downward slope of the loss curve. This whole process takes only 1–2 minutes and gives you a principled LR choice.</p>
+
+  <div class="viz">
+    <div class="viz-title">LR Finder plot — pick the LR at the steepest loss descent (one order of magnitude before the minimum)</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:600px;display:block;margin:0 auto;">
+      <defs><marker id="tf" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"></path></marker></defs>
+      <!-- axes -->
+      <line x1="50" y1="160" x2="560" y2="160" stroke="#2d3748" stroke-width="1.5" marker-end="url(#tf)"></line>
+      <line x1="50" y1="160" x2="50" y2="20" stroke="#2d3748" stroke-width="1.5" marker-end="url(#tf)"></line>
+      <!-- axis labels -->
+      <text x="305" y="183" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Learning Rate (log scale)  →</text>
+      <text x="18" y="90" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b" transform="rotate(-90,18,90)">Loss  ↑</text>
+      <!-- x-axis ticks -->
+      <text x="90" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">1e-6</text>
+      <text x="180" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">1e-5</text>
+      <text x="270" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">1e-4</text>
+      <text x="360" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">1e-3</text>
+      <text x="450" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">1e-2</text>
+      <text x="540" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#64748b">1e-1</text>
+
+      <!-- Loss curve: high → flat → decreasing → minimum → exploding -->
+      <path d="M 90,130  C 120,128 150,125 180,120  C 210,112 240,90  270,65
+               C 300,45  320,40  340,42  C 360,45  390,65  420,90
+               C 450,120 480,145 510,158" fill="none" stroke="#38bdf8" stroke-width="2.5"></path>
+
+      <!-- Steepest slope zone (best LR) -->
+      <line x1="230" y1="20" x2="230" y2="160" stroke="rgba(52,211,153,.5)" stroke-width="1.5" stroke-dasharray="5,3"></line>
+      <rect x="218" y="22" width="58" height="20" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1"></rect>
+      <text x="247" y="36" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">Best LR</text>
+      <text x="247" y="155" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">~2e-4</text>
+
+      <!-- Minimum zone -->
+      <line x1="330" y1="20" x2="330" y2="160" stroke="rgba(251,191,36,.4)" stroke-width="1.5" stroke-dasharray="5,3"></line>
+      <text x="360" y="36" font-family="Sora" font-size="9" fill="#fbbf24">Min loss</text>
+      <text x="360" y="50" font-family="Sora" font-size="8" fill="#64748b">(too close)</text>
+
+      <!-- Explosion zone -->
+      <text x="430" y="36" font-family="Sora" font-size="9" fill="#f87171">LR too large</text>
+      <text x="430" y="50" font-family="Sora" font-size="8" fill="#64748b">loss explodes</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">LR Schedules — Don't Use a Constant LR</h2>
+  <p>A constant learning rate is almost never the best choice for fine-tuning. As the network converges toward a good solution, the optimal step size gets smaller — you want large steps when you are far from a good solution and tiny steps when you are close. The three most practical schedules for fine-tuning are cosine annealing (smoothly decays the LR from its initial value to near zero following a cosine curve), step decay (reduce LR by a factor, typically 0.1, every N epochs), and 1-cycle policy (briefly warm up the LR, then decay it, completing one cycle — very aggressive but surprisingly effective).</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · LR Schedules for fine-tuning</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+
+<span class="cm"># Option 1: Cosine Annealing — smooth decay, very common</span>
+scheduler = optim.lr_scheduler.<span class="cls">CosineAnnealingLR</span>(
+    optimizer, T_max=num_epochs, eta_min=<span class="num">1e-6</span>
+)
+
+<span class="cm"># Option 2: Step LR — drop by 10× every 7 epochs</span>
+scheduler = optim.lr_scheduler.<span class="cls">StepLR</span>(
+    optimizer, step_size=<span class="num">7</span>, gamma=<span class="num">0.1</span>
+)
+
+<span class="cm"># Option 3: OneCycleLR — ramp up then rapidly decay
+# Best for fast fine-tuning (few epochs)</span>
+scheduler = optim.lr_scheduler.<span class="cls">OneCycleLR</span>(
+    optimizer,
+    max_lr=[<span class="num">1e-5</span>, <span class="num">1e-4</span>, <span class="num">1e-4</span>, <span class="num">1e-3</span>],  <span class="cm"># one per param group</span>
+    steps_per_epoch=<span class="fn">len</span>(train_loader),
+    epochs=num_epochs,
+    pct_start=<span class="num">0.3</span>,  <span class="cm"># 30% of training is warm-up</span>
+)
+
+<span class="cm"># Option 4: ReduceLROnPlateau — adaptive, reduces on stagnation</span>
+scheduler = optim.lr_scheduler.<span class="cls">ReduceLROnPlateau</span>(
+    optimizer, mode=<span class="st">'min'</span>, factor=<span class="num">0.1</span>, patience=<span class="num">3</span>,
+    min_lr=<span class="num">1e-7</span>
+)
+
+<span class="cm"># Training loop integration</span>
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(num_epochs):
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> batch <span class="kw">in</span> train_loader:
+        optimizer.<span class="fn">zero_grad</span>()
+        loss = <span class="fn">criterion</span>(model(batch[<span class="num">0</span>]), batch[<span class="num">1</span>])
+        loss.<span class="fn">backward</span>()
+        optimizer.<span class="fn">step</span>()
+        <span class="kw">if</span> <span class="fn">isinstance</span>(scheduler, optim.lr_scheduler.<span class="cls">OneCycleLR</span>):
+            scheduler.<span class="fn">step</span>()  <span class="cm"># OneCycle steps every batch</span>
+    <span class="kw">if not</span> <span class="fn">isinstance</span>(scheduler, optim.lr_scheduler.<span class="cls">OneCycleLR</span>):
+        scheduler.<span class="fn">step</span>()      <span class="cm"># others step every epoch</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S6: DOMAIN & TASK MATRIX ══════ -->
+<div class="section-block open" id="s6">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">06</div>
+      <div><div class="section-title">Domain Similarity &amp; Task Types — What Changes Your Approach</div>
+        <div class="section-sub">Medical imaging, satellite data, multi-label tasks, regression heads — how to adapt transfer learning to your specific problem</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">How Domain Similarity Affects Everything</h2>
+  <p>The further your target domain is from the ImageNet training distribution (natural RGB photos of everyday objects, animals, and scenes), the more aggressively you need to adapt the backbone — and the more cautious you need to be about learning rate. Here is a practical ranking of common domains from closest to furthest from ImageNet, along with the recommended adaptation strategy for each:</p>
+
+  <table class="tbl">
+    <tbody><tr>
+      <th>Domain</th><th>Similarity to ImageNet</th><th>Strategy</th><th>Typical LR (backbone)</th><th>Real Example</th>
+    </tr>
+    <tr>
+      <td><strong style="color:#34d399">Natural photos (cars, animals, food)</strong></td>
+      <td>Very high</td>
+      <td>Freeze all → train head; optionally fine-tune layer4</td>
+      <td>0 or 1e-5</td>
+      <td>Stanford Dogs, Food-101</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#38bdf8">Art / drawings / cartoons</strong></td>
+      <td>Moderate</td>
+      <td>Freeze early layers, fine-tune layer3+4</td>
+      <td>1e-5 → 1e-4</td>
+      <td>WikiArt style classification</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#818cf8">Medical endoscopy / dermoscopy</strong></td>
+      <td>Moderate–low</td>
+      <td>Fine-tune layer2–4, carefully; head from scratch</td>
+      <td>1e-5 → 1e-4</td>
+      <td>ISIC skin lesion challenge</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#fb923c">Chest X-rays / CT scans</strong></td>
+      <td>Low</td>
+      <td>Progressive unfreeze; adapt all layers slowly</td>
+      <td>1e-5</td>
+      <td>CheXNet, NIH chest dataset</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#fbbf24">Satellite / aerial imagery</strong></td>
+      <td>Low</td>
+      <td>Progressive unfreeze; possibly re-init later layers</td>
+      <td>1e-5</td>
+      <td>EuroSAT, BigEarth, DOTA</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Microscopy / histopathology slides</strong></td>
+      <td>Very low</td>
+      <td>Carefully fine-tune full network; consider domain-specific pretraining</td>
+      <td>1e-5 or smaller</td>
+      <td>Camelyon16, TCGA</td>
+    </tr>
+  </tbody></table>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ The Grayscale Problem — and How to Fix It</div>
+    <div class="callout-body">Many medical images (X-rays, CT, MRI) are grayscale — single channel — but all pretrained ImageNet models expect 3-channel RGB input. There are two solutions. The simplest is to replicate the single channel three times: <ic>img.repeat(1, 3, 1, 1)</ic>. This wastes some compute but works surprisingly well because the first conv layer quickly learns to average its 3-channel input back to a meaningful representation. The better approach is to change <ic>conv1</ic> to accept 1 input channel, then initialise its weights as the mean of the pretrained 3-channel weights: <ic>new_weight = pretrained_weight.mean(dim=1, keepdim=True)</ic>. This preserves the learned edge detectors while accepting grayscale input.</div>
+  </div>
+
+  <h2 class="sub">Adapting the Head for Different Task Types</h2>
+  <p>The head you attach after the backbone depends entirely on the nature of your target task. This is often overlooked — people default to a simple softmax classifier even when their task is fundamentally different. Here is how to match your head to your task:</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Head designs for different task types</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># ── 1. Multi-class classification (one label per image) ───────────
+# Standard softmax — use nn.CrossEntropyLoss</span>
+head_multiclass = nn.<span class="cls">Linear</span>(<span class="num">2048</span>, num_classes)
+<span class="cm"># Loss: nn.CrossEntropyLoss() — takes raw logits, no softmax needed</span>
+
+
+<span class="cm"># ── 2. Binary classification (yes/no) ─────────────────────────────
+# Single output neuron, sigmoid activation
+# Use nn.BCEWithLogitsLoss (numerically stable)</span>
+head_binary = nn.<span class="cls">Linear</span>(<span class="num">2048</span>, <span class="num">1</span>)
+<span class="cm"># Loss: nn.BCEWithLogitsLoss()
+# Prediction: (output &gt; 0.0).float()  — threshold at 0 (sigmoid=0.5)</span>
+
+
+<span class="cm"># ── 3. Multi-label classification (multiple labels per image) ──────
+# Each class gets its own sigmoid — independent probabilities
+# Use nn.BCEWithLogitsLoss (reduction='mean' over all classes)</span>
+head_multilabel = nn.<span class="cls">Linear</span>(<span class="num">2048</span>, num_classes)
+<span class="cm"># Loss: nn.BCEWithLogitsLoss()
+# Prediction: torch.sigmoid(output) &gt; threshold  (e.g. 0.5)
+# Example: chest X-ray can have pneumonia AND pleural effusion</span>
+
+
+<span class="cm"># ── 4. Regression (predict a continuous value) ────────────────────
+# No activation at output; use MSE or smooth L1 loss</span>
+head_regression = nn.<span class="cls">Sequential</span>(
+    nn.<span class="cls">Linear</span>(<span class="num">2048</span>, <span class="num">256</span>),
+    nn.<span class="cls">ReLU</span>(),
+    nn.<span class="cls">Linear</span>(<span class="num">256</span>, <span class="num">1</span>)   <span class="cm"># or more outputs for multi-output regression</span>
+)
+<span class="cm"># Loss: nn.MSELoss() or nn.SmoothL1Loss()
+# Example: predict patient age from X-ray, crowd count from photo</span>
+
+
+<span class="cm"># ── 5. Ordinal classification (severity 0→4) ──────────────────────
+# Treat as regression OR use CORN (Conditional Ordinal Regression Net)</span>
+head_ordinal = nn.<span class="cls">Linear</span>(<span class="num">2048</span>, num_classes - <span class="num">1</span>)  <span class="cm"># K-1 thresholds</span>
+<span class="cm"># Example: disease severity: none, mild, moderate, severe, critical</span>
+
+
+<span class="cm"># ── How to swap heads on any torchvision model ────────────────────</span>
+<span class="kw">from</span> torchvision <span class="kw">import</span> models
+
+<span class="kw">def</span> <span class="fn">replace_head</span>(model_name, num_outputs, task=<span class="st">'multiclass'</span>):
+    <span class="kw">if</span> model_name == <span class="st">'resnet50'</span>:
+        m = models.<span class="fn">resnet50</span>(weights=<span class="st">'IMAGENET1K_V2'</span>)
+        in_feat = m.fc.in_features          <span class="cm"># 2048</span>
+        m.fc = nn.<span class="cls">Linear</span>(in_feat, num_outputs)
+
+    <span class="kw">elif</span> model_name == <span class="st">'vgg16'</span>:
+        m = models.<span class="fn">vgg16</span>(weights=<span class="st">'IMAGENET1K_V1'</span>)
+        in_feat = m.classifier[<span class="num">6</span>].in_features   <span class="cm"># 4096</span>
+        m.classifier[<span class="num">6</span>] = nn.<span class="cls">Linear</span>(in_feat, num_outputs)
+
+    <span class="kw">elif</span> model_name == <span class="st">'densenet121'</span>:
+        m = models.<span class="fn">densenet121</span>(weights=<span class="st">'IMAGENET1K_V1'</span>)
+        in_feat = m.classifier.in_features     <span class="cm"># 1024</span>
+        m.classifier = nn.<span class="cls">Linear</span>(in_feat, num_outputs)
+
+    <span class="kw">elif</span> model_name == <span class="st">'efficientnet_b0'</span>:
+        m = models.<span class="fn">efficientnet_b0</span>(weights=<span class="st">'IMAGENET1K_V1'</span>)
+        in_feat = m.classifier[<span class="num">1</span>].in_features  <span class="cm"># 1280</span>
+        m.classifier[<span class="num">1</span>] = nn.<span class="cls">Linear</span>(in_feat, num_outputs)
+
+    <span class="kw">return</span> m</code></pre></div>
+  </div>
+
+  <h2 class="sub">Data Augmentation — Especially Important for Small Datasets</h2>
+  <p>When your dataset is small, aggressive data augmentation becomes essential. It artificially multiplies your effective dataset size and prevents the network from memorising specific training images. For natural image tasks, the standard augmentation pipeline is random horizontal flip, random crop, colour jitter, and random rotation. For medical imaging, you need to be more careful — horizontal flipping of a heart X-ray might produce anatomically incorrect images, and over-rotation of a skin lesion image might mislead the network about shape features that are diagnostically important.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Augmentation pipelines for transfer learning</span></div>
+    <div class="code-body"><pre><code><span class="kw">from</span> torchvision <span class="kw">import</span> transforms
+
+<span class="cm"># ── Standard natural image pipeline (ImageNet statistics) ─────────</span>
+train_transforms = transforms.<span class="cls">Compose</span>([
+    transforms.<span class="cls">RandomResizedCrop</span>(<span class="num">224</span>, scale=(<span class="num">0.7</span>, <span class="num">1.0</span>)),  <span class="cm"># crop + resize</span>
+    transforms.<span class="cls">RandomHorizontalFlip</span>(),
+    transforms.<span class="cls">ColorJitter</span>(brightness=<span class="num">0.3</span>, contrast=<span class="num">0.3</span>,
+                             saturation=<span class="num">0.3</span>, hue=<span class="num">0.1</span>),
+    transforms.<span class="cls">RandomRotation</span>(<span class="num">15</span>),
+    transforms.<span class="cls">ToTensor</span>(),
+    <span class="cm"># CRITICAL: use ImageNet mean/std — backbone was trained on these!</span>
+    transforms.<span class="cls">Normalize</span>(mean=[<span class="num">0.485</span>, <span class="num">0.456</span>, <span class="num">0.406</span>],
+                          std=[<span class="num">0.229</span>, <span class="num">0.224</span>, <span class="num">0.225</span>])
+])
+
+<span class="cm"># Validation / test: only resize + centre crop + normalise (no random aug)</span>
+val_transforms = transforms.<span class="cls">Compose</span>([
+    transforms.<span class="cls">Resize</span>(<span class="num">256</span>),
+    transforms.<span class="cls">CenterCrop</span>(<span class="num">224</span>),
+    transforms.<span class="cls">ToTensor</span>(),
+    transforms.<span class="cls">Normalize</span>(mean=[<span class="num">0.485</span>, <span class="num">0.456</span>, <span class="num">0.406</span>],
+                          std=[<span class="num">0.229</span>, <span class="num">0.224</span>, <span class="num">0.225</span>])
+])
+
+<span class="cm"># ── Medical imaging — conservative augmentation ───────────────────</span>
+medical_transforms = transforms.<span class="cls">Compose</span>([
+    transforms.<span class="cls">Resize</span>((<span class="num">224</span>, <span class="num">224</span>)),
+    transforms.<span class="cls">RandomHorizontalFlip</span>(),   <span class="cm"># OK for skin/retina, NOT for chest X-ray</span>
+    transforms.<span class="cls">RandomAffine</span>(degrees=<span class="num">10</span>, translate=(<span class="num">0.05</span>, <span class="num">0.05</span>)),
+    transforms.<span class="cls">ToTensor</span>(),
+    transforms.<span class="cls">Normalize</span>(mean=[<span class="num">0.485</span>, <span class="num">0.456</span>, <span class="num">0.406</span>],   <span class="cm"># still use ImageNet stats!</span>
+                          std=[<span class="num">0.229</span>, <span class="num">0.224</span>, <span class="num">0.225</span>])
+])</code></pre></div>
+  </div>
+
+  <div class="callout important">
+    <div class="callout-title">🔑 Always Use ImageNet Mean/Std for Normalisation</div>
+    <div class="callout-body">This is the single most commonly forgotten detail. A pretrained backbone expects its input to be normalised with the <em>same statistics it was trained on</em>: ImageNet mean <ic>[0.485, 0.456, 0.406]</ic> and std <ic>[0.229, 0.224, 0.225]</ic>. If you normalise with different statistics (e.g. your dataset's own mean/std), the values arriving at the first conv layer will be in a completely different numerical range than the network expects, and its pretrained weights will produce meaningless activations. Always use ImageNet statistics at inference, regardless of your domain.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S7: FULL PYTORCH WORKFLOW ══════ -->
+<div class="section-block open" id="s7">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">07</div>
+      <div><div class="section-title">Complete PyTorch Fine-Tuning Workflow</div>
+        <div class="section-sub">End-to-end code: data loading → model setup → two-phase training → evaluation → saving — production-ready template</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>This section gives you a complete, runnable fine-tuning workflow that puts together every concept from the previous sections. Read through it carefully — every comment explains the <em>why</em>, not just the <em>what</em>. This is the template you can adapt for almost any image classification task.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Complete Fine-Tuning Template (Part 1: Setup &amp; Data)</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+<span class="kw">from</span> torchvision <span class="kw">import</span> models, transforms, datasets
+<span class="kw">from</span> torch.utils.data <span class="kw">import</span> DataLoader, random_split
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+
+<span class="cm"># ── Config ─────────────────────────────────────────────────────────</span>
+DATA_DIR   = Path(<span class="st">'./data/my_dataset'</span>)  <span class="cm"># ImageFolder structure</span>
+NUM_CLASSES = <span class="num">5</span>
+BATCH_SIZE  = <span class="num">32</span>
+PHASE1_EPOCHS = <span class="num">5</span>   <span class="cm"># head-only training</span>
+PHASE2_EPOCHS = <span class="num">15</span>  <span class="cm"># backbone + head fine-tuning</span>
+DEVICE = torch.<span class="fn">device</span>(<span class="st">'cuda'</span> <span class="kw">if</span> torch.cuda.<span class="fn">is_available</span>() <span class="kw">else</span> <span class="st">'cpu'</span>)
+
+<span class="cm"># ── Transforms ─────────────────────────────────────────────────────
+# MUST use ImageNet mean/std — these are the values the pretrained
+# backbone was trained with. Wrong normalisation = garbage features.</span>
+IMAGENET_MEAN = [<span class="num">0.485</span>, <span class="num">0.456</span>, <span class="num">0.406</span>]
+IMAGENET_STD  = [<span class="num">0.229</span>, <span class="num">0.224</span>, <span class="num">0.225</span>]
+
+train_tf = transforms.<span class="cls">Compose</span>([
+    transforms.<span class="cls">RandomResizedCrop</span>(<span class="num">224</span>),
+    transforms.<span class="cls">RandomHorizontalFlip</span>(),
+    transforms.<span class="cls">ColorJitter</span>(<span class="num">0.2</span>, <span class="num">0.2</span>, <span class="num">0.2</span>),
+    transforms.<span class="cls">ToTensor</span>(),
+    transforms.<span class="cls">Normalize</span>(IMAGENET_MEAN, IMAGENET_STD),
+])
+val_tf = transforms.<span class="cls">Compose</span>([
+    transforms.<span class="cls">Resize</span>(<span class="num">256</span>), transforms.<span class="cls">CenterCrop</span>(<span class="num">224</span>),
+    transforms.<span class="cls">ToTensor</span>(),
+    transforms.<span class="cls">Normalize</span>(IMAGENET_MEAN, IMAGENET_STD),
+])
+
+<span class="cm"># ── Data loading ───────────────────────────────────────────────────
+# ImageFolder expects: data/train/class_a/, data/train/class_b/ etc.</span>
+full_ds   = datasets.<span class="cls">ImageFolder</span>(DATA_DIR / <span class="st">'train'</span>, transform=train_tf)
+val_ds    = datasets.<span class="cls">ImageFolder</span>(DATA_DIR / <span class="st">'val'</span>,   transform=val_tf)
+train_dl  = <span class="cls">DataLoader</span>(full_ds, batch_size=BATCH_SIZE,
+                         shuffle=<span class="kw">True</span>, num_workers=<span class="num">4</span>, pin_memory=<span class="kw">True</span>)
+val_dl    = <span class="cls">DataLoader</span>(val_ds,   batch_size=BATCH_SIZE,
+                         shuffle=<span class="kw">False</span>, num_workers=<span class="num">4</span>, pin_memory=<span class="kw">True</span>)
+<span class="fn">print</span>(<span class="st">f"Train: {len(full_ds)} images | Val: {len(val_ds)} images"</span>)
+<span class="fn">print</span>(<span class="st">f"Classes: {full_ds.classes}"</span>)</code></pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Complete Fine-Tuning Template (Part 2: Model Setup)</span></div>
+    <div class="code-body"><pre><code><span class="cm"># ── Build model ────────────────────────────────────────────────────</span>
+model = models.<span class="fn">resnet50</span>(weights=<span class="st">'IMAGENET1K_V2'</span>)  <span class="cm"># V2 = better accuracy</span>
+
+<span class="cm"># Replace head with our N-class head + dropout for regularisation</span>
+model.fc = nn.<span class="cls">Sequential</span>(
+    nn.<span class="cls">Dropout</span>(<span class="num">0.4</span>),
+    nn.<span class="cls">Linear</span>(model.fc.in_features, NUM_CLASSES)
+)
+model = model.<span class="fn">to</span>(DEVICE)
+
+<span class="cm"># ── Freeze entire backbone, leave only head trainable ──────────────</span>
+<span class="kw">def</span> <span class="fn">set_backbone_trainable</span>(model, trainable: <span class="fn">bool</span>):
+    <span class="st">"""Freeze or unfreeze all layers except the FC head.
+    Also manages BatchNorm train/eval mode correctly."""</span>
+    <span class="kw">for</span> name, module <span class="kw">in</span> model.<span class="fn">named_modules</span>():
+        <span class="kw">if</span> <span class="st">'fc'</span> <span class="kw">in</span> name:
+            <span class="kw">continue</span>
+        <span class="kw">for</span> p <span class="kw">in</span> module.<span class="fn">parameters</span>(recurse=<span class="kw">False</span>):
+            p.requires_grad = trainable
+        <span class="kw">if</span> <span class="fn">isinstance</span>(module, nn.<span class="cls">BatchNorm2d</span>):
+            <span class="cm"># BN: eval mode when frozen (preserve ImageNet stats)</span>
+            <span class="cm">#     train mode when unfrozen (adapt stats to new data)</span>
+            module.<span class="fn">train</span>(trainable)
+
+<span class="fn">set_backbone_trainable</span>(model, trainable=<span class="kw">False</span>)  <span class="cm"># start frozen</span>
+
+<span class="cm"># Count trainable params to verify</span>
+trainable_p = <span class="fn">sum</span>(p.numel() <span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>() <span class="kw">if</span> p.requires_grad)
+total_p     = <span class="fn">sum</span>(p.numel() <span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>())
+<span class="fn">print</span>(<span class="st">f"Phase 1: training {trainable_p:,} / {total_p:,} params"</span>)</code></pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Complete Fine-Tuning Template (Part 3: Training Loop)</span></div>
+    <div class="code-body"><pre><code><span class="cm"># ── Training utilities ─────────────────────────────────────────────</span>
+criterion = nn.<span class="cls">CrossEntropyLoss</span>(label_smoothing=<span class="num">0.1</span>)
+<span class="cm"># label_smoothing=0.1 prevents overconfident predictions — helps generalisation</span>
+
+<span class="kw">def</span> <span class="fn">train_epoch</span>(model, loader, optimizer, scheduler=<span class="kw">None</span>):
+    model.<span class="fn">train</span>()
+    <span class="cm"># Important: if backbone is frozen, ensure BN stays in eval mode</span>
+    <span class="kw">for</span> m <span class="kw">in</span> model.<span class="fn">modules</span>():
+        <span class="kw">if</span> <span class="fn">isinstance</span>(m, nn.<span class="cls">BatchNorm2d</span>) <span class="kw">and not</span> <span class="fn">any</span>(
+                p.requires_grad <span class="kw">for</span> p <span class="kw">in</span> m.<span class="fn">parameters</span>()):
+            m.<span class="fn">eval</span>()
+
+    total_loss, correct, total = <span class="num">0.0</span>, <span class="num">0</span>, <span class="num">0</span>
+    <span class="kw">for</span> imgs, labels <span class="kw">in</span> loader:
+        imgs, labels = imgs.<span class="fn">to</span>(DEVICE), labels.<span class="fn">to</span>(DEVICE)
+        optimizer.<span class="fn">zero_grad</span>(set_to_none=<span class="kw">True</span>)  <span class="cm"># slightly faster than zero_grad()</span>
+        logits = <span class="fn">model</span>(imgs)
+        loss = <span class="fn">criterion</span>(logits, labels)
+        loss.<span class="fn">backward</span>()
+        <span class="cm"># Gradient clipping — prevents exploding gradients during fine-tuning</span>
+        nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), max_norm=<span class="num">1.0</span>)
+        optimizer.<span class="fn">step</span>()
+        <span class="kw">if</span> scheduler <span class="kw">is not None</span>: scheduler.<span class="fn">step</span>()
+        total_loss += loss.<span class="fn">item</span>() * imgs.<span class="fn">size</span>(<span class="num">0</span>)
+        correct += (logits.<span class="fn">argmax</span>(<span class="num">1</span>) == labels).<span class="fn">sum</span>().<span class="fn">item</span>()
+        total += imgs.<span class="fn">size</span>(<span class="num">0</span>)
+    <span class="kw">return</span> total_loss / total, correct / total
+
+<span class="kw">def</span> <span class="fn">eval_epoch</span>(model, loader):
+    model.<span class="fn">eval</span>()
+    total_loss, correct, total = <span class="num">0.0</span>, <span class="num">0</span>, <span class="num">0</span>
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        <span class="kw">for</span> imgs, labels <span class="kw">in</span> loader:
+            imgs, labels = imgs.<span class="fn">to</span>(DEVICE), labels.<span class="fn">to</span>(DEVICE)
+            logits = <span class="fn">model</span>(imgs)
+            total_loss += <span class="fn">criterion</span>(logits, labels).<span class="fn">item</span>() * imgs.<span class="fn">size</span>(<span class="num">0</span>)
+            correct += (logits.<span class="fn">argmax</span>(<span class="num">1</span>) == labels).<span class="fn">sum</span>().<span class="fn">item</span>()
+            total += imgs.<span class="fn">size</span>(<span class="num">0</span>)
+    <span class="kw">return</span> total_loss / total, correct / total
+
+<span class="cm"># ── Phase 1: Train head only (backbone frozen) ─────────────────────</span>
+<span class="fn">print</span>(<span class="st">"\n=== PHASE 1: HEAD ONLY ==="</span>)
+optimizer_p1 = optim.<span class="cls">Adam</span>(
+    <span class="fn">filter</span>(<span class="kw">lambda</span> p: p.requires_grad, model.<span class="fn">parameters</span>()),
+    lr=<span class="num">1e-3</span>
+)
+best_val_acc = <span class="num">0.0</span>
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(PHASE1_EPOCHS):
+    tr_loss, tr_acc = <span class="fn">train_epoch</span>(model, train_dl, optimizer_p1)
+    vl_loss, vl_acc = <span class="fn">eval_epoch</span>(model, val_dl)
+    <span class="fn">print</span>(<span class="st">f"P1 Ep {epoch+1:02d} | train {tr_acc:.3f} | val {vl_acc:.3f}"</span>)
+
+<span class="cm"># ── Phase 2: Unfreeze backbone, fine-tune with discriminative LRs ──</span>
+<span class="fn">print</span>(<span class="st">"\n=== PHASE 2: FULL FINE-TUNING ==="</span>)
+<span class="fn">set_backbone_trainable</span>(model, trainable=<span class="kw">True</span>)
+
+<span class="cm"># Different LR for each layer group — discriminative learning rates</span>
+param_groups = [
+    {<span class="st">'params'</span>: [*model.layer1.<span class="fn">parameters</span>(), *model.layer2.<span class="fn">parameters</span>()],
+     <span class="st">'lr'</span>: <span class="num">1e-5</span>},   <span class="cm"># early layers — very small updates</span>
+    {<span class="st">'params'</span>: model.layer3.<span class="fn">parameters</span>(), <span class="st">'lr'</span>: <span class="num">5e-5</span>},
+    {<span class="st">'params'</span>: model.layer4.<span class="fn">parameters</span>(), <span class="st">'lr'</span>: <span class="num">1e-4</span>},
+    {<span class="st">'params'</span>: model.fc.<span class="fn">parameters</span>(),     <span class="st">'lr'</span>: <span class="num">1e-3</span>},   <span class="cm"># head — largest LR</span>
+]
+optimizer_p2 = optim.<span class="cls">AdamW</span>(param_groups, weight_decay=<span class="num">1e-4</span>)
+scheduler_p2 = optim.lr_scheduler.<span class="cls">CosineAnnealingLR</span>(
+    optimizer_p2, T_max=PHASE2_EPOCHS, eta_min=<span class="num">1e-7</span>
+)
+
+best_ckpt_path = Path(<span class="st">'best_model.pth'</span>)
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(PHASE2_EPOCHS):
+    tr_loss, tr_acc = <span class="fn">train_epoch</span>(model, train_dl, optimizer_p2)
+    vl_loss, vl_acc = <span class="fn">eval_epoch</span>(model, val_dl)
+    scheduler_p2.<span class="fn">step</span>()
+
+    <span class="cm"># Save best checkpoint — critical! Never return the final epoch model.</span>
+    <span class="kw">if</span> vl_acc &gt; best_val_acc:
+        best_val_acc = vl_acc
+        torch.<span class="fn">save</span>({
+            <span class="st">'epoch'</span>: epoch,
+            <span class="st">'model_state_dict'</span>: model.<span class="fn">state_dict</span>(),
+            <span class="st">'optimizer_state_dict'</span>: optimizer_p2.<span class="fn">state_dict</span>(),
+            <span class="st">'val_acc'</span>: best_val_acc,
+        }, best_ckpt_path)
+
+    curr_lr = optimizer_p2.<span class="fn">param_groups</span>[-<span class="num">1</span>][<span class="st">'lr'</span>]   <span class="cm"># head LR</span>
+    <span class="fn">print</span>(<span class="st">f"P2 Ep {epoch+1:02d} | tr {tr_acc:.3f} | val {vl_acc:.3f} "
+          f"| lr={curr_lr:.2e} {'★' if vl_acc == best_val_acc else ''}"</span>)
+
+<span class="fn">print</span>(<span class="st">f"\nBest val accuracy: {best_val_acc:.4f}"</span>)</code></pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Complete Fine-Tuning Template (Part 4: Load &amp; Inference)</span></div>
+    <div class="code-body"><pre><code><span class="cm"># ── Load best checkpoint for inference ─────────────────────────────</span>
+checkpoint = torch.<span class="fn">load</span>(best_ckpt_path, map_location=DEVICE)
+model.<span class="fn">load_state_dict</span>(checkpoint[<span class="st">'model_state_dict'</span>])
+model.<span class="fn">eval</span>()
+<span class="fn">print</span>(<span class="st">f"Loaded checkpoint from epoch {checkpoint['epoch']+1}, "
+      f"val_acc = {checkpoint['val_acc']:.4f}"</span>)
+
+<span class="cm"># ── Inference on a single image ────────────────────────────────────</span>
+<span class="kw">from</span> PIL <span class="kw">import</span> Image
+
+<span class="kw">def</span> <span class="fn">predict</span>(image_path, model, class_names):
+    img = Image.<span class="fn">open</span>(image_path).<span class="fn">convert</span>(<span class="st">'RGB'</span>)
+    tensor = val_tf(img).<span class="fn">unsqueeze</span>(<span class="num">0</span>).<span class="fn">to</span>(DEVICE)  <span class="cm"># (1, 3, 224, 224)</span>
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+        logits = <span class="fn">model</span>(tensor)
+        probs  = torch.<span class="fn">softmax</span>(logits, dim=<span class="num">1</span>)[<span class="num">0</span>]
+    top_prob, top_idx = probs.<span class="fn">topk</span>(<span class="num">3</span>)
+    <span class="kw">for</span> p, i <span class="kw">in</span> <span class="fn">zip</span>(top_prob, top_idx):
+        <span class="fn">print</span>(<span class="st">f"  {class_names[i]:20s}  {p.item()*100:6.2f}%"</span>)
+
+<span class="fn">predict</span>(<span class="st">'test_image.jpg'</span>, model, full_ds.classes)</code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S8: COMMON MISTAKES ══════ -->
+<div class="section-block open" id="s8">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(248,113,113,.15);color:var(--red)">08</div>
+      <div><div class="section-title">Common Mistakes and How to Diagnose Them</div>
+        <div class="section-sub">The errors that trip up 90% of students doing transfer learning for the first time</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Transfer learning looks simple — load pretrained model, swap head, train — but there are many subtle ways to get it wrong. Each mistake below has a distinct symptom that helps you diagnose it quickly.</p>
+
+  <table class="tbl">
+    <tbody><tr>
+      <th style="width:28%">Mistake</th>
+      <th style="width:30%">What Goes Wrong</th>
+      <th style="width:20%">Symptom</th>
+      <th style="width:22%">Fix</th>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Wrong normalisation statistics</strong></td>
+      <td>Using your dataset's mean/std instead of ImageNet's (0.485, 0.456, 0.406) / (0.229, 0.224, 0.225). The first layer receives values outside the range it expects.</td>
+      <td>Training loss starts very high and barely decreases. Network seems unable to learn anything despite good architecture.</td>
+      <td>Always use ImageNet mean and std for any model pretrained on ImageNet, regardless of your target domain.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Forgetting model.eval() at test time</strong></td>
+      <td>BatchNorm uses batch statistics instead of running statistics. Dropout randomly zeros activations. Results are non-deterministic and generally worse.</td>
+      <td>Test accuracy is inconsistent — varies between runs on the same data. Training accuracy looks great but val is poor.</td>
+      <td>Always call <ic>model.eval()</ic> before any validation/test loop and <ic>model.train()</ic> at the start of each training epoch.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Same LR for backbone and head</strong></td>
+      <td>Large LR on backbone → catastrophic forgetting. Small LR on head → head learns too slowly, overall training appears stuck.</td>
+      <td>Val accuracy plateaus early and refuses to improve, or loss drops then spikes back up mid-training.</td>
+      <td>Use discriminative LRs: head at ~1e-3, backbone at 1e-5 to 1e-4, with lower rates for earlier layers.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Not freezing BatchNorm in frozen layers</strong></td>
+      <td>Running mean/variance statistics update from your small dataset, corrupting the ImageNet statistics. Features become unnormalised and noisy.</td>
+      <td>Training loss oscillates wildly. Features degrade over epochs even though backbone is "frozen".</td>
+      <td>When freezing a layer, explicitly call <ic>module.eval()</ic> on all its BatchNorm sublayers. Re-enable <ic>module.train()</ic> when you unfreeze.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Skipping Phase 1 (head-only) training</strong></td>
+      <td>Random head gradients corrupt backbone weights on the very first batch, before the head has any useful signal.</td>
+      <td>Training loss spikes to a huge value in epoch 1 then slowly recovers — but backbone has already been damaged.</td>
+      <td>Always freeze backbone, train head for 3–10 epochs until it converges reasonably, then unfreeze backbone.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Class imbalance ignored</strong></td>
+      <td>With small datasets, extreme class imbalance (e.g. 900 normal, 100 disease) makes the model predict majority class almost always.</td>
+      <td>Training accuracy looks high (e.g. 90%) but on inspection the model never predicts the minority class. F1 score is terrible.</td>
+      <td>Use <ic>WeightedRandomSampler</ic> or <ic>pos_weight</ic> in the loss function. Report per-class accuracy and F1, not just overall accuracy.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Returning final epoch model instead of best</strong></td>
+      <td>The model at the final epoch often has overfit compared to its best validation performance earlier in training.</td>
+      <td>Reported val accuracy is lower than what you saw in the training log at intermediate epochs.</td>
+      <td>Save a checkpoint every time val loss improves. Load the best checkpoint for evaluation, never the final epoch's weights.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Augmenting validation data</strong></td>
+      <td>Applying random crops/flips to validation images means you evaluate on different crops each time, making metrics noisy and misleading.</td>
+      <td>Validation accuracy fluctuates significantly between epochs even when the model is not changing much.</td>
+      <td>Validation transform should be deterministic: Resize → CenterCrop → ToTensor → Normalize. Never RandomCrop or RandomFlip on validation.</td>
+    </tr>
+  </tbody></table>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ The Leakage Trap — A Subtle Mistake That Looks Like Success</div>
+    <div class="callout-body">Data leakage in transfer learning occurs when test set images appear (perhaps as augmented versions, or with different filenames) in the training set. With pretrained models, this is especially dangerous because the model has extremely good memory — it can recognise near-identical images even after fine-tuning. If your dataset came from scraping the web, there is a real risk that some of your "test" images were included in ImageNet itself. Your model was pretrained on those images, so it effectively "knows" the answer without learning anything about your task. Always check that your train/val/test splits are truly disjoint, and verify that your dataset is not a subset of ImageNet.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S9: WHEN NOT TO TRANSFER ══════ -->
+<div class="section-block open" id="s9">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,191,36,.15);color:var(--yellow)">09</div>
+      <div><div class="section-title">When NOT to Use Transfer Learning — and What to Do Instead</div>
+        <div class="section-sub">The scenarios where training from scratch or domain-specific pretraining beats ImageNet weights</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Transfer learning from ImageNet is so powerful and convenient that it is easy to assume it is always the right choice. It is not. There are genuine scenarios where it performs poorly, wastes effort, or actively hurts results compared to alternatives. Recognising these cases is part of being a good practitioner.</p>
+
+  <h2 class="sub">When ImageNet Pretraining Helps Less Than You Expect</h2>
+  <p>The most common case is a domain that is genuinely, fundamentally different from natural photos. Consider a satellite multispectral image with 13 channels (Sentinel-2 data), where channels include near-infrared, short-wave infrared, and red-edge bands that have no analogue in RGB photography. A ResNet-50's first conv layer expects exactly 3 channels and has learned Gabor-like edge detectors that are specifically tuned to human visual perception. Those edge detectors are not directly meaningful in near-infrared wavelengths. You can still transfer (by averaging the 3-channel weights to get 1-channel weights and then concatenating them 13 times), but the benefit is much reduced.</p>
+  <p>Similarly, consider time-series or spectral data that has been rendered as images (spectrograms, ECG plots) just to use a pretrained CNN. The low-level visual statistics of a spectrogram (how pixels relate to nearby pixels) are completely different from those of a natural photograph. The pretrained edge detectors may be irrelevant or misleading, and a model specifically designed for the signal domain — or a 1D CNN trained from scratch — might outperform a fine-tuned ResNet.</p>
+
+  <h2 class="sub">When You Have Massive Domain-Specific Data</h2>
+  <p>If you have hundreds of thousands of labelled domain-specific images, training from scratch — or using a domain-specific pretrained model — can match or surpass ImageNet transfer. The medical imaging community has demonstrated this clearly: models pretrained on large medical image datasets (CheXpert: 224,000 chest X-rays; RadImageNet: 1.35 million radiology images) outperform ImageNet-pretrained models on medical imaging tasks, sometimes substantially. If a domain-specific pretrained backbone is available for your field, use it instead of ImageNet weights.</p>
+
+  <h2 class="sub">The Decision Framework</h2>
+
+  <div class="viz">
+    <div class="viz-title">Decision flowchart — which approach to choose for your specific situation</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 680 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="td" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"></path></marker>
+        <marker id="tdg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"></path></marker>
+        <marker id="tdo" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#fb923c"></path></marker>
+      </defs>
+
+      <!-- Start -->
+      <rect x="230" y="8" width="220" height="38" rx="8" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="2"></rect>
+      <text x="340" y="32" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">Is your input visual (images)?</text>
+      <line x1="340" y1="46" x2="340" y2="64" stroke="#475569" stroke-width="1.3" marker-end="url(#td)"></line>
+
+      <!-- Is it image-like? -->
+      <rect x="230" y="66" width="220" height="38" rx="8" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"></rect>
+      <text x="340" y="84" text-anchor="middle" font-family="Sora" font-size="10" fill="#818cf8">Is domain close to natural photos?</text>
+      <text x="340" y="97" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">(RGB, similar textures, objects)</text>
+      <!-- Yes branch (left) -->
+      <line x1="230" y1="85" x2="180" y2="85" stroke="#34d399" stroke-width="1.3" marker-end="url(#tdg)"></line>
+      <text x="205" y="80" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">Yes</text>
+      <line x1="180" y1="85" x2="180" y2="154" stroke="#34d399" stroke-width="1.3" marker-end="url(#tdg)"></line>
+      <!-- No branch (right) -->
+      <line x1="450" y1="85" x2="510" y2="85" stroke="#fb923c" stroke-width="1.3" marker-end="url(#tdo)"></line>
+      <text x="480" y="80" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c">No/Unsure</text>
+      <line x1="510" y1="85" x2="510" y2="154" stroke="#fb923c" stroke-width="1.3" marker-end="url(#tdo)"></line>
+
+      <!-- Left path: Yes visual similar -->
+      <rect x="90" y="156" width="180" height="38" rx="7" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.5"></rect>
+      <text x="180" y="174" text-anchor="middle" font-family="Sora" font-size="10" fill="#34d399">Domain-specific</text>
+      <text x="180" y="186" text-anchor="middle" font-family="Sora" font-size="10" fill="#34d399">pretrained model exists?</text>
+      <!-- Yes subpath -->
+      <line x1="90" y1="175" x2="30" y2="175" stroke="#34d399" stroke-width="1.3"></line>
+      <text x="60" y="170" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">Yes</text>
+      <line x1="30" y1="175" x2="30" y2="250" stroke="#34d399" stroke-width="1.3" marker-end="url(#tdg)"></line>
+      <rect x="2" y="252" width="140" height="46" rx="7" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"></rect>
+      <text x="72" y="270" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">Use domain-specific</text>
+      <text x="72" y="283" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">pretrained backbone</text>
+      <text x="72" y="296" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">(e.g. RadImageNet)</text>
+      <!-- No subpath -->
+      <line x1="270" y1="175" x2="340" y2="175" stroke="#34d399" stroke-width="1.3"></line>
+      <text x="305" y="170" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">No</text>
+      <line x1="340" y1="175" x2="340" y2="215" stroke="#34d399" stroke-width="1.3" marker-end="url(#tdg)"></line>
+
+      <!-- How much data? -->
+      <rect x="230" y="217" width="220" height="38" rx="7" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"></rect>
+      <text x="340" y="233" text-anchor="middle" font-family="Sora" font-size="10" fill="#38bdf8">How much labelled data</text>
+      <text x="340" y="246" text-anchor="middle" font-family="Sora" font-size="10" fill="#38bdf8">do you have?</text>
+      <!-- Small data -->
+      <line x1="230" y1="236" x2="160" y2="236" stroke="#38bdf8" stroke-width="1.3"></line>
+      <text x="195" y="231" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">&lt;10K</text>
+      <line x1="160" y1="236" x2="160" y2="300" stroke="#38bdf8" stroke-width="1.3" marker-end="url(#td)"></line>
+      <rect x="90" y="302" width="145" height="46" rx="7" fill="rgba(56,189,248,.2)" stroke="#38bdf8" stroke-width="2"></rect>
+      <text x="162" y="320" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">ImageNet pretrain</text>
+      <text x="162" y="333" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">Freeze backbone</text>
+      <text x="162" y="346" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Train head only</text>
+      <!-- Large data -->
+      <line x1="450" y1="236" x2="520" y2="236" stroke="#38bdf8" stroke-width="1.3"></line>
+      <text x="485" y="231" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">&gt;50K</text>
+      <line x1="520" y1="236" x2="520" y2="340
+    " stroke="#38bdf8" stroke-width="1.3" marker-end="url(#td)"></line>
+      <rect x="458" y="340" width="130" height="46" rx="7" fill="rgba(244,114,182,.2)" stroke="#f472b6" stroke-width="2"></rect>
+      <text x="523" y="360" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f472b6">ImageNet pretrain</text>
+      <text x="523" y="370" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f472b6">Full fine-tuning</text>
+      <text x="523" y="380" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Discriminative LR</text>
+      <!-- Mid data (arrow down) -->
+      <line x1="340" y1="255" x2="340" y2="300" stroke="#38bdf8" stroke-width="1.3" marker-end="url(#td)"></line>
+      <text x="357" y="275" font-family="Sora" font-size="9" fill="#38bdf8">10–50K</text>
+      <rect x="270" y="302" width="140" height="46" rx="7" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="2"></rect>
+      <text x="340" y="320" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">ImageNet pretrain</text>
+      <text x="340" y="333" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">Partial fine-tune</text>
+      <text x="340" y="346" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Unfreeze last 1–2 stages</text>
+
+      <!-- Right path: non-visual or very different -->
+      <rect x="428" y="156" width="160" height="50" rx="7" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.5"></rect>
+      <text x="508" y="174" text-anchor="middle" font-family="Sora" font-size="10" fill="#fb923c">Non-visual / very</text>
+      <text x="508" y="187" text-anchor="middle" font-family="Sora" font-size="10" fill="#fb923c">different domain</text>
+      <text x="508" y="200" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">e.g. spectrograms, multi-spectral</text>
+      <line x1="508" y1="206" x2="508" y2="252" stroke="#fb923c" stroke-width="1.3" marker-end="url(#tdo)"></line>
+      <rect x="428" y="254" width="160" height="60" rx="7" fill="rgba(251,146,60,.2)" stroke="#fb923c" stroke-width="2"></rect>
+      <text x="508" y="272" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">Consider:</text>
+      <text x="508" y="286" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">1. Train from scratch</text>
+      <text x="508" y="299" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">2. Domain-specific pretrain</text>
+      <text x="508" y="312" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">3. Self-supervised pretrain</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Self-Supervised Pretraining — The Modern Alternative</h2>
+  <p>When you have lots of unlabelled domain-specific data but few labels, a powerful modern approach is self-supervised pretraining (SSL). Methods like SimCLR, BYOL, MoCo, and DINO train a backbone to produce consistent representations for differently augmented versions of the same image, without any labels at all. Once the backbone has been pretrained on your unlabelled domain data, you fine-tune it with your small labelled dataset. This often outperforms ImageNet transfer because the backbone has learned visual representations directly from your domain, even if it learned them without labels.</p>
+  <p>For example, if you have 50,000 unlabelled chest X-rays and 2,000 labelled ones, you would run DINO or SimCLR on all 52,000 images (labels ignored), then fine-tune the backbone on just the 2,000 labelled ones. The backbone will have learned X-ray-specific texture and structure representations that are far more relevant to your task than ImageNet features.</p>
+
+  <h2 class="sub">Summary — The Complete Decision Guide</h2>
+
+  <table class="tbl">
+    <tbody><tr><th>Situation</th><th>Best Approach</th><th>Expected Outcome</th></tr>
+    <tr>
+      <td>Small data (&lt;10K) + similar domain</td>
+      <td>Freeze backbone, train head only. Strong augmentation.</td>
+      <td>Good accuracy, fast training, low overfit risk.</td>
+    </tr>
+    <tr>
+      <td>Small data + different domain</td>
+      <td>Freeze early layers, fine-tune late layers + head. Very small LR on backbone.</td>
+      <td>Reasonable accuracy. Risk of overfitting — monitor val loss closely.</td>
+    </tr>
+    <tr>
+      <td>Medium data (10K–50K) + any domain</td>
+      <td>Two-phase training: head first, then partial or full unfreeze with discriminative LRs.</td>
+      <td>Good to excellent accuracy depending on domain similarity.</td>
+    </tr>
+    <tr>
+      <td>Large data (&gt;50K) + similar domain</td>
+      <td>Full fine-tune with discriminative LRs and cosine decay.</td>
+      <td>Best possible accuracy. State-of-the-art potential.</td>
+    </tr>
+    <tr>
+      <td>Domain-specific pretrained model available</td>
+      <td>Use domain-specific weights instead of ImageNet. Fine-tune as normal.</td>
+      <td>Often better than ImageNet for specialised domains.</td>
+    </tr>
+    <tr>
+      <td>Lots of unlabelled data, few labels</td>
+      <td>Self-supervised pretraining (SimCLR / DINO / BYOL) on unlabelled data, then supervised fine-tune.</td>
+      <td>Often matches or beats ImageNet transfer on domain-specific tasks.</td>
+    </tr>
+    <tr>
+      <td>Non-image data (spectrograms, sensor data)</td>
+      <td>Consider domain-specific architecture (1D CNN, Transformer) trained from scratch or with audio/signal pretraining.</td>
+      <td>ImageNet transfer gives marginal benefit; may hurt if domain is too different.</td>
+    </tr>
+  </tbody></table>
+
+  </div></div>
+</div>
+
+<!-- ══════ FOOTER + JS ══════ -->
+<div class="footer">
+  Deep Neural Networks Course &nbsp;·&nbsp; <strong>Module 5 — Transfer Learning &amp; Fine-Tuning</strong><br>
+  <span style="font-size:.75rem;margin-top:4px;display:block">Covers: feature transferability · the 4 strategies · discriminative LRs · two-phase training · BatchNorm modes · domain adaptation · common mistakes</span>
+</div>
+
+<script>
+function toggleTheme(){
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = h.dataset.theme === 'dark' ? '☀️' : '🌙';
+}
+function tog(header){ header.parentElement.classList.toggle('open'); }
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('prog').style.width = pct + '%';
+});
+</script>
+
+
+</body>
+</html>

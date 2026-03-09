@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convolution Operations — Deep Neural Networks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ─── THEME TOKENS ─── */
+[data-theme="dark"] {
+  --bg:#0d1117; --surface:#161b22; --surface2:#1f2937; --border:#2d3748;
+  --text:#e2e8f0; --text-muted:#94a3b8; --text-dim:#64748b;
+  --hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);
+  --hero-glow:rgba(56,189,248,0.08);
+  --code-bg:#0a0f1a; --code-header:#1a2035;
+  --hover-overlay:rgba(255,255,255,0.03);
+  --card-hover-shadow:0 8px 24px rgba(0,0,0,.4);
+  --section-hover:0 0 0 1px rgba(56,189,248,.25);
+  --p-color:#cbd5e1;
+}
+[data-theme="light"] {
+  --bg:#f8fafc; --surface:#ffffff; --surface2:#f1f5f9; --border:#e2e8f0;
+  --text:#0f172a; --text-muted:#475569; --text-dim:#94a3b8;
+  --hero-bg:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0f9ff 100%);
+  --hero-glow:rgba(56,189,248,0.12);
+  --code-bg:#1e293b; --code-header:#0f172a;
+  --hover-overlay:rgba(0,0,0,0.02);
+  --card-hover-shadow:0 8px 24px rgba(0,0,0,.12);
+  --section-hover:0 0 0 1px rgba(56,189,248,.4);
+  --p-color:#334155;
+}
+
+/* ─── ACCENTS (same both themes) ─── */
+:root {
+  --accent:#38bdf8; --accent2:#818cf8; --accent3:#34d399;
+  --accent4:#fb923c; --accent5:#f472b6;
+  --red:#f87171; --yellow:#fbbf24; --green:#4ade80;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;}
+
+/* ─── PROGRESS ─── */
+.progress-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent5));position:fixed;top:0;left:0;z-index:1000;transition:width .15s;}
+
+/* ─── HERO ─── */
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:56px 24px 44px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);pointer-events:none;}
+.hero-badge{display:inline-block;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(1.9rem,5vw,3.6rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;}
+.hero p{color:var(--text-muted);font-size:1rem;max-width:640px;margin:0 auto;line-height:1.7;}
+
+/* ─── THEME TOGGLE ─── */
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ─── TOC ─── */
+.toc-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100;}
+.toc-label{color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-right:4px;font-weight:700;flex-shrink:0;}
+.toc-link{color:var(--text-muted);font-size:.78rem;text-decoration:none;padding:3px 10px;border-radius:5px;transition:all .2s;border:1px solid transparent;white-space:nowrap;}
+.toc-link:hover{color:var(--accent);border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.07);}
+
+/* ─── LAYOUT ─── */
+.page{max-width:1060px;margin:0 auto;padding:36px 16px 80px;}
+
+/* ─── ACCORDION ─── */
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden;transition:box-shadow .25s;}
+.section-block:hover{box-shadow:var(--section-hover);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;gap:14px;transition:background .2s;}
+.section-header:hover{background:var(--hover-overlay);}
+.section-title-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.section-num{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--text);line-height:1.3;}
+.section-sub{font-size:.76rem;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.chevron{color:var(--text-dim);font-size:1rem;transition:transform .3s cubic-bezier(.4,0,.2,1);flex-shrink:0;}
+.section-block.open .chevron{transform:rotate(180deg);}
+.section-body{display:none;padding:0 22px 28px;border-top:1px solid var(--border);}
+.section-block.open .section-body{display:block;}
+.section-body-inner{padding-top:24px;}
+
+/* ─── TYPOGRAPHY ─── */
+h2.subsection{font-size:1.08rem;font-weight:700;color:var(--accent);margin:28px 0 12px;padding-bottom:7px;border-bottom:1px solid rgba(56,189,248,.18);}
+p{margin-bottom:12px;color:var(--p-color);line-height:1.85;}
+
+/* ─── CALLOUTS ─── */
+.callout{border-radius:9px;padding:15px 18px;margin:16px 0;border-left:4px solid;}
+.callout-title{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+.callout-body{font-size:.92rem;color:var(--p-color);line-height:1.8;}
+.callout.analogy{background:rgba(251,146,60,.08);border-color:var(--accent4);}
+.callout.analogy .callout-title{color:var(--accent4);}
+.callout.insight{background:rgba(52,211,153,.08);border-color:var(--accent3);}
+.callout.insight .callout-title{color:var(--accent3);}
+.callout.warning{background:rgba(251,191,36,.08);border-color:var(--yellow);}
+.callout.warning .callout-title{color:var(--yellow);}
+.callout.important{background:rgba(56,189,248,.08);border-color:var(--accent);}
+.callout.important .callout-title{color:var(--accent);}
+.callout.definition{background:rgba(129,140,248,.08);border-color:var(--accent2);}
+.callout.definition .callout-title{color:var(--accent2);}
+
+/* ─── MATH ─── */
+.math-block{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px 20px;margin:14px 0;overflow-x:auto;text-align:center;}
+.math-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:700;}
+
+/* ─── CODE BLOCKS ─── */
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:16px 0;}
+.code-header{background:var(--code-header);padding:7px 14px;display:flex;align-items:center;border-bottom:1px solid var(--border);}
+.code-lang{font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.code-body{padding:16px 18px;overflow-x:auto;}
+.code-body pre{margin:0;}
+.code-body code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.9;white-space:pre;}
+.kw{color:#c792ea;} .fn{color:#82aaff;} .st{color:#c3e88d;}
+.cm{color:#607080;font-style:italic;} .num{color:#f78c6c;}
+.cls{color:#ffcb6b;} .op{color:#89ddff;}
+
+/* ─── CARDS ─── */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:18px;transition:all .2s;}
+.card:hover{border-color:rgba(56,189,248,.4);transform:translateY(-2px);box-shadow:var(--card-hover-shadow);}
+.card-icon{font-size:1.5rem;margin-bottom:9px;}
+.card-title{font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:5px;}
+.card-text{font-size:.82rem;color:var(--text-muted);line-height:1.6;}
+
+/* ─── TABLES ─── */
+.compare-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.85rem;}
+.compare-table th{background:var(--surface2);color:var(--accent);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid rgba(56,189,248,.25);}
+.compare-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;}
+.compare-table tr:hover td{background:var(--hover-overlay);}
+
+/* ─── VERSUS ─── */
+.versus-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:0;margin:20px 0;align-items:stretch;}
+.versus-col{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:18px;}
+.versus-col.ann{border-color:rgba(248,113,113,.35);}
+.versus-col.cnn{border-color:rgba(52,211,153,.35);}
+.versus-vs{display:flex;align-items:center;justify-content:center;padding:0 12px;font-weight:800;font-size:1rem;color:var(--text-dim);}
+.versus-title{font-weight:800;font-size:.92rem;margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--border);}
+.versus-col.ann .versus-title{color:var(--red);}
+.versus-col.cnn .versus-title{color:var(--accent3);}
+.versus-row{display:flex;gap:7px;margin-bottom:8px;font-size:.83rem;color:var(--text-muted);line-height:1.55;}
+.versus-row::before{content:'•';flex-shrink:0;margin-top:1px;}
+.versus-col.ann .versus-row::before{color:var(--red);}
+.versus-col.cnn .versus-row::before{color:var(--accent3);}
+
+/* ─── DIM TABLE ─── */
+.dim-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.83rem;}
+.dim-table th{padding:12px 14px;text-align:left;border-bottom:2px solid var(--border);font-size:.82rem;font-weight:700;}
+.dim-table td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;line-height:1.6;}
+.dim-table tr:hover td{background:var(--hover-overlay);}
+.dim-table .row-label{font-weight:700;color:var(--text);font-size:.85rem;}
+th.col-1d{color:var(--accent4);}
+th.col-2d{color:var(--accent);}
+th.col-3d{color:var(--accent5);}
+
+/* ─── VIZ ─── */
+.viz-container{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:18px;margin:16px 0;text-align:center;}
+.viz-title{font-size:.76rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;font-weight:700;}
+.svg-wrap{overflow-x:auto;margin:14px 0;}
+
+/* ─── LISTS ─── */
+ul.nice{list-style:none;padding:0;margin:10px 0;}
+ul.nice li{padding:5px 0 5px 20px;position:relative;color:var(--p-color);font-size:.92rem;}
+ul.nice li::before{content:'▸';position:absolute;left:0;color:var(--accent);}
+
+/* ─── INLINE CODE ─── */
+ic{font-family:'JetBrains Mono',monospace;font-size:.8em;background:rgba(56,189,248,.1);color:var(--accent);padding:1px 5px;border-radius:4px;}
+
+/* ─── BUTTONS ─── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;font-family:'Sora',sans-serif;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d1117;}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px);}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ─── FOOTER ─── */
+.footer{text-align:center;padding:36px 16px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.8rem;margin-top:32px;}
+
+/* ─── MOBILE ─── */
+@media(max-width:700px){
+  .toc-bar{padding:8px 12px;overflow-x:auto;flex-wrap:nowrap;}
+  .toc-link{padding:3px 8px;font-size:.72rem;}
+  .page{padding:20px 12px 60px;}
+  .section-header{padding:14px 16px;}
+  .section-body{padding:0 14px 22px;}
+  .section-body-inner{padding-top:18px;}
+  .versus-grid{grid-template-columns:1fr;}
+  .versus-vs{padding:6px 0;}
+  .card-grid{grid-template-columns:1fr 1fr;}
+  h2.subsection{font-size:1rem;}
+  .hero{padding:40px 16px 32px;}
+  .hero h1{font-size:clamp(1.6rem,7vw,2.8rem);}
+  .math-block{font-size:.92rem;}
+  .dim-table{font-size:.75rem;}
+  .dim-table th,.dim-table td{padding:8px 8px;}
+  .compare-table{font-size:.78rem;}
+  .code-body code{font-size:.76rem;}
+  .theme-btn{top:8px;right:10px;width:34px;height:34px;font-size:.95rem;}
+}
+@media(max-width:420px){
+  .card-grid{grid-template-columns:1fr;}
+  .versus-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="prog"></div>
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Module 3 · Convolutional Neural Networks</div>
+  <h1>Convolution Operations</h1>
+  <p>From the limitations of fully-connected networks to the power of convolution — kernels, sliding windows, and 1D / 2D / 3D operations explained from the ground up.</p>
+</div>
+
+<!-- TOC -->
+<div class="toc-bar">
+  <span class="toc-label">Jump to</span>
+  <a class="toc-link" href="#s1">Intuition</a>
+  <a class="toc-link" href="#s2">Math</a>
+  <a class="toc-link" href="#s3">ANN→CNN</a>
+  <a class="toc-link" href="#s4">Kernels</a>
+  <a class="toc-link" href="#s5">1D</a>
+  <a class="toc-link" href="#s6">2D</a>
+  <a class="toc-link" href="#s7">3D</a>
+  <a class="toc-link" href="#s8">Comparison</a>
+  <a class="toc-link" href="#s9">PyTorch</a>
+  <a class="toc-link" href="#s10">Summary</a>
+</div>
+
+<div class="page">
+
+<!-- ══ S1: INTUITION ══ -->
+<div class="section-block open" id="s1">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">01</div>
+      <div>
+        <div class="section-title">Building Intuition — What is Convolution?</div>
+        <div class="section-sub">The core idea before any mathematics</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout analogy">
+    <div class="callout-title">🔦 Analogy — The Flashlight and the Painting</div>
+    <div class="callout-body">Imagine examining a large painting in a dark room with a small flashlight. You slide the flashlight slowly across every part of the painting. At each position, you record what you see under the light. That flashlight is the <strong>kernel</strong>. The painting is the <strong>input</strong>. The record you make is the <strong>feature map</strong>. Convolution is exactly this — a small pattern detector sliding over a large input, recording what it finds at every position.</div>
+  </div>
+
+  <p>The convolution operation is a classical signal processing operation repurposed as a <strong>learnable, differentiable module</strong>. The kernel weights are what the network learns during training via backpropagation — not hand-crafted by engineers.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">📐</div>
+      <div class="card-title">Local Connectivity</div>
+      <div class="card-text">Each output depends only on a small local patch of the input. Edges and textures are inherently local patterns.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔁</div>
+      <div class="card-title">Weight Sharing</div>
+      <div class="card-text">Same kernel weights used at every position. An edge detector learned in one corner works everywhere automatically.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🗺️</div>
+      <div class="card-title">Translation Equivariance</div>
+      <div class="card-text">If a cat moves in the image, the feature map shifts accordingly. The network recognises patterns regardless of position.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🧱</div>
+      <div class="card-title">Hierarchical Features</div>
+      <div class="card-text">Early layers detect edges. Later layers combine edges into textures, then shapes, then objects — all learned automatically.</div>
+    </div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S2: MATH ══ -->
+<div class="section-block open" id="s2">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent2)">02</div>
+      <div>
+        <div class="section-title">Mathematical Foundation</div>
+        <div class="section-sub">Continuous convolution, discrete convolution, cross-correlation</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <h2 class="subsection">Continuous Convolution</h2>
+  <div class="math-block">
+    <div class="math-label">Continuous Convolution</div>
+    $$(f * g)(t) = \int_{-\infty}^{\infty} f(\tau)\, g(t - \tau)\, d\tau$$
+  </div>
+  <p>Here \(g\) is <strong>flipped</strong> (reflected) and slid over \(f\). This gives convolution elegant properties: commutativity \((f*g = g*f)\) and the convolution theorem (convolution in time ≡ multiplication in frequency domain).</p>
+
+  <h2 class="subsection">Discrete Convolution</h2>
+  <div class="math-block">
+    <div class="math-label">Discrete Convolution (1D)</div>
+    $$(f * g)[n] = \sum_{k=-\infty}^{\infty} f[k]\, g[n - k]$$
+  </div>
+
+  <h2 class="subsection">Cross-Correlation vs Convolution in Deep Learning</h2>
+  <div class="callout warning">
+    <div class="callout-title">⚠️ Critical Distinction</div>
+    <div class="callout-body">What PyTorch and TensorFlow call "convolution" is technically <strong>cross-correlation</strong>. The kernel is <em>not</em> flipped before sliding. Since the kernel weights are learned by gradient descent anyway, this distinction does not affect what the network learns — but you must understand it to read the literature correctly.</div>
+  </div>
+
+  <table class="compare-table">
+    <tr><th>Operation</th><th>Formula</th><th>Kernel Flip?</th><th>Used in DL?</th></tr>
+    <tr><td>True Convolution</td><td>\(\sum_{k} f[k]\, g[n-k]\)</td><td>✓ Yes</td><td>Rarely</td></tr>
+    <tr><td>Cross-Correlation</td><td>\(\sum_{k} f[n+k]\, g[k]\)</td><td>✗ No</td><td><strong>Always</strong></td></tr>
+  </table>
+
+  <div class="math-block">
+    <div class="math-label">Cross-Correlation — what deep learning actually computes</div>
+    $$(x \star w)[n] = \sum_{k=0}^{K-1} x[n + k]\cdot w[k]$$
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S3: ANN→CNN ══ -->
+<div class="section-block open" id="s3">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(248,113,113,.15);color:var(--red)">03</div>
+      <div>
+        <div class="section-title">Why Did We Move from ANN to CNN?</div>
+        <div class="section-sub">The fundamental problems with fully-connected networks on images</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <h2 class="subsection">Problem 1 — The Parameter Explosion</h2>
+  <p>In a fully-connected layer, every input neuron connects to every output neuron. For images this becomes computationally catastrophic:</p>
+  <div class="math-block">
+    <div class="math-label">Parameters — 224×224 RGB image → 1000 neurons (FC layer)</div>
+    $$224 \times 224 \times 3 \times 1000 = \mathbf{150{,}528{,}000 \text{ weights}}$$
+  </div>
+  <ul class="nice">
+    <li>Enormous memory requirements — impractical on real hardware</li>
+    <li>Severe overfitting — too many parameters, insufficient training data</li>
+    <li>Problem grows <em>quadratically</em> with image resolution</li>
+  </ul>
+
+  <h2 class="subsection">Problem 2 — No Spatial Awareness</h2>
+  <p>A fully-connected layer treats every pixel as an <strong>independent, unrelated feature</strong>. It has no concept that pixel \((10,10)\) and pixel \((11,10)\) are neighbours and share local context.</p>
+  <div class="callout analogy">
+    <div class="callout-title">🧩 Analogy — Shuffled Puzzle Pieces</div>
+    <div class="callout-body">An ANN would perform <em>identically</em> if you randomly shuffled all pixels in every image (as long as shuffling is consistent). It literally cannot see spatial neighbourhoods. A CNN, by contrast, explicitly exploits the 2D structure of the image.</div>
+  </div>
+
+  <h2 class="subsection">Problem 3 — No Translation Invariance</h2>
+  <p>In a fully-connected network, a cat in the top-left of an image activates completely different weights than a cat in the bottom-right. The network must re-learn "cat" for every possible position separately.</p>
+  <div class="math-block">
+    <div class="math-label">Number of positions a 3×3 pattern can appear in a 224×224 image</div>
+    $$(224 - 3 + 1)^2 = 222^2 = 49{,}284 \text{ positions}$$
+    <div style="margin-top:7px;font-size:.8rem;color:var(--text-dim)">ANN must re-learn the same feature ~49,000 times. CNN learns it once and reuses it everywhere.</div>
+  </div>
+
+  <h2 class="subsection">ANN vs CNN — Direct Comparison</h2>
+  <div class="versus-grid">
+    <div class="versus-col ann">
+      <div class="versus-title">🧠 ANN / MLP (Fully Connected)</div>
+      <div class="versus-row">Connects <strong>every</strong> input to every output — full connectivity</div>
+      <div class="versus-row">Treats each pixel as <strong>independent</strong> — no spatial awareness</div>
+      <div class="versus-row">No weight sharing — re-learns same pattern at each location</div>
+      <div class="versus-row">Parameters = input size × output size — grows explosively</div>
+      <div class="versus-row">Sensitive to position — not translation invariant</div>
+      <div class="versus-row">Best for: tabular data, low-dimensional inputs</div>
+    </div>
+    <div class="versus-vs">VS</div>
+    <div class="versus-col cnn">
+      <div class="versus-title">🖼️ CNN (Convolutional)</div>
+      <div class="versus-row">Connects each output only to a <strong>local region</strong> of the input</div>
+      <div class="versus-row">Explicitly uses <strong>2D spatial structure</strong> — neighbours share context</div>
+      <div class="versus-row">Full weight sharing — one kernel scans everywhere</div>
+      <div class="versus-row">Parameters = kernel size × channels — independent of image size</div>
+      <div class="versus-row">Translation equivariant — recognises patterns anywhere</div>
+      <div class="versus-row">Best for: images, audio, video, time-series</div>
+    </div>
+  </div>
+
+  <h2 class="subsection">Parameter Efficiency — Concrete Numbers</h2>
+  <table class="compare-table">
+    <tr><th>Layer Type</th><th>Input</th><th>Output</th><th>Parameters</th><th>Ratio</th></tr>
+    <tr><td>FC / Dense Layer</td><td>224×224×3 = 150,528</td><td>64 neurons</td><td><strong>9,633,856</strong></td><td>—</td></tr>
+    <tr><td>Conv Layer (3×3)</td><td>224×224×3</td><td>64 feature maps</td><td><strong>1,792</strong></td><td><strong>5,377× fewer</strong></td></tr>
+  </table>
+  <div class="callout insight">
+    <div class="callout-title">✅ The Core Insight</div>
+    <div class="callout-body">A 3×3 conv layer with 64 filters on a 224×224 RGB image uses only <strong>1,792 parameters</strong> and produces a 224×224×64 output — the equivalent FC layer needs over 9.6 million parameters for the same output. This efficiency is why CNNs revolutionised computer vision.</div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S4: KERNELS ══ -->
+<div class="section-block" id="s4">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">04</div>
+      <div>
+        <div class="section-title">Kernels — The Pattern Detectors</div>
+        <div class="section-sub">What kernels are, classical examples, and how learning works</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition</div>
+    <div class="callout-body">A <strong>kernel</strong> (also called a <em>filter</em>) is a small matrix of learnable weights. It slides over the input and computes a weighted sum at each position. The resulting grid of values is the <strong>feature map</strong> or <strong>activation map</strong>.</div>
+  </div>
+
+  <h2 class="subsection">Properties of Kernels</h2>
+  <ul class="nice">
+    <li><strong>Size:</strong> Always odd-dimensioned — 1×1, 3×3, 5×5, 7×7. Odd sizes have a natural centre pixel.</li>
+    <li><strong>Depth:</strong> Always equals the number of input channels. A 3×3 kernel on RGB has shape 3×3×3 = 27 weights.</li>
+    <li><strong>Quantity:</strong> Multiple kernels produce multiple feature maps — one per kernel.</li>
+    <li><strong>Values:</strong> All values learned during training via backpropagation — never hand-crafted.</li>
+  </ul>
+
+  <h2 class="subsection">Classical Hand-Crafted Kernels (Pre-Deep Learning)</h2>
+  <p>Before learning, researchers designed kernels manually. Understanding these builds strong intuition for what learned kernels do:</p>
+
+  <div class="svg-wrap">
+  <svg width="800" height="290" viewBox="0 0 800 290" xmlns="http://www.w3.org/2000/svg" style="background:var(--surface2);border-radius:10px;border:1px solid var(--border);max-width:100%;">
+    <!-- Identity -->
+    <text x="65" y="26" font-family="Sora" font-size="13" font-weight="700" fill="#38bdf8" text-anchor="middle">Identity</text>
+    <text x="65" y="40" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">No change to input</text>
+    <g transform="translate(20,50)">
+      <rect width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="21" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+      <rect x="42" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="63" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+      <rect x="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="105" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+      <rect y="42" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="21" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+      <rect x="42" y="42" width="42" height="42" rx="4" fill="rgba(56,189,248,0.22)" stroke="#38bdf8"/><text x="63" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#38bdf8">1</text>
+      <rect x="84" y="42" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="105" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+      <rect y="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="21" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+      <rect x="42" y="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="63" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+      <rect x="84" y="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="105" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="600" fill="#64748b">0</text>
+    </g>
+    <text x="65" y="200" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">Output = Input</text>
+
+    <!-- Sobel X -->
+    <text x="265" y="26" font-family="Sora" font-size="13" font-weight="700" fill="#fb923c" text-anchor="middle">Sobel X</text>
+    <text x="265" y="40" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">Detects vertical edges</text>
+    <g transform="translate(220,50)">
+      <rect width="42" height="42" rx="4" fill="rgba(248,113,113,0.15)" stroke="#f87171"/><text x="21" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#f87171">−1</text>
+      <rect x="42" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="63" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#64748b">0</text>
+      <rect x="84" width="42" height="42" rx="4" fill="rgba(52,211,153,0.15)" stroke="#34d399"/><text x="105" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#4ade80">+1</text>
+      <rect y="42" width="42" height="42" rx="4" fill="rgba(248,113,113,0.25)" stroke="#f87171"/><text x="21" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#f87171">−2</text>
+      <rect x="42" y="42" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="63" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#64748b">0</text>
+      <rect x="84" y="42" width="42" height="42" rx="4" fill="rgba(52,211,153,0.25)" stroke="#34d399"/><text x="105" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#4ade80">+2</text>
+      <rect y="84" width="42" height="42" rx="4" fill="rgba(248,113,113,0.15)" stroke="#f87171"/><text x="21" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#f87171">−1</text>
+      <rect x="42" y="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="63" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#64748b">0</text>
+      <rect x="84" y="84" width="42" height="42" rx="4" fill="rgba(52,211,153,0.15)" stroke="#34d399"/><text x="105" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#4ade80">+1</text>
+    </g>
+    <text x="265" y="200" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">High response at | edges</text>
+
+    <!-- Box Blur -->
+    <text x="465" y="26" font-family="Sora" font-size="13" font-weight="700" fill="#818cf8" text-anchor="middle">Box Blur</text>
+    <text x="465" y="40" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">Averages neighbourhood pixels</text>
+    <g transform="translate(420,50)">
+      <rect width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="21" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect x="42" width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="63" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect x="84" width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="105" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect y="42" width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="21" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect x="42" y="42" width="42" height="42" rx="4" fill="rgba(129,140,248,0.28)" stroke="#818cf8"/><text x="63" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect x="84" y="42" width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="105" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect y="84" width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="21" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect x="42" y="84" width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="63" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+      <rect x="84" y="84" width="42" height="42" rx="4" fill="rgba(129,140,248,0.15)" stroke="#818cf8"/><text x="105" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#818cf8">1/9</text>
+    </g>
+    <text x="465" y="200" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">Smooths / blurs image</text>
+
+    <!-- Sharpen -->
+    <text x="665" y="26" font-family="Sora" font-size="13" font-weight="700" fill="#f472b6" text-anchor="middle">Sharpening</text>
+    <text x="665" y="40" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">Enhances edges and details</text>
+    <g transform="translate(620,50)">
+      <rect width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="21" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#64748b">0</text>
+      <rect x="42" width="42" height="42" rx="4" fill="rgba(248,113,113,0.15)" stroke="#f87171"/><text x="63" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#f87171">−1</text>
+      <rect x="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="105" y="27" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#64748b">0</text>
+      <rect y="42" width="42" height="42" rx="4" fill="rgba(248,113,113,0.15)" stroke="#f87171"/><text x="21" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#f87171">−1</text>
+      <rect x="42" y="42" width="42" height="42" rx="4" fill="rgba(244,114,182,0.3)" stroke="#f472b6"/><text x="63" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="14" font-weight="700" fill="#f472b6">+5</text>
+      <rect x="84" y="42" width="42" height="42" rx="4" fill="rgba(248,113,113,0.15)" stroke="#f87171"/><text x="105" y="69" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#f87171">−1</text>
+      <rect y="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="21" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#64748b">0</text>
+      <rect x="42" y="84" width="42" height="42" rx="4" fill="rgba(248,113,113,0.15)" stroke="#f87171"/><text x="63" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#f87171">−1</text>
+      <rect x="84" y="84" width="42" height="42" rx="4" fill="#1f2937" stroke="#2d3748"/><text x="105" y="111" text-anchor="middle" font-family="JetBrains Mono" font-size="14" fill="#64748b">0</text>
+    </g>
+    <text x="665" y="200" font-family="Sora" font-size="10" fill="#64748b" text-anchor="middle">Emphasises fine details</text>
+
+    <text x="400" y="255" text-anchor="middle" font-family="Sora" font-size="11" fill="#64748b">In CNNs, kernels like these are not hand-crafted — the network learns optimal detectors automatically via backpropagation.</text>
+    <text x="400" y="272" text-anchor="middle" font-family="Sora" font-size="11" fill="#64748b">First layer of ResNet learns Gabor-like edge detectors very similar to Sobel kernels above.</text>
+  </svg>
+  </div>
+
+  <h2 class="subsection">Parameter Count</h2>
+  <div class="math-block">
+    <div class="math-label">Total Parameters — Conv Layer</div>
+    $$\text{Params} = K_H \times K_W \times C_{in} \times C_{out} + C_{out} \quad \text{(bias)}$$
+    $$\text{Example: } 3 \times 3 \times 3 \times 64 + 64 = \mathbf{1{,}792}$$
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S5: 1D CONV ══ -->
+<div class="section-block" id="s5">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">05</div>
+      <div>
+        <div class="section-title">1D Convolution</div>
+        <div class="section-sub">Sequential data — time series, audio, text</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <p>1D convolution operates on sequential data. The kernel slides along a single dimension (time or sequence length). It is ideal for audio waveforms, ECG signals, stock prices, and text.</p>
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Formal Definition</div>
+    <div class="callout-body">
+      For input \(x \in \mathbb{R}^{C_{in} \times L}\) (channels × length) and kernel \(w \in \mathbb{R}^{C_{in} \times K}\):
+      $$y[n] = \sum_{c=1}^{C_{in}} \sum_{k=0}^{K-1} x[c,\; n + k] \cdot w[c,\; k] + b$$
+    </div>
+  </div>
+
+  <!-- Interactive 1D Demo -->
+  <div class="viz-container">
+    <div class="viz-title">Interactive 1D Convolution — step through the sliding window</div>
+    <div style="display:flex;flex-direction:column;gap:16px;align-items:center;">
+      <div>
+        <div style="font-size:.76rem;color:var(--accent);font-weight:700;margin-bottom:5px;text-align:center;">INPUT x = [1, 2, 3, 4, 5, 6, 7, 8]</div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;" id="d1d-input"></div>
+      </div>
+      <div>
+        <div style="font-size:.76rem;color:var(--accent4);font-weight:700;margin-bottom:5px;text-align:center;">KERNEL w = [1, 0, −1]</div>
+        <div style="display:flex;justify-content:center;" id="d1d-kernel"></div>
+      </div>
+      <div>
+        <div style="font-size:.76rem;color:var(--accent3);font-weight:700;margin-bottom:5px;text-align:center;">OUTPUT (valid padding, length = 6)</div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;" id="d1d-output"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn btn-secondary" onclick="conv1DStep(-1)">← Prev</button>
+        <button class="btn btn-primary" onclick="conv1DStep(1)">Next →</button>
+        <button class="btn btn-secondary" onclick="conv1DReset()">↺ Reset</button>
+      </div>
+      <div id="d1d-calc" style="font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--text-muted);min-height:22px;text-align:center;padding:0 8px;"></div>
+    </div>
+  </div>
+
+  <h2 class="subsection">Worked Example</h2>
+  <div class="math-block">
+    <div class="math-label">x = [1,2,3,4,5,6,7,8], w = [1, 0, −1], stride=1, no padding</div>
+    $$\begin{aligned}
+    y[0] &= 1\cdot(+1) + 2\cdot(0) + 3\cdot(-1) = -2 \\
+    y[1] &= 2\cdot(+1) + 3\cdot(0) + 4\cdot(-1) = -2 \\
+    y[2] &= 3\cdot(+1) + 4\cdot(0) + 5\cdot(-1) = -2 \\
+    y[3] &= 4\cdot(+1) + 5\cdot(0) + 6\cdot(-1) = -2 \\
+    y[4] &= 5\cdot(+1) + 6\cdot(0) + 7\cdot(-1) = -2 \\
+    y[5] &= 6\cdot(+1) + 7\cdot(0) + 8\cdot(-1) = -2
+    \end{aligned}$$
+  </div>
+  <div class="math-block">
+    <div class="math-label">Output Length Formula</div>
+    $$L_{out} = \left\lfloor \frac{L_{in} + 2P - K}{S} \right\rfloor + 1 = \left\lfloor \frac{8 + 0 - 3}{1} \right\rfloor + 1 = 6$$
+  </div>
+
+  <h2 class="subsection">Applications</h2>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">🎵</div><div class="card-title">Audio / Speech</div><div class="card-text">Speech recognition, music classification. Sequence = audio samples over time.</div></div>
+    <div class="card"><div class="card-icon">📈</div><div class="card-title">Time Series</div><div class="card-text">ECG arrhythmia, stock prices, sensor readings, weather data.</div></div>
+    <div class="card"><div class="card-icon">📝</div><div class="card-title">Text (NLP)</div><div class="card-text">Text classification via character/word n-grams. Kernel size = window of words.</div></div>
+  </div>
+
+  <h2 class="subsection">PyTorch — <ic>nn.Conv1d</ic></h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · PyTorch Conv1d</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># Input shape: (batch_size, C_in, L)</span>
+conv1d = nn.<span class="cls">Conv1d</span>(
+    in_channels=<span class="num">1</span>,    <span class="cm"># single ECG lead</span>
+    out_channels=<span class="num">16</span>, <span class="cm"># 16 feature detectors</span>
+    kernel_size=<span class="num">3</span>,   <span class="cm"># looks at 3 timesteps at once</span>
+    stride=<span class="num">1</span>,
+    padding=<span class="num">0</span>        <span class="cm"># valid convolution</span>
+)
+
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">1000</span>)   <span class="cm"># batch=1, 1 channel, length=1000</span>
+y = <span class="fn">conv1d</span>(x)
+<span class="fn">print</span>(y.shape)
+<span class="cm"># → torch.Size([1, 16, 998])  →  (1000 − 3)/1 + 1 = 998</span>
+
+<span class="cm"># Same-length output with padding=1</span>
+conv1d_same = nn.<span class="cls">Conv1d</span>(<span class="num">1</span>, <span class="num">16</span>, <span class="num">3</span>, padding=<span class="num">1</span>)
+<span class="fn">print</span>(<span class="fn">conv1d_same</span>(x).shape)
+<span class="cm"># → torch.Size([1, 16, 1000])</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S6: 2D CONV ══ -->
+<div class="section-block" id="s6">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">06</div>
+      <div>
+        <div class="section-title">2D Convolution</div>
+        <div class="section-sub">The workhorse of image processing — kernel slides across H and W</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <p>2D convolution is the operation behind modern computer vision. The kernel slides over both height and width simultaneously. Core operation in AlexNet, VGG, ResNet, EfficientNet and virtually every image model.</p>
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Formal Definition</div>
+    <div class="callout-body">
+      For input \(X \in \mathbb{R}^{C_{in} \times H \times W}\) and kernel \(W \in \mathbb{R}^{C_{in} \times K_H \times K_W}\):
+      $$Y[i,j] = \sum_{c=1}^{C_{in}} \sum_{p=0}^{K_H-1} \sum_{q=0}^{K_W-1} X[c,\; i+p,\; j+q] \cdot W[c,\; p,\; q] + b$$
+    </div>
+  </div>
+
+  <div class="viz-container">
+    <div class="viz-title">Interactive 2D Convolution — kernel sliding over 5×5 input</div>
+    <div id="conv2d-container" style="display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-bottom:14px;"></div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="startConv2DAnim()">▶ Animate</button>
+      <button class="btn btn-secondary" onclick="stopConv2DAnim()">⏸ Pause</button>
+      <button class="btn btn-secondary" onclick="resetConv2DAnim()">↺ Reset</button>
+    </div>
+    <div id="conv2d-calc" style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--text-muted);text-align:center;min-height:28px;"></div>
+  </div>
+
+  <h2 class="subsection">Worked Example</h2>
+  <div class="math-block">
+    <div class="math-label">Input X (5×5) and Kernel W (3×3 — vertical edge detector)</div>
+    $$X = \begin{bmatrix} 1 & 2 & 3 & 0 & 1 \\ 0 & 1 & 2 & 3 & 1 \\ 1 & 0 & 1 & 2 & 0 \\ 2 & 1 & 0 & 1 & 2 \\ 0 & 2 & 1 & 0 & 1 \end{bmatrix}, \qquad W = \begin{bmatrix} 1 & 0 & -1 \\ 1 & 0 & -1 \\ 1 & 0 & -1 \end{bmatrix}$$
+  </div>
+  <div class="math-block">
+    <div class="math-label">Computing Y[0,0]</div>
+    $$Y[0,0] = (1\!\cdot\!1 + 2\!\cdot\!0 + 3\!\cdot\!{-1}) + (0\!\cdot\!1 + 1\!\cdot\!0 + 2\!\cdot\!{-1}) + (1\!\cdot\!1 + 0\!\cdot\!0 + 1\!\cdot\!{-1}) = -2-2+0 = \mathbf{-4}$$
+  </div>
+  <div class="math-block">
+    <div class="math-label">Output Size Formula (2D)</div>
+    $$H_{out} = \left\lfloor \frac{H_{in} + 2P - K_H}{S} \right\rfloor + 1, \qquad W_{out} = \left\lfloor \frac{W_{in} + 2P - K_W}{S} \right\rfloor + 1$$
+  </div>
+
+  <h2 class="subsection">PyTorch — <ic>nn.Conv2d</ic></h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · PyTorch Conv2d</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># Input shape: (batch, C_in, H, W)</span>
+conv2d = nn.<span class="cls">Conv2d</span>(
+    in_channels=<span class="num">3</span>,   <span class="cm"># RGB</span>
+    out_channels=<span class="num">64</span>, <span class="cm"># 64 feature maps</span>
+    kernel_size=<span class="num">3</span>,   <span class="cm"># 3×3 kernel</span>
+    stride=<span class="num">1</span>,
+    padding=<span class="num">1</span>,       <span class="cm"># same padding: output H,W = input H,W</span>
+    bias=<span class="kw">True</span>
+)
+
+<span class="cm"># Parameters: 3×3×3×64 + 64 = 1792</span>
+x = torch.<span class="fn">randn</span>(<span class="num">8</span>, <span class="num">3</span>, <span class="num">224</span>, <span class="num">224</span>)
+y = <span class="fn">conv2d</span>(x)
+<span class="fn">print</span>(y.shape)
+<span class="cm"># → torch.Size([8, 64, 224, 224])</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S7: 3D CONV ══ -->
+<div class="section-block" id="s7">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(244,114,182,.15);color:var(--accent5)">07</div>
+      <div>
+        <div class="section-title">3D Convolution</div>
+        <div class="section-sub">Video and volumetric data — kernel slides through depth, height, and width</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <p>3D convolution extends the sliding window into a third spatial dimension — either time (video frames) or physical depth (CT/MRI slices). It captures spatio-temporal patterns that 2D convolution misses entirely.</p>
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Formal Definition</div>
+    <div class="callout-body">
+      For input \(X \in \mathbb{R}^{C_{in} \times D \times H \times W}\) and kernel \(W \in \mathbb{R}^{C_{in} \times K_D \times K_H \times K_W}\):
+      $$Y[i,j,k] = \sum_{c} \sum_{d=0}^{K_D-1} \sum_{p=0}^{K_H-1} \sum_{q=0}^{K_W-1} X[c,\; i+d,\; j+p,\; k+q] \cdot W[c,\; d,\; p,\; q] + b$$
+    </div>
+  </div>
+
+  <!-- Clear 3D Conv diagram -->
+  <div class="viz-container">
+    <div class="viz-title">3D Convolution — kernel slides across Depth (frames), Height, and Width simultaneously</div>
+    <div style="overflow-x:auto;">
+    <svg width="680" height="320" viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+
+      <!-- ── INPUT VOLUME (4 frames shown as stacked) ── -->
+      <!-- Frame 4 (back) -->
+      <rect x="38" y="30" width="110" height="110" rx="3" fill="rgba(244,114,182,0.07)" stroke="#f472b6" stroke-width="1" stroke-dasharray="4,3"/>
+      <!-- Frame 3 -->
+      <rect x="29" y="39" width="110" height="110" rx="3" fill="rgba(244,114,182,0.09)" stroke="#f472b6" stroke-width="1" stroke-dasharray="4,3"/>
+      <!-- Frame 2 -->
+      <rect x="20" y="48" width="110" height="110" rx="3" fill="rgba(244,114,182,0.12)" stroke="#f472b6" stroke-width="1.2"/>
+      <!-- Frame 1 (front, most visible) -->
+      <rect x="10" y="58" width="110" height="110" rx="3" fill="rgba(244,114,182,0.18)" stroke="#f472b6" stroke-width="1.8"/>
+
+      <!-- Grid lines on front frame -->
+      <line x1="46" y1="58" x2="46" y2="168" stroke="#f472b6" stroke-width="0.5" stroke-opacity="0.4"/>
+      <line x1="82" y1="58" x2="82" y2="168" stroke="#f472b6" stroke-width="0.5" stroke-opacity="0.4"/>
+      <line x1="10" y1="94" x2="120" y2="94" stroke="#f472b6" stroke-width="0.5" stroke-opacity="0.4"/>
+      <line x1="10" y1="130" x2="120" y2="130" stroke="#f472b6" stroke-width="0.5" stroke-opacity="0.4"/>
+
+      <!-- Depth arrow -->
+      <line x1="10" y1="56" x2="40" y2="28" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrowPink)"/>
+      <text x="44" y="24" font-family="Sora" font-size="10" fill="#f472b6">D (frames/depth)</text>
+
+      <!-- Input labels -->
+      <text x="65" y="195" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#f472b6">Input Volume</text>
+      <text x="65" y="210" text-anchor="middle" font-family="Sora" font-size="10" fill="#94a3b8">C_in × D × H × W</text>
+
+      <!-- ── STAR SYMBOL ── -->
+      <text x="185" y="123" font-family="Sora" font-size="28" fill="#64748b" text-anchor="middle">★</text>
+
+      <!-- ── 3D KERNEL (shown as small cube) ── -->
+      <!-- Back face -->
+      <rect x="228" y="80" width="52" height="52" rx="3" fill="rgba(251,146,60,0.07)" stroke="#fb923c" stroke-width="1" stroke-dasharray="3,2"/>
+      <!-- Middle face -->
+      <rect x="221" y="87" width="52" height="52" rx="3" fill="rgba(251,146,60,0.12)" stroke="#fb923c" stroke-width="1.2"/>
+      <!-- Front face -->
+      <rect x="214" y="94" width="52" height="52" rx="3" fill="rgba(251,146,60,0.25)" stroke="#fb923c" stroke-width="2"/>
+
+      <!-- Grid on front face of kernel -->
+      <line x1="231" y1="94" x2="231" y2="146" stroke="#fb923c" stroke-width="0.7" stroke-opacity="0.5"/>
+      <line x1="248" y1="94" x2="248" y2="146" stroke="#fb923c" stroke-width="0.7" stroke-opacity="0.5"/>
+      <line x1="214" y1="111" x2="266" y2="111" stroke="#fb923c" stroke-width="0.7" stroke-opacity="0.5"/>
+      <line x1="214" y1="128" x2="266" y2="128" stroke="#fb923c" stroke-width="0.7" stroke-opacity="0.5"/>
+
+      <!-- Depth arrow on kernel -->
+      <line x1="214" y1="92" x2="230" y2="78" stroke="#fb923c" stroke-width="1.2" marker-end="url(#arrowOrange)"/>
+
+      <!-- Kernel labels -->
+      <text x="240" y="168" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#fb923c">3D Kernel</text>
+      <text x="240" y="181" text-anchor="middle" font-family="Sora" font-size="10" fill="#94a3b8">K_D × K_H × K_W</text>
+      <text x="240" y="194" text-anchor="middle" font-family="Sora" font-size="10" fill="#94a3b8">(e.g. 3 × 3 × 3)</text>
+
+      <!-- ── EQUALS ── -->
+      <text x="320" y="123" font-family="Sora" font-size="28" fill="#64748b" text-anchor="middle">=</text>
+
+      <!-- ── OUTPUT VOLUME ── -->
+      <!-- Output frame 3 (back) -->
+      <rect x="388" y="50" width="90" height="90" rx="3" fill="rgba(129,140,248,0.07)" stroke="#818cf8" stroke-width="1" stroke-dasharray="4,3"/>
+      <!-- Output frame 2 -->
+      <rect x="379" y="59" width="90" height="90" rx="3" fill="rgba(129,140,248,0.1)" stroke="#818cf8" stroke-width="1.2"/>
+      <!-- Output frame 1 (front) -->
+      <rect x="370" y="68" width="90" height="90" rx="3" fill="rgba(129,140,248,0.2)" stroke="#818cf8" stroke-width="1.8"/>
+
+      <!-- Grid on output front face -->
+      <line x1="400" y1="68" x2="400" y2="158" stroke="#818cf8" stroke-width="0.5" stroke-opacity="0.4"/>
+      <line x1="430" y1="68" x2="430" y2="158" stroke="#818cf8" stroke-width="0.5" stroke-opacity="0.4"/>
+      <line x1="370" y1="98" x2="460" y2="98" stroke="#818cf8" stroke-width="0.5" stroke-opacity="0.4"/>
+      <line x1="370" y1="128" x2="460" y2="128" stroke="#818cf8" stroke-width="0.5" stroke-opacity="0.4"/>
+
+      <!-- Depth arrow on output -->
+      <line x1="370" y1="66" x2="390" y2="48" stroke="#818cf8" stroke-width="1.2" marker-end="url(#arrowPurple)"/>
+
+      <!-- Output labels -->
+      <text x="415" y="195" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#818cf8">Output Volume</text>
+      <text x="415" y="210" text-anchor="middle" font-family="Sora" font-size="10" fill="#94a3b8">C_out × D_out × H_out × W_out</text>
+
+      <!-- ── KEY INSIGHT BOX ── -->
+      <rect x="10" y="240" width="660" height="64" rx="8" fill="rgba(56,189,248,0.06)" stroke="rgba(56,189,248,0.25)" stroke-width="1"/>
+      <text x="340" y="260" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">Key Insight</text>
+      <text x="340" y="278" text-anchor="middle" font-family="Sora" font-size="11" fill="#94a3b8">The 3D kernel captures patterns across BOTH spatial (H, W) AND temporal/depth (D) dimensions</text>
+      <text x="340" y="295" text-anchor="middle" font-family="Sora" font-size="11" fill="#94a3b8">simultaneously. A 2D kernel would process each frame independently, missing motion patterns.</text>
+
+      <!-- Arrow markers -->
+      <defs>
+        <marker id="arrowPink" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#f472b6"/>
+        </marker>
+        <marker id="arrowOrange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#fb923c"/>
+        </marker>
+        <marker id="arrowPurple" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#818cf8"/>
+        </marker>
+      </defs>
+    </svg>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ Computational Cost</div>
+    <div class="callout-body">3D convolution is expensive. A 3D conv with kernel \(K_D \times K_H \times K_W\) is \(K_D\) times more expensive than the equivalent 2D conv. For 16-frame video with a 3×3×3 kernel, that's 16× more computation per forward pass. This is why (2+1)D decomposed convolutions (separate spatial + temporal convs) are commonly used in practice.</div>
+  </div>
+
+  <h2 class="subsection">Applications</h2>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">🎬</div><div class="card-title">Video Understanding</div><div class="card-text">Action recognition. D axis = video frames. Used in C3D, I3D, SlowFast networks.</div></div>
+    <div class="card"><div class="card-icon">🧠</div><div class="card-title">Medical Imaging</div><div class="card-text">3D CT/MRI scan segmentation, tumour detection. D axis = physical Z-depth of scan.</div></div>
+    <div class="card"><div class="card-icon">☁️</div><div class="card-title">3D Point Clouds</div><div class="card-text">Autonomous driving LiDAR data, 3D object detection and scene understanding.</div></div>
+  </div>
+
+  <h2 class="subsection">PyTorch — <ic>nn.Conv3d</ic></h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · PyTorch Conv3d</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># Input shape: (batch, C_in, D, H, W)</span>
+<span class="cm"># Example: 2 videos, RGB, 16 frames, 112×112</span>
+video = torch.<span class="fn">randn</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">16</span>, <span class="num">112</span>, <span class="num">112</span>)
+
+conv3d = nn.<span class="cls">Conv3d</span>(
+    in_channels=<span class="num">3</span>,
+    out_channels=<span class="num">64</span>,
+    kernel_size=(<span class="num">3</span>, <span class="num">3</span>, <span class="num">3</span>),  <span class="cm"># temporal × height × width</span>
+    stride=(<span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>),
+    padding=(<span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span>)
+)
+
+out = <span class="fn">conv3d</span>(video)
+<span class="fn">print</span>(out.shape)
+<span class="cm"># → torch.Size([2, 64, 16, 112, 112])</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S8: COMPARISON ══ -->
+<div class="section-block open" id="s8">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,191,36,.15);color:var(--yellow)">08</div>
+      <div>
+        <div class="section-title">1D vs 2D vs 3D — Complete Comparison</div>
+        <div class="section-sub">Input shapes, use cases, APIs, and when to use each</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <!-- Visual: 3 clear diagrams side by side -->
+  <div class="viz-container">
+    <div class="viz-title">Visual: How each convolution slides</div>
+    <div style="overflow-x:auto;">
+    <svg width="680" height="240" viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+
+      <!-- Dividers -->
+      <line x1="227" y1="10" x2="227" y2="220" stroke="#2d3748" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="454" y1="10" x2="454" y2="220" stroke="#2d3748" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- ─ 1D ─ -->
+      <text x="113" y="22" text-anchor="middle" font-family="Sora" font-size="15" font-weight="800" fill="#fb923c">1D Convolution</text>
+      <text x="113" y="37" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Slides along 1 axis →</text>
+      <!-- Signal bars -->
+      <rect x="22" y="100" width="22" height="55" rx="3" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1.5"/>
+      <rect x="48" y="115" width="22" height="40" rx="3" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1.5"/>
+      <rect x="74" y="88" width="22" height="67" rx="3" fill="rgba(251,146,60,0.55)" stroke="#fb923c" stroke-width="2"/>
+      <rect x="100" y="120" width="22" height="35" rx="3" fill="rgba(251,146,60,0.55)" stroke="#fb923c" stroke-width="2"/>
+      <rect x="126" y="105" width="22" height="50" rx="3" fill="rgba(251,146,60,0.55)" stroke="#fb923c" stroke-width="2"/>
+      <rect x="152" y="72" width="22" height="83" rx="3" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1.5"/>
+      <rect x="178" y="90" width="22" height="65" rx="3" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1.5"/>
+      <!-- Kernel highlight box -->
+      <rect x="70" y="58" width="84" height="105" rx="5" fill="none" stroke="#fb923c" stroke-width="2.5" stroke-dasharray="5,3"/>
+      <text x="112" y="52" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c" font-weight="700">kernel window</text>
+      <!-- Axis -->
+      <line x1="20" y1="162" x2="205" y2="162" stroke="#64748b" stroke-width="1.5"/>
+      <text x="210" y="166" font-family="Sora" font-size="11" fill="#64748b">→</text>
+      <text x="113" y="180" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Length (time / samples)</text>
+      <text x="113" y="200" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#fb923c">nn.Conv1d</text>
+      <text x="113" y="216" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Input: (B, C, L)</text>
+
+      <!-- ─ 2D ─ -->
+      <text x="340" y="22" text-anchor="middle" font-family="Sora" font-size="15" font-weight="800" fill="#38bdf8">2D Convolution</text>
+      <text x="340" y="37" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Slides along H and W</text>
+      <!-- Image grid 5×5 -->
+      <g transform="translate(249,48)">
+        <!-- All cells -->
+        <rect width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="32" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="64" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="96" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="128" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/>
+        <rect y="32" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="32" y="32" width="30" height="30" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><rect x="64" y="32" width="30" height="30" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><rect x="96" y="32" width="30" height="30" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><rect x="128" y="32" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/>
+        <rect y="64" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="32" y="64" width="30" height="30" rx="2" fill="rgba(56,189,248,0.5)" stroke="#38bdf8" stroke-width="2"/><rect x="64" y="64" width="30" height="30" rx="2" fill="rgba(56,189,248,0.5)" stroke="#38bdf8" stroke-width="2"/><rect x="96" y="64" width="30" height="30" rx="2" fill="rgba(56,189,248,0.5)" stroke="#38bdf8" stroke-width="2"/><rect x="128" y="64" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/>
+        <rect y="96" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="32" y="96" width="30" height="30" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><rect x="64" y="96" width="30" height="30" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><rect x="96" y="96" width="30" height="30" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><rect x="128" y="96" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/>
+        <rect y="128" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="32" y="128" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="64" y="128" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="96" y="128" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/><rect x="128" y="128" width="30" height="30" rx="2" fill="rgba(56,189,248,0.1)" stroke="#2d3748" stroke-width="0.8"/>
+        <!-- Kernel outline -->
+        <rect x="30" y="30" width="98" height="98" rx="4" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="5,3"/>
+        <text x="79" y="22" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8" font-weight="700">3×3 kernel</text>
+        <!-- H/W arrows -->
+        <text x="79" y="180" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Width (W) →</text>
+      </g>
+      <text x="340" y="200" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">nn.Conv2d</text>
+      <text x="340" y="216" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Input: (B, C, H, W)</text>
+
+      <!-- ─ 3D ─ -->
+      <text x="567" y="22" text-anchor="middle" font-family="Sora" font-size="15" font-weight="800" fill="#f472b6">3D Convolution</text>
+      <text x="567" y="37" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Slides along D, H, and W</text>
+      <!-- Input volume (3 frames) -->
+      <rect x="490" y="78" width="70" height="70" rx="3" fill="rgba(244,114,182,0.07)" stroke="#f472b6" stroke-width="1" stroke-dasharray="3,2"/>
+      <rect x="481" y="87" width="70" height="70" rx="3" fill="rgba(244,114,182,0.1)" stroke="#f472b6" stroke-width="1.2"/>
+      <rect x="472" y="96" width="70" height="70" rx="3" fill="rgba(244,114,182,0.2)" stroke="#f472b6" stroke-width="1.8"/>
+      <!-- Grid on front face -->
+      <line x1="495" y1="96" x2="495" y2="166" stroke="#f472b6" stroke-width="0.6" stroke-opacity="0.5"/>
+      <line x1="518" y1="96" x2="518" y2="166" stroke="#f472b6" stroke-width="0.6" stroke-opacity="0.5"/>
+      <line x1="472" y1="119" x2="542" y2="119" stroke="#f472b6" stroke-width="0.6" stroke-opacity="0.5"/>
+      <line x1="472" y1="142" x2="542" y2="142" stroke="#f472b6" stroke-width="0.6" stroke-opacity="0.5"/>
+      <!-- Depth arrow -->
+      <line x1="472" y1="94" x2="491" y2="76" stroke="#f472b6" stroke-width="1.5" marker-end="url(#arrowPink2)"/>
+      <text x="495" y="72" font-family="Sora" font-size="9" fill="#f472b6">D →</text>
+      <!-- Kernel (tiny cube on volume) -->
+      <rect x="488" y="104" width="30" height="30" rx="2" fill="rgba(251,146,60,0.5)" stroke="#fb923c" stroke-width="1.5"/>
+      <rect x="480" y="112" width="30" height="30" rx="2" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1" stroke-dasharray="2,2"/>
+      <text x="507" y="178" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">kernel shown</text>
+      <text x="507" y="191" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">on front frame</text>
+      <text x="567" y="200" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#f472b6">nn.Conv3d</text>
+      <text x="567" y="216" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Input: (B, C, D, H, W)</text>
+
+      <defs>
+        <marker id="arrowPink2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#f472b6"/>
+        </marker>
+      </defs>
+    </svg>
+    </div>
+  </div>
+
+  <!-- Comparison table -->
+  <table class="dim-table">
+    <thead>
+      <tr>
+        <th style="color:var(--text-muted);width:22%">Property</th>
+        <th class="col-1d">1D Conv</th>
+        <th class="col-2d">2D Conv</th>
+        <th class="col-3d">3D Conv</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="row-label">Spatial Dims</td><td>1 (Length)</td><td>2 (Height × Width)</td><td>3 (Depth × H × W)</td></tr>
+      <tr><td class="row-label">Kernel Shape</td><td>\(K\)</td><td>\(K_H \times K_W\)</td><td>\(K_D \times K_H \times K_W\)</td></tr>
+      <tr><td class="row-label">PyTorch Input</td><td><ic>(B, C, L)</ic></td><td><ic>(B, C, H, W)</ic></td><td><ic>(B, C, D, H, W)</ic></td></tr>
+      <tr><td class="row-label">PyTorch API</td><td><ic>nn.Conv1d</ic></td><td><ic>nn.Conv2d</ic></td><td><ic>nn.Conv3d</ic></td></tr>
+      <tr><td class="row-label">Captures</td><td>Temporal / sequence patterns</td><td>Spatial patterns — edges, shapes</td><td>Spatio-temporal — motion, 3D structure</td></tr>
+      <tr><td class="row-label">Use Cases</td><td>ECG, audio, NLP, stock prices</td><td>Image classification, detection</td><td>Video action recognition, CT/MRI</td></tr>
+      <tr><td class="row-label">Famous Models</td><td>WaveNet, TextCNN, TCN</td><td>ResNet, VGG, EfficientNet</td><td>C3D, I3D, SlowFast, 3D-UNet</td></tr>
+      <tr><td class="row-label">Compute Cost</td><td>Lightest</td><td>Medium</td><td>Heaviest (\(K_D\times\) more than 2D)</td></tr>
+      <tr><td class="row-label">Parameters</td><td>\(K \cdot C_{in} \cdot C_{out}\)</td><td>\(K_H K_W \cdot C_{in} \cdot C_{out}\)</td><td>\(K_D K_H K_W \cdot C_{in} \cdot C_{out}\)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · 1D / 2D / 3D side by side</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># ── 1D: sequences ─────────────────────────────────────</span>
+conv1d = nn.<span class="cls">Conv1d</span>(in_channels=<span class="num">1</span>, out_channels=<span class="num">16</span>, kernel_size=<span class="num">3</span>)
+x1d    = torch.<span class="fn">randn</span>(<span class="num">4</span>, <span class="num">1</span>, <span class="num">100</span>)   <span class="cm"># 4 samples, 1 ch, length 100</span>
+<span class="fn">print</span>(<span class="fn">conv1d</span>(x1d).shape)           <span class="cm"># → [4, 16, 98]</span>
+
+<span class="cm"># ── 2D: images ────────────────────────────────────────</span>
+conv2d = nn.<span class="cls">Conv2d</span>(in_channels=<span class="num">3</span>, out_channels=<span class="num">32</span>, kernel_size=<span class="num">3</span>, padding=<span class="num">1</span>)
+x2d    = torch.<span class="fn">randn</span>(<span class="num">4</span>, <span class="num">3</span>, <span class="num">64</span>, <span class="num">64</span>)  <span class="cm"># 4 images, RGB, 64×64</span>
+<span class="fn">print</span>(<span class="fn">conv2d</span>(x2d).shape)            <span class="cm"># → [4, 32, 64, 64]</span>
+
+<span class="cm"># ── 3D: video / volumetric ────────────────────────────</span>
+conv3d = nn.<span class="cls">Conv3d</span>(in_channels=<span class="num">3</span>, out_channels=<span class="num">32</span>, kernel_size=(<span class="num">3</span>,<span class="num">3</span>,<span class="num">3</span>), padding=<span class="num">1</span>)
+x3d    = torch.<span class="fn">randn</span>(<span class="num">2</span>, <span class="num">3</span>, <span class="num">16</span>, <span class="num">64</span>, <span class="num">64</span>)  <span class="cm"># 2 videos, RGB, 16 frames</span>
+<span class="fn">print</span>(<span class="fn">conv3d</span>(x3d).shape)              <span class="cm"># → [2, 32, 16, 64, 64]</span></code></pre></div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ Rule of Thumb</div>
+    <div class="callout-body">Match convolution dimensionality to where meaningful local patterns live in your data. <strong>1 spatial direction</strong> (sequences) → Conv1d. <strong>2 directions</strong> (images) → Conv2d. <strong>3 directions</strong> (video/volumes) → Conv3d.</div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══ S9: PYTORCH ══ -->
+<div class="section-block" id="s9">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">09</div>
+      <div>
+        <div class="section-title">Complete PyTorch Practice</div>
+        <div class="section-sub">Building a CNN combining all convolution types</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · 1D CNN for ECG classification</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="kw">class</span> <span class="cls">ECGClassifier</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes=<span class="num">5</span>):
+        <span class="fn">super</span>().__init__()
+        self.conv1 = nn.<span class="cls">Conv1d</span>(<span class="num">1</span>, <span class="num">32</span>, kernel_size=<span class="num">7</span>, padding=<span class="num">3</span>)
+        self.conv2 = nn.<span class="cls">Conv1d</span>(<span class="num">32</span>, <span class="num">64</span>, kernel_size=<span class="num">5</span>, padding=<span class="num">2</span>)
+        self.conv3 = nn.<span class="cls">Conv1d</span>(<span class="num">64</span>, <span class="num">128</span>, kernel_size=<span class="num">3</span>, padding=<span class="num">1</span>)
+        self.pool  = nn.<span class="cls">AdaptiveAvgPool1d</span>(<span class="num">1</span>)
+        self.fc    = nn.<span class="cls">Linear</span>(<span class="num">128</span>, num_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = F.<span class="fn">relu</span>(self.<span class="fn">conv1</span>(x))
+        x = F.<span class="fn">max_pool1d</span>(x, <span class="num">2</span>)
+        x = F.<span class="fn">relu</span>(self.<span class="fn">conv2</span>(x))
+        x = F.<span class="fn">max_pool1d</span>(x, <span class="num">2</span>)
+        x = F.<span class="fn">relu</span>(self.<span class="fn">conv3</span>(x))
+        x = self.<span class="fn">pool</span>(x).squeeze(-<span class="num">1</span>)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(x)</code></pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · 2D CNN for image classification</span></div>
+    <div class="code-body"><pre><code><span class="kw">class</span> <span class="cls">ImageCNN</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes=<span class="num">10</span>):
+        <span class="fn">super</span>().__init__()
+        self.features = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Conv2d</span>(<span class="num">3</span>, <span class="num">32</span>, <span class="num">3</span>, padding=<span class="num">1</span>),
+            nn.<span class="cls">BatchNorm2d</span>(<span class="num">32</span>),
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">Conv2d</span>(<span class="num">32</span>, <span class="num">64</span>, <span class="num">3</span>, stride=<span class="num">2</span>, padding=<span class="num">1</span>),
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">Conv2d</span>(<span class="num">64</span>, <span class="num">128</span>, <span class="num">3</span>, stride=<span class="num">2</span>, padding=<span class="num">1</span>),
+            nn.<span class="cls">BatchNorm2d</span>(<span class="num">128</span>),
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+        )
+        self.classifier = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">AdaptiveAvgPool2d</span>(<span class="num">1</span>),
+            nn.<span class="cls">Flatten</span>(),
+            nn.<span class="cls">Linear</span>(<span class="num">128</span>, num_classes),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> self.<span class="fn">classifier</span>(self.<span class="fn">features</span>(x))</code></pre></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Test and count parameters</span></div>
+    <div class="code-body"><pre><code><span class="kw">def</span> <span class="fn">count_params</span>(model):
+    <span class="kw">return</span> <span class="fn">sum</span>(p.numel() <span class="kw">for</span> p <span class="kw">in</span> model.parameters() <span class="kw">if</span> p.requires_grad)
+
+ecg = <span class="cls">ECGClassifier</span>()
+img = <span class="cls">ImageCNN</span>()
+
+<span class="fn">print</span>(<span class="st">f"ECG Classifier params: {count_params(ecg):,}"</span>)
+<span class="fn">print</span>(<span class="st">f"Image CNN params:      {count_params(img):,}"</span>)
+
+out1 = <span class="fn">ecg</span>(torch.<span class="fn">randn</span>(<span class="num">4</span>, <span class="num">1</span>, <span class="num">500</span>))
+<span class="fn">print</span>(<span class="st">f"ECG output:   {out1.shape}"</span>)   <span class="cm"># → [4, 5]</span>
+
+out2 = <span class="fn">img</span>(torch.<span class="fn">randn</span>(<span class="num">4</span>, <span class="num">3</span>, <span class="num">64</span>, <span class="num">64</span>))
+<span class="fn">print</span>(<span class="st">f"Image output: {out2.shape}"</span>)   <span class="cm"># → [4, 10]</span></code></pre></div>
+  </div>
+
+  <h2 class="subsection">Common Mistakes</h2>
+  <table class="compare-table">
+    <tr><th>Mistake</th><th>Symptom</th><th>Fix</th></tr>
+    <tr><td>Wrong <ic>in_channels</ic></td><td>RuntimeError on forward</td><td>Match your data's C dimension exactly</td></tr>
+    <tr><td>Even kernel size</td><td>Asymmetric padding issues</td><td>Always use odd: 1, 3, 5, 7</td></tr>
+    <tr><td>Missing BatchNorm</td><td>Slow / unstable training</td><td>Conv → BatchNorm → ReLU ordering</td></tr>
+    <tr><td>No padding in deep net</td><td>Feature maps shrink too fast</td><td>Use <ic>padding=kernel//2</ic> to preserve size</td></tr>
+    <tr><td>FC where Conv fits</td><td>Millions of extra params</td><td>Use Conv for spatially structured inputs</td></tr>
+  </table>
+
+  </div></div>
+</div>
+
+<!-- ══ S10: SUMMARY ══ -->
+<div class="section-block open" id="s10">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">10</div>
+      <div>
+        <div class="section-title">Summary &amp; Key Takeaways</div>
+        <div class="section-sub">Everything you must carry forward from this module</div>
+      </div>
+    </div>
+    <div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="card-grid">
+    <div class="card" style="border-color:rgba(248,113,113,.3)">
+      <div class="card-icon">🚫</div>
+      <div class="card-title">Why Not ANN for Images?</div>
+      <div class="card-text">Too many params, no spatial structure, no weight sharing, not translation invariant. First FC layer on a 224×224 image = 150M weights.</div>
+    </div>
+    <div class="card" style="border-color:rgba(56,189,248,.3)">
+      <div class="card-icon">✅</div>
+      <div class="card-title">Why CNN Works</div>
+      <div class="card-text">Local connectivity + weight sharing = 5,377× fewer parameters. Same output, massively efficient. Right inductive bias for images.</div>
+    </div>
+    <div class="card" style="border-color:rgba(251,146,60,.3)">
+      <div class="card-icon">🧮</div>
+      <div class="card-title">The Core Operation</div>
+      <div class="card-text">Slide a small kernel, compute element-wise multiply + sum at each position. DL uses cross-correlation (no flip) but calls it convolution.</div>
+    </div>
+    <div class="card" style="border-color:rgba(129,140,248,.3)">
+      <div class="card-icon">📐</div>
+      <div class="card-title">Dimension Guide</div>
+      <div class="card-text">1D → sequences. 2D → images. 3D → video / volumes. Match dimensionality to where local structure lives in your data.</div>
+    </div>
+  </div>
+
+  <div class="callout important" style="margin-top:20px;">
+    <div class="callout-title">📌 The Big Picture</div>
+    <div class="callout-body">The kernel weights are not hand-crafted — they are learned entirely by gradient descent. Given enough data, CNNs discover optimal feature detectors automatically, from low-level edges to high-level semantic concepts, layer by layer. This is what makes them so powerful.</div>
+  </div>
+
+  <h2 class="subsection">What's Coming Next</h2>
+  <ul class="nice">
+    <li><strong>Hyperparameters in detail</strong> — stride, padding, dilation (separate module)</li>
+    <li><strong>Pooling layers</strong> — max pooling, average pooling, global pooling</li>
+    <li><strong>CNN architectures</strong> — LeNet → AlexNet → VGG → ResNet evolution</li>
+    <li><strong>Depthwise separable convolutions</strong> — MobileNet efficiency tricks</li>
+    <li><strong>Transposed convolution</strong> — upsampling in decoder networks</li>
+  </ul>
+
+  </div></div>
+</div>
+
+</div><!-- /.page -->
+
+<div class="footer">
+  <p>Deep Neural Networks Course &nbsp;·&nbsp; <strong>Module 3 — Convolution Operations</strong></p>
+</div>
+
+<script>
+// ── Theme toggle ────────────────────────────────────────────
+function toggleTheme(){
+  const html=document.documentElement;
+  const btn=document.getElementById('themeBtn');
+  if(html.dataset.theme==='dark'){
+    html.dataset.theme='light';
+    btn.textContent='🌙';
+  } else {
+    html.dataset.theme='dark';
+    btn.textContent='☀️';
+  }
+}
+// Set initial icon
+document.getElementById('themeBtn').textContent = document.documentElement.dataset.theme==='dark' ? '☀️' : '🌙';
+
+// ── Progress bar ────────────────────────────────────────────
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+  document.getElementById('prog').style.width=pct+'%';
+});
+
+// ── Accordion ───────────────────────────────────────────────
+function toggle(header){
+  header.parentElement.classList.toggle('open');
+}
+
+// ── 1D Conv Demo ────────────────────────────────────────────
+const I1=[1,2,3,4,5,6,7,8], K1=[1,0,-1];
+const O1=[];
+for(let i=0;i<I1.length-K1.length+1;i++) O1.push(I1[i]*K1[0]+I1[i+1]*K1[1]+I1[i+2]*K1[2]);
+let pos1=0;
+
+function cell(val,active,done,curr,accent){
+  const bg=active?`rgba(${accent},0.2)`:'var(--surface)';
+  const border=active?`1px solid rgb(${accent})`:'1px solid var(--border)';
+  const color=active?`rgb(${accent})`:'var(--text-dim)';
+  return `<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+    border:${border};border-radius:6px;margin:2px;background:${bg};
+    font-family:JetBrains Mono,monospace;font-weight:600;color:${color};font-size:.9rem;transition:all .25s">${val}</div>`;
+}
+
+function renderConv1D(){
+  const inp=document.getElementById('d1d-input');
+  const ker=document.getElementById('d1d-kernel');
+  const out=document.getElementById('d1d-output');
+  const cal=document.getElementById('d1d-calc');
+  if(!inp) return;
+  inp.innerHTML=I1.map((v,i)=>cell(v,i>=pos1&&i<pos1+3,false,false,'56,189,248')).join('');
+  ker.innerHTML=K1.map(v=>`<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+    border:1px solid #fb923c;border-radius:6px;margin:2px;background:rgba(251,146,60,0.18);
+    font-family:JetBrains Mono,monospace;font-weight:700;color:#fb923c;font-size:.9rem">${v>=0?'+':''}${v}</div>`).join('');
+  out.innerHTML=O1.map((v,i)=>{
+    const done=i<pos1, curr=i===pos1;
+    const bg=curr?'rgba(52,211,153,0.22)':done?'rgba(52,211,153,0.1)':'var(--surface)';
+    const border=curr?'1px solid #34d399':done?'1px solid rgba(52,211,153,0.4)':'1px solid var(--border)';
+    const color=curr?'#34d399':done?'#4ade80':'var(--text-dim)';
+    return `<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;
+      border:${border};border-radius:6px;margin:2px;background:${bg};
+      font-family:JetBrains Mono,monospace;font-weight:600;color:${color};font-size:.9rem;transition:all .25s">
+      ${(done||curr)?v:'?'}</div>`;
+  }).join('');
+  if(pos1<O1.length){
+    const p=pos1;
+    cal.textContent=`y[${p}] = ${I1[p]}×(+1) + ${I1[p+1]}×(0) + ${I1[p+2]}×(−1) = ${I1[p]} − ${I1[p+2]} = ${O1[p]}`;
+  } else {
+    cal.textContent=`Done! Output = [${O1.join(', ')}]`;
+  }
+}
+function conv1DStep(d){ pos1=Math.max(0,Math.min(O1.length-1,pos1+d)); renderConv1D(); }
+function conv1DReset(){ pos1=0; renderConv1D(); }
+
+// ── 2D Conv Demo ────────────────────────────────────────────
+const X2=[[1,2,3,0,1],[0,1,2,3,1],[1,0,1,2,0],[2,1,0,1,2],[0,2,1,0,1]];
+const W2=[[1,0,-1],[1,0,-1],[1,0,-1]];
+let p2={r:0,c:0}, animId=null;
+function calc2d(r,c){let s=0;for(let p=0;p<3;p++)for(let q=0;q<3;q++)s+=X2[r+p][c+q]*W2[p][q];return s;}
+const OUT2=[];
+for(let r=0;r<3;r++){OUT2.push([]);for(let c=0;c<3;c++)OUT2[r].push(calc2d(r,c));}
+
+function renderConv2D(){
+  const ct=document.getElementById('conv2d-container');
+  const cl=document.getElementById('conv2d-calc');
+  if(!ct) return;
+  const {r,c}=p2;
+  const CZ=38;
+
+  let inH=`<div><div style="font-size:.72rem;color:var(--accent);font-weight:700;text-align:center;margin-bottom:6px;">INPUT (5×5)</div>
+    <div style="display:grid;grid-template-columns:repeat(5,${CZ}px);">`;
+  for(let i=0;i<5;i++)for(let j=0;j<5;j++){
+    const a=i>=r&&i<r+3&&j>=c&&j<c+3;
+    inH+=`<div style="width:${CZ}px;height:${CZ}px;display:flex;align-items:center;justify-content:center;
+      border:1px solid ${a?'#38bdf8':'var(--border)'};border-radius:4px;margin:1px;
+      background:${a?'rgba(56,189,248,0.18)':'var(--surface)'};
+      font-family:JetBrains Mono,monospace;font-size:.82rem;font-weight:600;
+      color:${a?'#e2e8f0':'var(--text-dim)'};transition:all .2s">${X2[i][j]}</div>`;
+  }
+  inH+=`</div></div>`;
+
+  let kH=`<div style="align-self:center"><div style="font-size:.72rem;color:#fb923c;font-weight:700;text-align:center;margin-bottom:6px;">KERNEL (3×3)</div>
+    <div style="display:grid;grid-template-columns:repeat(3,${CZ}px);">`;
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+    kH+=`<div style="width:${CZ}px;height:${CZ}px;display:flex;align-items:center;justify-content:center;
+      border:1px solid #fb923c;border-radius:4px;margin:1px;background:rgba(251,146,60,0.18);
+      font-family:JetBrains Mono,monospace;font-size:.82rem;font-weight:700;color:#fb923c;">
+      ${W2[i][j]>=0?'+':''}${W2[i][j]}</div>`;
+  }
+  kH+=`</div></div>`;
+
+  let oH=`<div><div style="font-size:.72rem;color:#34d399;font-weight:700;text-align:center;margin-bottom:6px;">OUTPUT (3×3)</div>
+    <div style="display:grid;grid-template-columns:repeat(3,${CZ}px);">`;
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+    const done=(i<r)||(i===r&&j<=c), curr=i===r&&j===c;
+    oH+=`<div style="width:${CZ}px;height:${CZ}px;display:flex;align-items:center;justify-content:center;
+      border:1px solid ${curr?'#34d399':done?'rgba(52,211,153,0.4)':'var(--border)'};
+      border-radius:4px;margin:1px;
+      background:${curr?'rgba(52,211,153,0.22)':done?'rgba(52,211,153,0.1)':'var(--surface)'};
+      font-family:JetBrains Mono,monospace;font-size:.82rem;font-weight:600;
+      color:${curr?'#34d399':done?'#4ade80':'var(--text-dim)'};transition:all .2s">
+      ${done?OUT2[i][j]:'?'}</div>`;
+  }
+  oH+=`</div></div>`;
+
+  ct.innerHTML=inH+`<div style="font-size:1.3rem;color:var(--text-dim);align-self:center;padding:0 4px">★</div>`+kH+`<div style="font-size:1.3rem;color:var(--text-dim);align-self:center;padding:0 4px">=</div>`+oH;
+
+  const terms=[];
+  for(let p=0;p<3;p++)for(let q=0;q<3;q++){if(W2[p][q]!==0)terms.push(`${X2[r+p][c+q]}×${W2[p][q]>0?'(+':'('}${W2[p][q]})`);}
+  cl.textContent=`Y[${r},${c}] = ${terms.join(' + ')} = ${calc2d(r,c)}`;
+}
+function advConv2D(){p2.c++;if(p2.c>=3){p2.c=0;p2.r++;}if(p2.r>=3){p2.r=0;p2.c=0;}renderConv2D();}
+function startConv2DAnim(){if(animId)return;animId=setInterval(advConv2D,900);}
+function stopConv2DAnim(){clearInterval(animId);animId=null;}
+function resetConv2DAnim(){stopConv2DAnim();p2={r:0,c:0};renderConv2D();}
+
+// Init
+window.addEventListener('load',()=>{
+  document.getElementById('themeBtn').textContent='☀️';
+  renderConv1D();
+  renderConv2D();
+});
+</script>
+</body>
+</html>

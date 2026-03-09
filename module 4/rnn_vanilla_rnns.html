@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vanilla RNNs — Module IV: Sequential Models</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);--hero-glow:rgba(129,140,248,0.1);--code-bg:#0a0f1a;--code-header:#1a2035;--hover-overlay:rgba(255,255,255,0.03);--card-hover-shadow:0 8px 24px rgba(0,0,0,.4);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#f0f9ff 0%,#eef2ff 50%,#f0f9ff 100%);--hero-glow:rgba(129,140,248,0.12);--code-bg:#1e293b;--code-header:#0f172a;--hover-overlay:rgba(0,0,0,0.02);--card-hover-shadow:0 8px 24px rgba(0,0,0,.12);--p-color:#334155;}
+:root{--accent:#818cf8;--accent2:#38bdf8;--accent3:#34d399;--accent4:#fb923c;--accent5:#f472b6;--red:#f87171;--yellow:#fbbf24;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;}
+.progress-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent5));position:fixed;top:0;left:0;z-index:1000;transition:width .15s;}
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:60px 24px 48px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);}
+.hero-badge{display:inline-block;background:rgba(129,140,248,.12);border:1px solid rgba(129,140,248,.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;}
+.hero p{color:var(--text-muted);font-size:1rem;max-width:740px;margin:0 auto 20px;line-height:1.75;}
+.hero-nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.hero-nav a{font-size:.78rem;padding:5px 14px;border-radius:99px;text-decoration:none;border:1px solid var(--border);color:var(--text-muted);transition:all .2s;}
+.hero-nav a:hover{border-color:var(--accent);color:var(--accent);}
+.hero-nav .current{background:rgba(129,140,248,.15);border-color:rgba(129,140,248,.5);color:var(--accent);font-weight:700;}
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.toc-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100;}
+.toc-label{color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-right:4px;font-weight:700;flex-shrink:0;}
+.toc-link{color:var(--text-muted);font-size:.78rem;text-decoration:none;padding:3px 10px;border-radius:5px;transition:all .2s;border:1px solid transparent;white-space:nowrap;}
+.toc-link:hover{color:var(--accent);border-color:rgba(129,140,248,.3);background:rgba(129,140,248,.07);}
+.page{max-width:1080px;margin:0 auto;padding:36px 16px 80px;}
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;transition:box-shadow .25s;}
+.section-block:hover{box-shadow:0 0 0 1px rgba(129,140,248,.22);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;gap:14px;transition:background .2s;}
+.section-header:hover{background:var(--hover-overlay);}
+.section-title-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.section-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;}
+.section-title{font-size:1.08rem;font-weight:700;color:var(--text);line-height:1.3;}
+.section-sub{font-size:.76rem;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.chevron{color:var(--text-dim);font-size:1rem;transition:transform .3s;flex-shrink:0;}
+.section-block.open .chevron{transform:rotate(180deg);}
+.section-body{display:none;padding:0 22px 28px;border-top:1px solid var(--border);}
+.section-block.open .section-body{display:block;}
+.inner{padding-top:24px;}
+h2.sub{font-size:1.02rem;font-weight:700;color:var(--accent);margin:28px 0 12px;padding-bottom:7px;border-bottom:1px solid rgba(129,140,248,.18);}
+p{margin-bottom:12px;color:var(--p-color);line-height:1.85;}
+strong{color:var(--text);}
+.callout{border-radius:9px;padding:15px 18px;margin:16px 0;border-left:4px solid;}
+.callout-title{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.callout-body{font-size:.92rem;color:var(--p-color);line-height:1.8;}
+.callout.analogy{background:rgba(251,146,60,.08);border-color:var(--accent4);}.callout.analogy .callout-title{color:var(--accent4);}
+.callout.insight{background:rgba(52,211,153,.08);border-color:var(--accent3);}.callout.insight .callout-title{color:var(--accent3);}
+.callout.warning{background:rgba(251,191,36,.08);border-color:var(--yellow);}.callout.warning .callout-title{color:var(--yellow);}
+.callout.important{background:rgba(129,140,248,.08);border-color:var(--accent);}.callout.important .callout-title{color:var(--accent);}
+.callout.problem{background:rgba(248,113,113,.08);border-color:var(--red);}.callout.problem .callout-title{color:var(--red);}
+.callout.definition{background:rgba(56,189,248,.08);border-color:var(--accent2);}.callout.definition .callout-title{color:var(--accent2);}
+.callout.cliffhanger{background:rgba(244,114,182,.08);border-color:var(--accent5);}.callout.cliffhanger .callout-title{color:var(--accent5);}
+.math-block{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px 20px;margin:14px 0;overflow-x:auto;text-align:center;}
+.math-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:700;text-align:left;}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:16px 0;}
+.code-header{background:var(--code-header);padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.code-lang{font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.code-note{font-size:.72rem;color:var(--text-dim);font-family:'JetBrains Mono',monospace;}
+.code-body{padding:16px 18px;overflow-x:auto;}.code-body pre{margin:0;}
+.code-body code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.9;white-space:pre;}
+.kw{color:#c792ea;}.fn{color:#82aaff;}.st{color:#c3e88d;}.cm{color:#607080;font-style:italic;}.num{color:#f78c6c;}.cls{color:#ffcb6b;}.dec{color:#89ddff;}.op{color:#89ddff;}
+.tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:.84rem;}
+.tbl th{background:var(--surface2);color:var(--accent);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid rgba(129,140,248,.25);}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;line-height:1.6;}
+.tbl tr:hover td{background:var(--hover-overlay);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px;text-align:center;}
+.stat-val{font-size:1.3rem;font-weight:800;line-height:1.2;}.stat-lbl{font-size:.7rem;color:var(--text-dim);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;transition:all .2s;}
+.card:hover{border-color:rgba(129,140,248,.4);transform:translateY(-2px);box-shadow:var(--card-hover-shadow);}
+.card-icon{font-size:1.4rem;margin-bottom:8px;}.card-title{font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:5px;}.card-text{font-size:.81rem;color:var(--text-muted);line-height:1.6;}
+ic{font-family:'JetBrains Mono',monospace;font-size:.8em;background:rgba(129,140,248,.12);color:var(--accent);padding:1px 6px;border-radius:4px;}
+.viz{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:20px 16px;margin:16px 0;}
+.viz-title{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;font-weight:700;text-align:center;}
+.svg-wrap{overflow-x:auto;}
+/* step-through animator */
+.stepper{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:20px;margin:16px 0;}
+.step-controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.step-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-muted);padding:7px 18px;border-radius:7px;cursor:pointer;font-family:'Sora',sans-serif;font-size:.82rem;font-weight:600;transition:all .2s;}
+.step-btn:hover{border-color:var(--accent);color:var(--accent);}
+.step-btn.active{background:rgba(129,140,248,.15);border-color:var(--accent);color:var(--accent);}
+.step-display{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-top:12px;font-size:.88rem;color:var(--p-color);line-height:1.7;min-height:80px;}
+.step-indicator{font-size:.75rem;color:var(--text-dim);margin-left:auto;}
+/* gradient decay bars */
+.grad-bar-wrap{margin:14px 0;}
+.grad-row{display:flex;align-items:center;gap:10px;margin:5px 0;}
+.grad-label{font-size:.8rem;color:var(--text-muted);width:80px;text-align:right;flex-shrink:0;font-family:'JetBrains Mono',monospace;}
+.grad-bar{height:22px;border-radius:5px;transition:width .4s;display:flex;align-items:center;padding:0 8px;}
+.grad-val{font-size:.75rem;font-weight:700;font-family:'JetBrains Mono',monospace;color:white;}
+.footer{text-align:center;padding:36px 16px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.8rem;margin-top:32px;}
+.next-page{background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.3);border-radius:12px;padding:20px 24px;margin:24px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.next-page-text{font-size:.92rem;color:var(--text-muted);line-height:1.6;}
+.next-page-title{font-weight:700;color:var(--accent);font-size:1rem;}
+@media(max-width:700px){.toc-bar{overflow-x:auto;flex-wrap:nowrap;}.page{padding:20px 10px 60px;}.code-body code{font-size:.75rem;}.stats-row{grid-template-columns:1fr 1fr;}.card-grid{grid-template-columns:1fr 1fr;}.hero-nav{gap:6px;}}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="prog"></div>
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+
+<div class="hero">
+  <div class="hero-badge">Module IV · Page 1 of 4 · Sequential Models &amp; RNNs</div>
+  <h1>Vanilla Recurrent Neural Networks</h1>
+  <p>Feedforward networks are stateless — they process each input in isolation, with no memory of what came before. The moment you need to understand a sentence, predict the next word, or classify a heartbeat signal, that assumption breaks down. This page builds the recurrent solution from first principles — and shows exactly why it is not quite enough.</p>
+  <!-- <div class="hero-nav">
+    <a href="#" class="current">Page 1 · Vanilla RNNs</a>
+    <a href="#">Page 2 · LSTM &amp; GRU</a>
+    <a href="#">Page 3 · Seq2Seq &amp; Attention</a>
+    <a href="#">Page 4 · Transformers</a>
+  </div> -->
+</div>
+
+<div class="toc-bar">
+  <span class="toc-label">Sections</span>
+  <a class="toc-link" href="#s1">Why Sequences?</a>
+  <a class="toc-link" href="#s2">The RNN Cell</a>
+  <a class="toc-link" href="#s3">Unrolling Through Time</a>
+  <a class="toc-link" href="#s4">BPTT</a>
+  <a class="toc-link" href="#s5">Vanishing Gradients</a>
+  <a class="toc-link" href="#s6">RNN Types</a>
+  <a class="toc-link" href="#s7">PyTorch</a>
+  <a class="toc-link" href="#s8">Applications</a>
+  <a class="toc-link" href="#s9">Limitations</a>
+</div>
+
+<div class="page">
+<!-- ══════ S1: WHY SEQUENCES ══════ -->
+<div class="section-block open" id="s1">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent)">01</div>
+      <div>
+        <div class="section-title">Why Sequences? The Fundamental Limitation of Feedforward Networks</div>
+        <div class="section-sub">What makes sequential data different — and why CNNs and MLPs fundamentally cannot handle it</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Everything you have studied so far — MLPs, CNNs, transfer learning — shares one deep assumption that is so obvious it is easy to miss: <strong>each input is processed independently</strong>. When a CNN classifies an image, it does not care what image came before it or what image will come after. Each image is a standalone problem, and the network is stateless — it has no memory of past inputs.</p>
+
+  <p>This assumption works perfectly for static problems. But an enormous class of real-world problems is fundamentally sequential — meaning the correct answer at step <em>t</em> depends not just on the input at step <em>t</em>, but on everything that happened before it. Consider these examples:</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">💬</div>
+      <div class="card-title">Language</div>
+      <div class="card-text">The word "bank" means something completely different in "river bank" vs "bank account." You cannot understand word meaning without context — the sequence of surrounding words.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎵</div>
+      <div class="card-title">Audio &amp; Speech</div>
+      <div class="card-text">A spoken phoneme like "p" in "pin" vs "spin" is physically different, but your brain uses context to hear the same sound. Speech recognition requires modelling time.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">💓</div>
+      <div class="card-title">Time Series</div>
+      <div class="card-text">Whether a heartbeat is abnormal depends on its relationship to the beats before it. A single data point in isolation tells you almost nothing about arrhythmia.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎬</div>
+      <div class="card-title">Video</div>
+      <div class="card-text">A single frame showing a hand might be grasping, releasing, or waving. You can only tell which by watching what happened in the previous frames.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🌡️</div>
+      <div class="card-title">Forecasting</div>
+      <div class="card-text">Predicting tomorrow's temperature requires yesterday's and today's readings. The trend — not just the current value — is what matters.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🧬</div>
+      <div class="card-title">DNA / Protein</div>
+      <div class="card-text">The function of a codon depends on its position in a gene. Biological sequences are meaningless without their order.</div>
+    </div>
+  </div>
+
+  <h2 class="sub">What Specifically Breaks With a Feedforward Network?</h2>
+
+  <p>Let's be precise about <em>why</em> an MLP or CNN cannot handle sequences. There are three distinct failures, not just one.</p>
+
+  <p><strong>Problem 1 — Fixed Input Size.</strong> An MLP requires a fixed-size input vector. But sequences vary in length. A sentence can be 3 words or 3,000 words. You cannot pad everything to the longest possible sequence — that would mean processing thousands of mostly-empty inputs, and the network would have no principled way to distinguish a short sequence from a padded one.</p>
+
+  <p><strong>Problem 2 — No Memory Across Steps.</strong> Even if you could handle variable length by sliding a fixed window across the sequence, the network would have no memory of what it saw in previous windows. It sees each window in isolation. The network cannot know that the word "not" two sentences ago reverses the sentiment of the current sentence, because that earlier window's information was discarded.</p>
+
+  <p><strong>Problem 3 — No Parameter Sharing Across Time.</strong> If you tried to handle a length-100 sequence by concatenating all 100 inputs into one giant vector and feeding it to a large MLP, the network would learn separate weights for "the word at position 1", "the word at position 2", etc. The same concept — say, "the subject of the sentence" — appearing at different positions would need to be learned separately for every position. This is both statistically wasteful and structurally wrong.</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Analogy — Reading Without Memory</div>
+    <div class="callout-body">Imagine reading a book with amnesia — every word you read, you instantly forget. By the time you reach the period at the end of a long sentence, you have no idea what the sentence was about. A feedforward network reading a sequence is exactly this: it processes each element in isolation, with no accumulation of context. The key insight of RNNs is that reading is not a series of independent events — each word updates a running mental model of what you have read so far, and that model persists as you continue reading.</div>
+  </div>
+
+  <h2 class="sub">The Key Insight: Hidden State as Memory</h2>
+
+  <p>The solution that recurrent neural networks introduce is conceptually simple: give the network a <strong>hidden state</strong> — a vector that persists across time steps. At each step, the network takes two inputs: the current input <em>and</em> the hidden state from the previous step. It produces two outputs: the current output <em>and</em> an updated hidden state that is passed to the next step. The hidden state is the network's memory. It encodes everything the network has seen so far in a compressed, learned representation.</p>
+
+  <div class="viz">
+    <div class="viz-title">Feedforward vs Recurrent — the fundamental architectural difference</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 820 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="m1" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="m1r" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+      </defs>
+
+      <!-- LEFT: Feedforward -->
+      <text x="175" y="18" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#94a3b8">Feedforward Network</text>
+      <text x="175" y="34" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Each input processed independently — no memory</text>
+
+      <!-- Three isolated networks -->
+      <rect x="20"  y="50" width="60" height="30" rx="5" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.3"/>
+      <text x="50"  y="70" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">x₁</text>
+      <line x1="50" y1="80" x2="50" y2="98" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="20"  y="100" width="60" height="36" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.3"/>
+      <text x="50"  y="123" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">FFN</text>
+      <line x1="50" y1="136" x2="50" y2="154" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="20"  y="156" width="60" height="28" rx="5" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="50"  y="175" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">ŷ₁</text>
+
+      <rect x="145" y="50" width="60" height="30" rx="5" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.3"/>
+      <text x="175" y="70" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">x₂</text>
+      <line x1="175" y1="80" x2="175" y2="98" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="145" y="100" width="60" height="36" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.3"/>
+      <text x="175" y="123" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">FFN</text>
+      <line x1="175" y1="136" x2="175" y2="154" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="145" y="156" width="60" height="28" rx="5" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="175" y="175" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">ŷ₂</text>
+
+      <rect x="270" y="50" width="60" height="30" rx="5" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.3"/>
+      <text x="300" y="70" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">x₃</text>
+      <line x1="300" y1="80" x2="300" y2="98" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="270" y="100" width="60" height="36" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.3"/>
+      <text x="300" y="123" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">FFN</text>
+      <line x1="300" y1="136" x2="300" y2="154" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="270" y="156" width="60" height="28" rx="5" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="300" y="175" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">ŷ₃</text>
+
+      <!-- No connection annotation -->
+      <line x1="82" y1="118" x2="143" y2="118" stroke="#f87171" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="112" y="113" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">✗ no connection</text>
+      <line x1="207" y1="118" x2="268" y2="118" stroke="#f87171" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="237" y="113" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">✗ no connection</text>
+
+      <!-- Vertical divider -->
+      <line x1="410" y1="30" x2="410" y2="210" stroke="#2d3748" stroke-width="1" stroke-dasharray="6,3"/>
+
+      <!-- RIGHT: RNN -->
+      <text x="620" y="18" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#818cf8">Recurrent Network</text>
+      <text x="620" y="34" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Hidden state carries memory across all steps</text>
+
+      <!-- h0 -->
+      <rect x="420" y="100" width="60" height="36" rx="5" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1.3"/>
+      <text x="450" y="118" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">h₀</text>
+      <text x="450" y="130" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">zeros</text>
+
+      <!-- Step 1 -->
+      <rect x="505" y="50" width="60" height="28" rx="5" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.3"/>
+      <text x="535" y="69" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">x₁</text>
+      <line x1="535" y1="78" x2="535" y2="98" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="505" y="100" width="60" height="36" rx="5" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="2"/>
+      <text x="535" y="118" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">RNN</text>
+      <text x="535" y="130" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">cell</text>
+      <line x1="535" y1="136" x2="535" y2="156" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="505" y="158" width="60" height="26" rx="5" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="535" y="176" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">ŷ₁</text>
+      <!-- h0 → RNN1 -->
+      <line x1="480" y1="118" x2="503" y2="118" stroke="#fb923c" stroke-width="2" marker-end="url(#m1)"/>
+
+      <!-- Step 2 -->
+      <rect x="610" y="50" width="60" height="28" rx="5" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.3"/>
+      <text x="640" y="69" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">x₂</text>
+      <line x1="640" y1="78" x2="640" y2="98" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="610" y="100" width="60" height="36" rx="5" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="2"/>
+      <text x="640" y="118" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">RNN</text>
+      <text x="640" y="130" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">cell</text>
+      <line x1="640" y1="136" x2="640" y2="156" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="610" y="158" width="60" height="26" rx="5" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="640" y="176" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">ŷ₂</text>
+      <!-- h1 arrow -->
+      <line x1="565" y1="118" x2="608" y2="118" stroke="#818cf8" stroke-width="2.5" marker-end="url(#m1r)"/>
+      <text x="587" y="112" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8" font-weight="700">h₁</text>
+
+      <!-- Step 3 -->
+      <rect x="715" y="50" width="60" height="28" rx="5" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.3"/>
+      <text x="745" y="69" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">x₃</text>
+      <line x1="745" y1="78" x2="745" y2="98" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="715" y="100" width="60" height="36" rx="5" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="2"/>
+      <text x="745" y="118" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">RNN</text>
+      <text x="745" y="130" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">cell</text>
+      <line x1="745" y1="136" x2="745" y2="156" stroke="#475569" stroke-width="1.2" marker-end="url(#m1)"/>
+      <rect x="715" y="158" width="60" height="26" rx="5" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="745" y="176" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">ŷ₃</text>
+      <!-- h2 arrow -->
+      <line x1="670" y1="118" x2="713" y2="118" stroke="#818cf8" stroke-width="2.5" marker-end="url(#m1r)"/>
+      <text x="692" y="112" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8" font-weight="700">h₂</text>
+
+      <!-- "memory flows" annotation -->
+      <rect x="424" y="196" width="360" height="22" rx="5" fill="rgba(129,140,248,.07)" stroke="rgba(129,140,248,.25)" stroke-width="1"/>
+      <text x="604" y="211" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8">Hidden state hₜ flows right — each cell reads ALL previous context</text>
+    </svg>
+    </div>
+  </div>
+
+  <p>The critical observation is that <strong>the same set of weights is reused at every time step</strong>. There is only one RNN cell, not a different network for each position. This is analogous to the parameter sharing idea in CNNs — the same filter slides across spatial positions; in an RNN, the same cell slides across time steps. This means the network can generalise across sequence lengths and positions without learning separate parameters for each.</p>
+
+  </div></div>
+</div>
+<!-- ══════ S2: THE RNN CELL ══════ -->
+<div class="section-block open" id="s2">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent2)">02</div>
+      <div>
+        <div class="section-title">The RNN Cell — Architecture and Mathematics</div>
+        <div class="section-sub">The recurrence equation, weight matrices, and what the hidden state actually means</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The RNN cell is the core computational unit, and it is simpler than it first appears. At every time step <em>t</em>, it receives two things: the current input vector <strong>x</strong><sub>t</sub> and the hidden state from the previous step <strong>h</strong><sub>t−1</sub>. It produces two things: the new hidden state <strong>h</strong><sub>t</sub> and optionally an output <strong>y</strong><sub>t</sub>. The same operation, the same weights, repeated at every single time step regardless of sequence length.</p>
+
+  <h2 class="sub">The Recurrence Equation</h2>
+  <p>The computation inside the cell is a single equation — a weighted combination of the current input and the previous hidden state, passed through a nonlinearity:</p>
+
+  <div class="math-block">
+    <div class="math-label">Core RNN recurrence — computed at every time step t</div>
+    $$\mathbf{h}_t = \tanh\!\left(\mathbf{W}_{hh}\,\mathbf{h}_{t-1} + \mathbf{W}_{xh}\,\mathbf{x}_t + \mathbf{b}_h\right)$$
+  </div>
+
+  <div class="math-block">
+    <div class="math-label">Output at each step (if required)</div>
+    $$\mathbf{y}_t = \mathbf{W}_{hy}\,\mathbf{h}_t + \mathbf{b}_y$$
+  </div>
+
+  <p>Each symbol has a precise meaning that is worth understanding individually before putting them together.</p>
+
+  <table class="tbl">
+    <tr><th>Symbol</th><th>Shape</th><th>Role</th></tr>
+    <tr>
+      <td><ic>xₜ</ic></td>
+      <td>(input_size,)</td>
+      <td>The input at the current time step. For text, this might be a one-hot vector or a word embedding. For audio, a frame of MFCC features.</td>
+    </tr>
+    <tr>
+      <td><ic>hₜ₋₁</ic></td>
+      <td>(hidden_size,)</td>
+      <td>The hidden state from the previous step — the network's memory of everything it has seen so far. At t=0, this is initialised to zeros.</td>
+    </tr>
+    <tr>
+      <td><ic>W_xh</ic></td>
+      <td>(hidden_size, input_size)</td>
+      <td>Input weight matrix. Projects the current input into hidden space. Learns "which aspects of the input are worth remembering."</td>
+    </tr>
+    <tr>
+      <td><ic>W_hh</ic></td>
+      <td>(hidden_size, hidden_size)</td>
+      <td>Recurrent weight matrix — the memory weight. Projects the previous hidden state. Learns "how to update memory given what was previously remembered." This is the defining matrix of an RNN.</td>
+    </tr>
+    <tr>
+      <td><ic>W_hy</ic></td>
+      <td>(output_size, hidden_size)</td>
+      <td>Output weight matrix. Projects the hidden state to the output space. Only used when a prediction is needed at this step.</td>
+    </tr>
+    <tr>
+      <td><ic>tanh</ic></td>
+      <td>—</td>
+      <td>Activation function, applied element-wise. Squashes values to (−1, 1), keeping the hidden state bounded. Historically tanh was preferred over ReLU for RNNs because unbounded hidden states cause numerical instability across long sequences.</td>
+    </tr>
+  </table>
+
+  <div class="callout important">
+    <div class="callout-title">🔑 W_hh Is What Makes It Recurrent</div>
+    <div class="callout-body">Remove <ic>W_hh</ic> from the equation and you have a plain feedforward network applied independently to each time step — exactly what we said cannot model sequences. It is the recurrent weight matrix <ic>W_hh</ic> that creates the feedback loop, allowing information to flow from one time step to the next. This is the one essential architectural difference between an RNN and everything you have studied before.</div>
+  </div>
+
+  <h2 class="sub">Visualising the RNN Cell Internals</h2>
+
+  <div class="viz">
+    <div class="viz-title">Inside one RNN cell at time step t — two inputs, one hidden state output, one optional prediction</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 740 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:740px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ca" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="cb" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+        <marker id="cc" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#38bdf8"/></marker>
+        <marker id="cd" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+      </defs>
+
+      <!-- Cell border -->
+      <rect x="180" y="80" width="360" height="160" rx="12" fill="rgba(129,140,248,.07)" stroke="#818cf8" stroke-width="2" stroke-dasharray="8,4"/>
+      <text x="360" y="100" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="rgba(129,140,248,.6)">RNN Cell — same weights every step</text>
+
+      <!-- hₜ₋₁ input from left -->
+      <rect x="20" y="148" width="80" height="34" rx="6" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="60" y="167" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#fb923c">hₜ₋₁</text>
+      <text x="60" y="180" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">prev hidden</text>
+      <line x1="100" y1="165" x2="178" y2="165" stroke="#fb923c" stroke-width="2" marker-end="url(#ca)"/>
+      <text x="139" y="158" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c">W_hh ×</text>
+
+      <!-- xₜ input from top -->
+      <rect x="320" y="10" width="80" height="32" rx="6" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="360" y="31" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">xₜ</text>
+      <line x1="360" y1="42" x2="360" y2="78" stroke="#38bdf8" stroke-width="2" marker-end="url(#ca)"/>
+      <text x="375" y="66" font-family="Sora" font-size="9" fill="#38bdf8">W_xh ×</text>
+
+      <!-- Addition node -->
+      <circle cx="310" cy="165" r="22" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="2"/>
+      <text x="310" y="171" text-anchor="middle" font-family="Sora" font-size="18" fill="#818cf8">+</text>
+      <text x="310" y="190" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">+ bias bₕ</text>
+
+      <!-- xₜ →  Addition -->
+      <line x1="360" y1="130" x2="330" y2="155" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#ca)"/>
+
+      <!-- W_hh path to addition -->
+      <line x1="178" y1="165" x2="288" y2="165" stroke="#fb923c" stroke-width="1.5" marker-end="url(#ca)"/>
+
+      <!-- tanh node -->
+      <rect x="365" y="148" width="80" height="36" rx="8" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.8"/>
+      <text x="405" y="169" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#f472b6">tanh</text>
+      <line x1="332" y1="165" x2="363" y2="165" stroke="#818cf8" stroke-width="2" marker-end="url(#cb)"/>
+
+      <!-- hₜ output right -->
+      <line x1="445" y1="165" x2="540" y2="165" stroke="#818cf8" stroke-width="2.5" marker-end="url(#cb)"/>
+      <rect x="542" y="148" width="80" height="34" rx="6" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="2"/>
+      <text x="582" y="167" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#818cf8">hₜ</text>
+      <text x="582" y="180" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">new hidden</text>
+      <!-- hₜ → next step (feedback arrow) -->
+      <path d="M 622 148 L 622 60 L 60 60 L 60 148" fill="none" stroke="#fb923c" stroke-width="1.8" stroke-dasharray="7,3" marker-end="url(#ca)"/>
+      <text x="341" y="52" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c">hₜ becomes hₜ₋₁ at next step</text>
+
+      <!-- Output yₜ (optional, going down) -->
+      <line x1="582" y1="182" x2="582" y2="230" stroke="#34d399" stroke-width="1.8" marker-end="url(#cd)"/>
+      <text x="606" y="214" font-family="Sora" font-size="9" fill="#34d399">W_hy ×</text>
+      <rect x="542" y="232" width="80" height="30" rx="6" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="582" y="252" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#34d399">ŷₜ</text>
+      <text x="582" y="275" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">(optional output)</text>
+
+      <!-- Equation reminder -->
+      <rect x="12" y="260" width="340" height="42" rx="7" fill="rgba(129,140,248,.06)" stroke="rgba(129,140,248,.2)" stroke-width="1"/>
+      <text x="22" y="278" font-family="JetBrains Mono" font-size="10" fill="#818cf8">hₜ = tanh(W_hh · hₜ₋₁  +  W_xh · xₜ  +  bₕ)</text>
+      <text x="22" y="295" font-family="JetBrains Mono" font-size="10" fill="#34d399">ŷₜ = W_hy · hₜ  +  b_y</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Parameter Count — Surprisingly Compact</h2>
+  <p>An RNN has three weight matrices and two bias vectors. If the input has size <em>n</em> and the hidden state has size <em>h</em>, and the output has size <em>o</em>, the total parameter count is:</p>
+
+  <div class="math-block">
+    <div class="math-label">Total parameters in a vanilla RNN</div>
+    $$\text{Params} = \underbrace{h \times n}_{\mathbf{W}_{xh}} + \underbrace{h \times h}_{\mathbf{W}_{hh}} + \underbrace{h}_{b_h} + \underbrace{o \times h}_{\mathbf{W}_{hy}} + \underbrace{o}_{b_y}$$
+  </div>
+
+  <p>Notice that this count does <em>not</em> grow with the sequence length T. A 256-unit RNN processing sequences of 10 tokens uses the exact same number of parameters as a 256-unit RNN processing sequences of 10,000 tokens — because the weights are shared across all time steps. This is the efficiency advantage of the recurrent approach.</p>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ Concrete Example — Character-Level Language Model</div>
+    <div class="callout-body">Suppose we want to model English text at the character level: 26 letters + punctuation = 65 characters total (input size = 65, one-hot encoded). We choose a hidden size of 128. The RNN has: W_xh = 128×65 = 8,320 params, W_hh = 128×128 = 16,384 params, b_h = 128 params, W_hy = 65×128 = 8,320 params, b_y = 65 params. <strong>Total: 33,217 parameters</strong> — a tiny model that can be trained on a laptop CPU in minutes and learns to generate plausible-looking text. Andrej Karpathy's famous "The Unreasonable Effectiveness of RNNs" (2015) showed that even this tiny model, trained on Shakespeare, generates surprisingly coherent prose.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S3: UNROLLING THROUGH TIME ══════ -->
+<div class="section-block open" id="s3">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">03</div>
+      <div>
+        <div class="section-title">Unrolling Through Time — The RNN as a Deep Network</div>
+        <div class="section-sub">How a single recurrent cell becomes a deep computational graph, and what that means for training</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The compact diagram of a single RNN cell with a looping arrow is the <em>folded</em> view — convenient for understanding the concept but misleading when you need to think about training. To actually compute gradients, we need to "unroll" the network: replace the single cell with one copy per time step, connected in a chain. This turns the RNN into a deep feedforward network where depth equals sequence length.</p>
+
+  <p>This is a critical perspective shift. A sequence of length T, processed by an RNN, creates a computational graph that is T layers deep. Training an RNN on sequences of length 100 is — from the optimiser's perspective — equivalent to training a 100-layer feedforward network. All of the challenges of training very deep networks apply here, magnified by the fact that the same weights appear in every layer (time step).</p>
+
+  <div class="viz">
+    <div class="viz-title">Folded view → Unrolled view — a T=5 sequence creates a 5-layer computation graph</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 820 260" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ua" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="ub" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+        <marker id="uc" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+      </defs>
+
+      <!-- FOLDED VIEW (left) -->
+      <text x="70" y="18" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Folded (compact)</text>
+      <rect x="20" y="100" width="50" height="30" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="45" y="119" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">xₜ</text>
+      <line x1="45" y1="130" x2="45" y2="148" stroke="#475569" stroke-width="1.2" marker-end="url(#ua)"/>
+      <rect x="20" y="150" width="50" height="36" rx="8" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="2"/>
+      <text x="45" y="173" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#818cf8">h</text>
+      <line x1="45" y1="186" x2="45" y2="205" stroke="#475569" stroke-width="1.2" marker-end="url(#ua)"/>
+      <rect x="20" y="207" width="50" height="26" rx="5" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="45" y="224" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">ŷₜ</text>
+      <!-- loop arrow -->
+      <path d="M 70 168 C 120 168, 120 168, 120 80 C 120 30, 20 30, 20 80 C 20 110, 20 150, 20 150" 
+            fill="none" stroke="#fb923c" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#ua)"/>
+      <text x="128" y="100" font-family="Sora" font-size="9" fill="#fb923c">hₜ→hₜ₊₁</text>
+
+      <!-- Arrow "unroll" -->
+      <text x="185" y="130" text-anchor="middle" font-family="Sora" font-size="11" fill="#64748b">unroll</text>
+      <line x1="155" y1="168" x2="212" y2="168" stroke="#64748b" stroke-width="1.5" marker-end="url(#ua)"/>
+
+      <!-- UNROLLED VIEW (right) — 5 steps -->
+      <text x="540" y="18" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Unrolled (T = 5 steps) — same W at every step</text>
+
+      <!-- h0 -->
+      <rect x="220" y="148" width="46" height="32" rx="5" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1.3"/>
+      <text x="243" y="167" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">h₀</text>
+      <text x="243" y="178" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">zeros</text>
+
+      <!-- 5 cells -->
+      <!-- helper: cell at x_offset -->
+      <!-- t=1 -->
+      <rect x="278" y="90" width="42" height="24" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1"/>
+      <text x="299" y="106" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₁</text>
+      <line x1="299" y1="114" x2="299" y2="146" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="275" y="148" width="48" height="32" rx="6" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="299" y="169" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₁</text>
+      <line x1="266" y1="164" x2="275" y2="164" stroke="#fb923c" stroke-width="1.8" marker-end="url(#ua)"/>
+      <line x1="299" y1="180" x2="299" y2="200" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="275" y="202" width="48" height="22" rx="4" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="1"/>
+      <text x="299" y="217" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">ŷ₁</text>
+
+      <!-- t=2 -->
+      <rect x="340" y="90" width="42" height="24" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1"/>
+      <text x="361" y="106" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₂</text>
+      <line x1="361" y1="114" x2="361" y2="146" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="337" y="148" width="48" height="32" rx="6" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="361" y="169" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₂</text>
+      <line x1="323" y1="164" x2="337" y2="164" stroke="#818cf8" stroke-width="1.8" marker-end="url(#ub)"/>
+      <line x1="361" y1="180" x2="361" y2="200" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="337" y="202" width="48" height="22" rx="4" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="1"/>
+      <text x="361" y="217" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">ŷ₂</text>
+
+      <!-- t=3 -->
+      <rect x="402" y="90" width="42" height="24" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1"/>
+      <text x="423" y="106" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₃</text>
+      <line x1="423" y1="114" x2="423" y2="146" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="399" y="148" width="48" height="32" rx="6" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="423" y="169" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₃</text>
+      <line x1="385" y1="164" x2="399" y2="164" stroke="#818cf8" stroke-width="1.8" marker-end="url(#ub)"/>
+      <line x1="423" y1="180" x2="423" y2="200" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="399" y="202" width="48" height="22" rx="4" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="1"/>
+      <text x="423" y="217" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">ŷ₃</text>
+
+      <!-- t=4 -->
+      <rect x="464" y="90" width="42" height="24" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1"/>
+      <text x="485" y="106" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₄</text>
+      <line x1="485" y1="114" x2="485" y2="146" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="461" y="148" width="48" height="32" rx="6" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="485" y="169" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₄</text>
+      <line x1="447" y1="164" x2="461" y2="164" stroke="#818cf8" stroke-width="1.8" marker-end="url(#ub)"/>
+      <line x1="485" y1="180" x2="485" y2="200" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="461" y="202" width="48" height="22" rx="4" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="1"/>
+      <text x="485" y="217" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">ŷ₄</text>
+
+      <!-- t=5 -->
+      <rect x="526" y="90" width="42" height="24" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1"/>
+      <text x="547" y="106" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₅</text>
+      <line x1="547" y1="114" x2="547" y2="146" stroke="#475569" stroke-width="1.1" marker-end="url(#ua)"/>
+      <rect x="523" y="148" width="48" height="32" rx="6" fill="rgba(129,140,248,.3)" stroke="#818cf8" stroke-width="2.5"/>
+      <text x="547" y="169" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₅</text>
+      <line x1="509" y1="164" x2="523" y2="164" stroke="#818cf8" stroke-width="1.8" marker-end="url(#ub)"/>
+      <line x1="547" y1="180" x2="547" y2="200" stroke="#34d399" stroke-width="2" marker-end="url(#uc)"/>
+      <rect x="519" y="202" width="56" height="22" rx="4" fill="rgba(52,211,153,.25)" stroke="#34d399" stroke-width="2"/>
+      <text x="547" y="217" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">ŷ₅ ★</text>
+
+      <!-- "same W" brace -->
+      <line x1="275" y1="240" x2="571" y2="240" stroke="#818cf8" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="423" y="254" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8">W_hh, W_xh, W_hy are identical at every step — shared weights</text>
+
+      <!-- "depth = T" annotation -->
+      <text x="710" y="100" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f87171">Effective</text>
+      <text x="710" y="114" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f87171">depth = T</text>
+      <text x="710" y="136" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">For T=100</text>
+      <text x="710" y="150" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">this graph is</text>
+      <text x="710" y="164" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">100 layers</text>
+      <text x="710" y="178" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">deep!</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">The Stepped Computation — Following One Sentence</h2>
+  <p>To make this concrete, let's trace what happens when we feed the sentence <strong>"The cat sat"</strong> into a character-level RNN. At each step, the RNN processes one character and updates its hidden state:</p>
+
+  <div class="stepper" id="stepper1">
+    <div class="viz-title" style="margin-bottom:10px">Step-by-step: hidden state evolution for "The cat sat"</div>
+    <div class="step-controls">
+      <button class="step-btn active" onclick="stepTo(0)">Start</button>
+      <button class="step-btn" onclick="stepTo(1)">'T'</button>
+      <button class="step-btn" onclick="stepTo(2)">'h'</button>
+      <button class="step-btn" onclick="stepTo(3)">'e'</button>
+      <button class="step-btn" onclick="stepTo(4)">' '</button>
+      <button class="step-btn" onclick="stepTo(5)">'c'</button>
+      <button class="step-btn" onclick="stepTo(6)">'a'</button>
+      <button class="step-btn" onclick="stepTo(7)">'t'</button>
+      <span class="step-indicator" id="stepInd">Step 0 / 7</span>
+    </div>
+    <div class="step-display" id="stepDisplay">
+      <strong style="color:var(--accent)">Before processing:</strong> h₀ is a zero vector — no memory, no context. The network knows nothing yet. The first character it receives will form the beginning of the context that all subsequent characters build upon.
+    </div>
+  </div>
+
+  <h2 class="sub">What Does the Hidden State Actually Encode?</h2>
+  <p>A natural question is: what does the hidden state <em>contain</em> after processing several tokens? The answer is that it contains a learned, compressed representation of the sequence history — but that representation is not interpretable in any human-meaningful way. The hidden state is a dense vector of real numbers whose dimensions do not correspond to named concepts. However, researchers have visualised individual hidden units (single dimensions of the hidden state vector) and found remarkable structure: some units track whether the current character is inside a quotation mark, others track the current indentation level in code, others fire when the previous word was a verb. The network discovers these structured representations without being told to — they emerge from learning to predict the next character.</p>
+
+  </div></div>
+</div>
+
+<script>
+const steps = [
+  "<strong style='color:var(--accent)'>Before processing:</strong> h₀ is a zero vector — no memory, no context. The network knows nothing yet. The first character it receives will form the beginning of the context that all subsequent characters build upon.",
+  "<strong style='color:var(--accent2)'>Step 1 — 'T':</strong> h₁ = tanh(W_xh·x_T + W_hh·h₀ + b). Since h₀ = 0, this simplifies to tanh(W_xh·x_T + b). h₁ encodes: 'I have seen one character — an uppercase T. This likely begins a sentence or a proper noun.' The hidden state now carries this weak, initial context.",
+  "<strong style='color:var(--accent2)'>Step 2 — 'h':</strong> h₂ = tanh(W_xh·x_h + W_hh·h₁ + b). Now both the current 'h' AND the memory of 'T' contribute. h₂ encodes the bigram 'Th' — which in English almost always precedes 'e' (as in 'The', 'This', 'That', 'They'). The network is already building sub-word structure.",
+  "<strong style='color:var(--accent3)'>Step 3 — 'e':</strong> h₃ encodes the trigram 'The' — a definite article. This is a complete word! The hidden state now carries meaningful grammatical information: the next element will be a noun phrase. Something important to predict follows.",
+  "<strong style='color:var(--accent4)'>Step 4 — ' ' (space):</strong> h₄ encodes 'The '. The space confirms word boundary. The network now knows it is after a definite article, expecting a noun or adjective next. Probable next characters: consonants that begin nouns (c, d, f, g, h, l, m, n, p, r, s, t...).",
+  "<strong style='color:var(--accent4)'>Step 5 — 'c':</strong> h₅ encodes 'The c'. After 'The', 'c' begins many common words: cat, car, city, country. The hidden state has narrowed the possibilities — it knows it is in the middle of a common noun following a definite article.",
+  "<strong style='color:var(--accent5)'>Step 6 — 'a':</strong> h₆ encodes 'The ca'. The bigram 'ca' narrows things further: cat, car, cake, case, call, camp... The hidden state is tracking both the local character pattern AND the broader sentence-level context (definite article + noun).",
+  "<strong style='color:var(--accent3)'>Step 7 — 't':</strong> h₇ encodes 'The cat'. The network has now compressed the entire phrase 'The cat' into h₇ — a single dense vector. From here it can predict: the next word is most likely a verb ('sat', 'ran', 'ate', 'slept'). The information from step 1 ('T' beginning the sentence) is still influencing this hidden state, 7 steps later."
+];
+
+function stepTo(i){
+  document.getElementById('stepDisplay').innerHTML = steps[i];
+  document.getElementById('stepInd').textContent = 'Step ' + i + ' / 7';
+  document.querySelectorAll('.step-btn').forEach((b,j) => b.classList.toggle('active', j===i));
+}
+</script>
+<!-- ══════ S4: BPTT ══════ -->
+<div class="section-block open" id="s4">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">04</div>
+      <div>
+        <div class="section-title">Backpropagation Through Time (BPTT)</div>
+        <div class="section-sub">How gradients flow backward through the unrolled graph — and why the chain rule becomes dangerous</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Training an RNN uses exactly the same algorithm as training any other neural network — gradient descent with backpropagation. The only difference is that backpropagation must flow backwards through the unrolled computation graph, traversing every time step from the last back to the first. This specialised application of backprop is called <strong>Backpropagation Through Time (BPTT)</strong>, though it is really just regular backprop applied to a graph that happens to be unrolled across time.</p>
+
+  <h2 class="sub">The Loss Function for a Sequence</h2>
+  <p>If the network makes a prediction at every time step (such as predicting the next character at each position), the total loss is the sum of per-step losses. For a classification task at each step using cross-entropy:</p>
+
+  <div class="math-block">
+    <div class="math-label">Total loss = sum of per-step losses across all T time steps</div>
+    $$\mathcal{L} = \sum_{t=1}^{T} \mathcal{L}_t = -\sum_{t=1}^{T} \log P(\mathbf{y}_t \mid \mathbf{x}_1, \ldots, \mathbf{x}_t)$$
+  </div>
+
+  <p>The gradient of this total loss with respect to every parameter must be computed. Because every time step uses the <em>same</em> weight matrices (W_hh, W_xh, W_hy), the total gradient for each matrix is the <em>sum</em> of gradients contributed by every time step:</p>
+
+  <div class="math-block">
+    <div class="math-label">Gradient accumulation — W_hh receives contributions from every step</div>
+    $$\frac{\partial \mathcal{L}}{\partial \mathbf{W}_{hh}} = \sum_{t=1}^{T} \frac{\partial \mathcal{L}_t}{\partial \mathbf{W}_{hh}}$$
+  </div>
+
+  <h2 class="sub">The Chain Rule Unrolled Through Time</h2>
+  <p>The tricky part is computing each <ic>∂Lₜ/∂W_hh</ic>. The loss at step t depends on h_t, which depends on h_{t−1}, which depends on h_{t−2}, and so on all the way back to h_0. The chain rule must be applied at every step of this dependency chain. To compute how much the loss at step t depends on the hidden state at step k (where k ≤ t), we must multiply together all the Jacobians of the hidden state at each intermediate step:</p>
+
+  <div class="math-block">
+    <div class="math-label">Gradient of loss at step t w.r.t. hidden state at earlier step k</div>
+    $$\frac{\partial \mathcal{L}_t}{\partial \mathbf{h}_k} = \frac{\partial \mathcal{L}_t}{\partial \mathbf{h}_t} \cdot \prod_{j=k+1}^{t} \frac{\partial \mathbf{h}_j}{\partial \mathbf{h}_{j-1}}$$
+  </div>
+
+  <p>Each factor in that product is:</p>
+
+  <div class="math-block">
+    <div class="math-label">Jacobian of one hidden state w.r.t. the previous</div>
+    $$\frac{\partial \mathbf{h}_j}{\partial \mathbf{h}_{j-1}} = \mathbf{W}_{hh}^\top \cdot \text{diag}\!\left(1 - \mathbf{h}_j^2\right)$$
+  </div>
+
+  <p>The <ic>diag(1 − h²)</ic> term is the derivative of tanh, which equals (1 − tanh²(x)) and lies in the range (0, 1]. Notice what happens when you multiply T of these terms together in the product above: you are multiplying T matrices, each containing factors that are strictly less than 1. This is the seed of the catastrophic vanishing gradient problem, which we will examine in the next section.</p>
+
+  <div class="viz">
+    <div class="viz-title">BPTT gradient flow — forward pass left→right, backward pass right→left through all T steps</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="bf" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#38bdf8"/></marker>
+        <marker id="bb" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#f87171"/></marker>
+        <marker id="bg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+      </defs>
+
+      <!-- 5 RNN cells -->
+      <!-- t=1 -->
+      <rect x="30"  y="80" width="90" height="50" rx="8" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="75"  y="108" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₁</text>
+      <text x="75"  y="122" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">t=1</text>
+      <!-- input -->
+      <line x1="75" y1="60" x2="75" y2="78" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="75" y="56" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₁</text>
+      <!-- output -->
+      <line x1="75" y1="130" x2="75" y2="148" stroke="#34d399" stroke-width="1.3"/>
+      <text x="75" y="160" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">L₁</text>
+
+      <!-- t=2 -->
+      <rect x="170" y="80" width="90" height="50" rx="8" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="215" y="108" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₂</text>
+      <text x="215" y="122" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">t=2</text>
+      <line x1="215" y1="60" x2="215" y2="78" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="215" y="56" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₂</text>
+      <line x1="215" y1="130" x2="215" y2="148" stroke="#34d399" stroke-width="1.3"/>
+      <text x="215" y="160" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">L₂</text>
+
+      <!-- t=3 -->
+      <rect x="310" y="80" width="90" height="50" rx="8" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="355" y="108" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₃</text>
+      <text x="355" y="122" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">t=3</text>
+      <line x1="355" y1="60" x2="355" y2="78" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="355" y="56" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₃</text>
+      <line x1="355" y1="130" x2="355" y2="148" stroke="#34d399" stroke-width="1.3"/>
+      <text x="355" y="160" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">L₃</text>
+
+      <!-- t=4 -->
+      <rect x="450" y="80" width="90" height="50" rx="8" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.8"/>
+      <text x="495" y="108" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₄</text>
+      <text x="495" y="122" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">t=4</text>
+      <line x1="495" y1="60" x2="495" y2="78" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="495" y="56" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₄</text>
+      <line x1="495" y1="130" x2="495" y2="148" stroke="#34d399" stroke-width="1.3"/>
+      <text x="495" y="160" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">L₄</text>
+
+      <!-- t=5 -->
+      <rect x="590" y="80" width="90" height="50" rx="8" fill="rgba(129,140,248,.3)" stroke="#818cf8" stroke-width="2.5"/>
+      <text x="635" y="108" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₅</text>
+      <text x="635" y="122" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">t=5</text>
+      <line x1="635" y1="60" x2="635" y2="78" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="635" y="56" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">x₅</text>
+      <line x1="635" y1="130" x2="635" y2="148" stroke="#34d399" stroke-width="1.8"/>
+      <text x="635" y="160" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">L (total)</text>
+
+      <!-- Forward arrows (blue, top) -->
+      <line x1="120" y1="92" x2="168" y2="92" stroke="#38bdf8" stroke-width="2" marker-end="url(#bf)"/>
+      <line x1="260" y1="92" x2="308" y2="92" stroke="#38bdf8" stroke-width="2" marker-end="url(#bf)"/>
+      <line x1="400" y1="92" x2="448" y2="92" stroke="#38bdf8" stroke-width="2" marker-end="url(#bf)"/>
+      <line x1="540" y1="92" x2="588" y2="92" stroke="#38bdf8" stroke-width="2" marker-end="url(#bf)"/>
+      <text x="390" y="72" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">→ forward pass: hidden states flow left to right →</text>
+
+      <!-- Backward arrows (red, bottom) -->
+      <line x1="588" y1="118" x2="542" y2="118" stroke="#f87171" stroke-width="2" marker-end="url(#bb)"/>
+      <line x1="448" y1="118" x2="402" y2="118" stroke="#f87171" stroke-width="2" marker-end="url(#bb)"/>
+      <line x1="308" y1="118" x2="262" y2="118" stroke="#f87171" stroke-width="2" marker-end="url(#bb)"/>
+      <line x1="168" y1="118" x2="122" y2="118" stroke="#f87171" stroke-width="1.5" marker-end="url(#bb)"/>
+      <text x="390" y="198" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">← backward pass: gradients flow right to left — multiplying W_hh at every step ←</text>
+
+      <!-- "shrinking gradient" annotation -->
+      <rect x="30" y="170" width="90" height="26" rx="4" fill="rgba(248,113,113,.08)" stroke="#f87171" stroke-width="1"/>
+      <text x="75" y="187" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">gradient tiny!</text>
+      <rect x="170" y="170" width="90" height="26" rx="4" fill="rgba(248,113,113,.12)" stroke="#f87171" stroke-width="1"/>
+      <text x="215" y="187" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">gradient small</text>
+      <rect x="310" y="170" width="90" height="26" rx="4" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1"/>
+      <text x="355" y="187" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">gradient ok</text>
+      <rect x="450" y="170" width="90" height="26" rx="4" fill="rgba(248,113,113,.3)" stroke="#f87171" stroke-width="1"/>
+      <text x="495" y="187" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">gradient good</text>
+      <rect x="590" y="170" width="90" height="26" rx="4" fill="rgba(248,113,113,.45)" stroke="#f87171" stroke-width="1.5"/>
+      <text x="635" y="187" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f87171">loss here</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Truncated BPTT — The Practical Compromise</h2>
+  <p>In practice, running full BPTT on very long sequences (thousands of steps) is computationally intractable — the memory required to store all intermediate activations grows linearly with sequence length, and computing gradients through thousands of steps takes too long. The standard solution is <strong>Truncated BPTT</strong>: process the sequence in fixed-length chunks, propagate gradients only within each chunk, and carry the hidden state forward between chunks. This means the network can maintain state over the full sequence length, but gradients only flow back a limited number of steps. It is a practical compromise that works well in practice even though it theoretically limits what the network can learn from long-range dependencies.</p>
+
+  </div></div>
+</div>
+<!-- ══════ S5: VANISHING GRADIENTS ══════ -->
+<div class="section-block open" id="s5">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(248,113,113,.15);color:var(--red)">05</div>
+      <div>
+        <div class="section-title">The Vanishing &amp; Exploding Gradient Problem</div>
+        <div class="section-sub">Why vanilla RNNs cannot learn long-range dependencies — the mathematical proof and practical consequences</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>This is the most important section of Page 1 — it is the problem that motivated every major advance in sequential modelling that came after vanilla RNNs. Understanding it deeply means understanding <em>why</em> LSTMs, GRUs, and ultimately Transformers were invented. It is not merely a training inconvenience — it is a fundamental architectural failure.</p>
+
+  <h2 class="sub">The Mathematical Root Cause</h2>
+  <p>Recall from BPTT that the gradient of the loss at time step t with respect to the hidden state at an earlier time step k requires multiplying together (t − k) Jacobian matrices, each of the form:</p>
+
+  <div class="math-block">
+    <div class="math-label">Gradient product across (t − k) steps</div>
+    $$\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_k} = \prod_{j=k+1}^{t} \mathbf{W}_{hh}^\top \cdot \text{diag}\!\left(1 - \mathbf{h}_j^2\right)$$
+  </div>
+
+  <p>Consider what happens to this product as (t − k) grows large. Each factor contains two components: <ic>W_hh</ic> and the tanh derivative <ic>diag(1 − h²)</ic>. Think about the eigenvalues of this product. If the largest eigenvalue of <ic>W_hh</ic> (the spectral radius) is less than 1, then this product shrinks toward zero exponentially fast. If it is greater than 1, the product grows toward infinity exponentially fast. In both cases, the gradient becomes useless.</p>
+
+  <div class="math-block">
+    <div class="math-label">Gradient norm grows or shrinks exponentially with distance (t − k)</div>
+    $$\left\|\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_k}\right\| \leq \left(\lambda_{\max} \cdot \max_j\left(1 - h_j^2\right)\right)^{t-k}$$
+    <div style="margin-top:8px;font-size:.82rem;color:var(--text-muted)">where λ_max is the largest singular value of W_hh. If this base is &lt;1 → vanishing. If &gt;1 → exploding.</div>
+  </div>
+
+  <p>The tanh derivative <ic>(1 − h²)</ic> makes the situation worse: it has a maximum value of 1 (when h = 0) and approaches 0 as the hidden state saturates near ±1. Saturated hidden states push the Jacobian eigenvalues toward zero even more aggressively.</p>
+
+  <h2 class="sub">Intuition: What This Means in Practice</h2>
+  <p>When the gradient vanishes, it means that the network's weights receive almost zero update signal from time steps that are far in the past. The network effectively has a short memory — it can only "see" a few recent time steps in its gradient signal. It learns to model short-range patterns but is completely blind to long-range dependencies.</p>
+
+  <p>To see why this is catastrophic, consider the sentence: <em>"The trophy didn't fit in the suitcase because it was too large."</em> What does "it" refer to — the trophy or the suitcase? The correct answer ("the trophy") requires connecting the word "it" (near the end) with information about the relative sizes of both objects (at the beginning). In a vanilla RNN, the gradient signal from predicting "trophy" must flow back 10+ steps to update the weights that process "trophy" at the beginning. With vanishing gradients, that signal is effectively zero — the network cannot make this connection.</p>
+
+  <div class="viz">
+    <div class="viz-title">Gradient magnitude reaching step 1 from step T — exponential decay with distance</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 700 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;">
+      <defs><marker id="vg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker></defs>
+      <!-- axes -->
+      <line x1="50" y1="160" x2="660" y2="160" stroke="#2d3748" stroke-width="1.5" marker-end="url(#vg)"/>
+      <line x1="50" y1="160" x2="50"  y2="20"  stroke="#2d3748" stroke-width="1.5" marker-end="url(#vg)"/>
+      <text x="355" y="185" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Distance from loss (number of steps back)</text>
+      <text x="18"  y="90"  text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b" transform="rotate(-90,18,90)">Gradient magnitude</text>
+
+      <!-- x axis labels -->
+      <text x="50"  y="174" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">0</text>
+      <text x="170" y="174" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">5</text>
+      <text x="290" y="174" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">10</text>
+      <text x="410" y="174" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">15</text>
+      <text x="530" y="174" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">20</text>
+      <text x="650" y="174" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">25</text>
+
+      <!-- Vanishing gradient curve (red, falls fast) -->
+      <path d="M 50,25 C 80,26 110,32 140,52 C 170,75 200,110 240,138 C 280,153 320,158 370,159 C 430,160 500,160 650,160"
+            fill="none" stroke="#f87171" stroke-width="2.5"/>
+      <text x="140" y="45" font-family="Sora" font-size="10" fill="#f87171" font-weight="700">Vanishing gradient</text>
+      <text x="140" y="58" font-family="Sora" font-size="9" fill="#f87171">(λ_max &lt; 1)</text>
+      <text x="480" y="155" font-family="Sora" font-size="9" fill="#f87171">≈ 0 beyond ~10 steps</text>
+
+      <!-- Exploding gradient curve (orange, shoots up) -->
+      <path d="M 50,155 C 80,150 110,140 140,120 C 170,95 190,60 205,28"
+            fill="none" stroke="#fb923c" stroke-width="2.5"/>
+      <text x="210" y="24" font-family="Sora" font-size="10" fill="#fb923c" font-weight="700">Exploding gradient (λ_max &gt; 1)</text>
+
+      <!-- Ideal zone -->
+      <rect x="50" y="20" width="160" height="140" fill="rgba(52,211,153,.05)" stroke="rgba(52,211,153,.3)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="130" y="35" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">useful zone</text>
+      <text x="130" y="48" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">(short range only)</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Exploding Gradients — The Other Problem</h2>
+  <p>When eigenvalues are large (&gt;1), gradients grow exponentially with sequence length instead of shrinking. This causes the weights to receive enormous updates that shoot past any good solution — training becomes violently unstable, loss oscillates wildly, and weights grow until they overflow to NaN. Exploding gradients are actually easier to detect and fix than vanishing gradients: the standard remedy is <strong>gradient clipping</strong>, where you cap the gradient norm to a maximum value (typically 1.0 or 5.0) before the parameter update. This prevents any single backward pass from making a catastrophically large update.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Gradient clipping — the standard fix for exploding gradients</span></div>
+    <div class="code-body"><pre><code><span class="cm"># After loss.backward(), before optimizer.step():</span>
+
+<span class="cm"># This clips the L2 norm of all gradients to max_norm.
+# If ||grad|| > max_norm, scale all gradients by max_norm/||grad||
+# If ||grad|| <= max_norm, leave gradients unchanged.</span>
+torch.nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), max_norm=<span class="num">5.0</span>)
+
+optimizer.<span class="fn">step</span>()
+
+<span class="cm"># You can monitor gradient norms before clipping to detect problems:</span>
+total_norm = <span class="num">0</span>
+<span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>():
+    <span class="kw">if</span> p.grad <span class="kw">is not None</span>:
+        total_norm += p.grad.data.<span class="fn">norm</span>(<span class="num">2</span>).<span class="fn">item</span>() ** <span class="num">2</span>
+total_norm = total_norm ** <span class="num">0.5</span>
+<span class="cm"># If total_norm >> max_norm consistently, you have exploding gradients</span></code></pre></div>
+  </div>
+
+  <h2 class="sub">Visualising Gradient Decay Through Steps</h2>
+
+  <div class="viz">
+    <div class="viz-title">Gradient signal strength reaching each time step — vanishing gradient in a 10-step sequence</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 680 170" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:680px;display:block;margin:0 auto;">
+      <!-- t=10 (loss) to t=1 — bars shrink left -->
+      <!-- Step labels -->
+      <text x="28" y="18" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#94a3b8">Step</text>
+      <text x="28" y="32" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Grad %</text>
+
+      <!-- Bar data: steps 10→1, gradient magnitude as percent of original -->
+      <!-- t=10: 100%, t=9: 48%, t=8: 23%, t=7: 11%, t=6: 5.3%, t=5: 2.5%, t=4: 1.2%, t=3: 0.6%, t=2: 0.3%, t=1: 0.1% -->
+      <text x="80"  y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#818cf8">t=10</text>
+      <rect x="55"  y="28" width="50" height="120" rx="4" fill="rgba(129,140,248,.7)" stroke="#818cf8" stroke-width="1"/>
+      <text x="80"  y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">100%</text>
+
+      <text x="150" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#818cf8">t=9</text>
+      <rect x="125" y="85" width="50" height="63" rx="4" fill="rgba(129,140,248,.5)" stroke="#818cf8" stroke-width="1"/>
+      <text x="150" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">~52%</text>
+
+      <text x="220" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f87171">t=8</text>
+      <rect x="195" y="115" width="50" height="33" rx="4" fill="rgba(248,113,113,.5)" stroke="#f87171" stroke-width="1"/>
+      <text x="220" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">~27%</text>
+
+      <text x="290" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f87171">t=7</text>
+      <rect x="265" y="133" width="50" height="15" rx="4" fill="rgba(248,113,113,.4)" stroke="#f87171" stroke-width="1"/>
+      <text x="290" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">~13%</text>
+
+      <text x="360" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f87171">t=6</text>
+      <rect x="335" y="141" width="50" height="7" rx="2" fill="rgba(248,113,113,.35)" stroke="#f87171" stroke-width="1"/>
+      <text x="360" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">~6%</text>
+
+      <text x="430" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f87171">t=5</text>
+      <rect x="405" y="145" width="50" height="3" rx="1" fill="rgba(248,113,113,.3)" stroke="#f87171" stroke-width="1"/>
+      <text x="430" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">~3%</text>
+
+      <text x="500" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f87171">t=4</text>
+      <rect x="475" y="147" width="50" height="1" rx="1" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1"/>
+      <text x="500" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">~1%</text>
+
+      <text x="570" y="18" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f87171">t=3..1</text>
+      <text x="570" y="148" text-anchor="middle" font-family="Sora" font-size="14" fill="#f87171">≈ 0</text>
+      <text x="570" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#f87171">invisible</text>
+
+      <!-- annotation -->
+      <text x="340" y="8" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Loss computed at t=10. Gradient reaching t=1 is effectively zero.</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="callout problem">
+    <div class="callout-title">🔴 The Core Failure — Long-Range Dependencies</div>
+    <div class="callout-body">
+      A vanilla RNN trained with gradient descent has an effective memory of roughly 5–10 time steps in practice. Any information from further back than that contributes essentially zero gradient signal. This means vanilla RNNs:<br><br>
+      <strong>Can learn:</strong> local character patterns, short-range grammar (subject–verb agreement within a clause), n-gram statistics, short-term signal patterns in time series.<br><br>
+      <strong>Cannot learn:</strong> long-range coreference ("it" referring to a noun introduced 20 words earlier), document-level structure, long musical phrases, dependencies in DNA sequences spanning hundreds of bases.
+    </div>
+  </div>
+
+  <div class="callout cliffhanger">
+    <div class="callout-title">⟶ This Is Why LSTM Was Invented</div>
+    <div class="callout-body">Hochreiter &amp; Schmidhuber (1997) proved mathematically that vanilla RNNs cannot maintain information across more than roughly 10 time steps due to vanishing gradients. Their solution — the Long Short-Term Memory (LSTM) network — introduces a fundamentally different information pathway: a <strong>cell state</strong> that flows through the network with only additive (not multiplicative) updates, keeping the gradient highway clear over hundreds of time steps. This is exactly what Page 2 covers.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S6: RNN TYPES ══════ -->
+<div class="section-block open" id="s6">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(244,114,182,.15);color:var(--accent5)">06</div>
+      <div>
+        <div class="section-title">RNN Architectures — Many-to-Many, Many-to-One, One-to-Many</div>
+        <div class="section-sub">How input–output structure determines the network topology for different real tasks</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>One of the most powerful aspects of RNNs is their flexibility: unlike a feedforward network, which has a fixed input size and a fixed output size, an RNN can be configured to accept sequences and produce sequences of completely different lengths — including producing a single output from a long sequence, or producing a long sequence from a single input. The right configuration depends entirely on the task. Understanding these patterns is essential because they directly determine how you build the network and where you compute the loss.</p>
+
+  <div class="viz">
+    <div class="viz-title">Five canonical RNN input–output configurations — rectangles are vectors, arrows are connections</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 820 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ta" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#475569"/></marker>
+        <marker id="tg" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#34d399"/></marker>
+        <marker id="tp" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#818cf8"/></marker>
+      </defs>
+
+      <!-- TYPE 1: One-to-One (for reference — this is a plain FFN) -->
+      <text x="75" y="18" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#64748b">One-to-One</text>
+      <text x="75" y="30" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">(not really RNN)</text>
+      <rect x="55" y="50" width="38" height="22" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="74" y1="72" x2="74" y2="88" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="55" y="90" width="38" height="22" rx="4" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="74" y1="112" x2="74" y2="128" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="55" y="130" width="38" height="22" rx="4" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.2"/>
+      <text x="74" y="166" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">Image → Class</text>
+      <text x="74" y="178" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">CNN, MLP</text>
+
+      <!-- TYPE 2: One-to-Many (image captioning) -->
+      <text x="220" y="18" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">One-to-Many</text>
+      <rect x="200" y="50" width="38" height="22" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="219" y1="72" x2="219" y2="88" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="200" y="90" width="38" height="22" rx="4" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.8"/>
+      <line x1="219" y1="112" x2="219" y2="128" stroke="#34d399" stroke-width="1.4" marker-end="url(#tg)"/>
+      <rect x="200" y="130" width="38" height="20" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <!-- additional outputs -->
+      <line x1="238" y1="101" x2="254" y2="101" stroke="#818cf8" stroke-width="1.4" marker-end="url(#tp)"/>
+      <rect x="255" y="90" width="38" height="22" rx="4" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.8"/>
+      <line x1="274" y1="112" x2="274" y2="128" stroke="#34d399" stroke-width="1.4" marker-end="url(#tg)"/>
+      <rect x="255" y="130" width="38" height="20" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <line x1="293" y1="101" x2="309" y2="101" stroke="#818cf8" stroke-width="1.4" marker-end="url(#tp)"/>
+      <rect x="310" y="90" width="38" height="22" rx="4" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.8"/>
+      <line x1="329" y1="112" x2="329" y2="128" stroke="#34d399" stroke-width="1.4" marker-end="url(#tg)"/>
+      <rect x="310" y="130" width="38" height="20" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <text x="265" y="166" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">Image → Caption</text>
+      <text x="265" y="178" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">Music generation</text>
+
+      <!-- TYPE 3: Many-to-One (sentiment) -->
+      <text x="470" y="18" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">Many-to-One</text>
+      <rect x="400" y="50" width="36" height="22" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="418" y1="72" x2="418" y2="88" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="400" y="90" width="36" height="22" rx="4" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="436" y1="101" x2="452" y2="101" stroke="#818cf8" stroke-width="1.4" marker-end="url(#tp)"/>
+
+      <rect x="453" y="50" width="36" height="22" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="471" y1="72" x2="471" y2="88" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="453" y="90" width="36" height="22" rx="4" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="489" y1="101" x2="505" y2="101" stroke="#818cf8" stroke-width="1.4" marker-end="url(#tp)"/>
+
+      <rect x="506" y="50" width="36" height="22" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="524" y1="72" x2="524" y2="88" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="506" y="90" width="36" height="22" rx="4" fill="rgba(129,140,248,.25)" stroke="#818cf8" stroke-width="2"/>
+      <line x1="524" y1="112" x2="524" y2="128" stroke="#34d399" stroke-width="1.8" marker-end="url(#tg)"/>
+      <rect x="506" y="130" width="36" height="22" rx="4" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="470" y="166" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">Sentence → Sentiment</text>
+      <text x="470" y="178" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">Text classification, Video → Label</text>
+
+      <!-- TYPE 4: Many-to-Many (aligned) -->
+      <text x="120" y="220" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">Many-to-Many (aligned)</text>
+      <rect x="40"  y="240" width="34" height="20" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="57"  y1="260" x2="57"  y2="272" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="40"  y="274" width="34" height="20" rx="4" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="57"  y1="294" x2="57"  y2="306" stroke="#34d399" stroke-width="1.3" marker-end="url(#tg)"/>
+      <rect x="40"  y="308" width="34" height="18" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <line x1="74"  y1="284" x2="90"  y2="284" stroke="#818cf8" stroke-width="1.3" marker-end="url(#tp)"/>
+
+      <rect x="91"  y="240" width="34" height="20" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="108" y1="260" x2="108" y2="272" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="91"  y="274" width="34" height="20" rx="4" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="108" y1="294" x2="108" y2="306" stroke="#34d399" stroke-width="1.3" marker-end="url(#tg)"/>
+      <rect x="91"  y="308" width="34" height="18" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <line x1="125" y1="284" x2="141" y2="284" stroke="#818cf8" stroke-width="1.3" marker-end="url(#tp)"/>
+
+      <rect x="142" y="240" width="34" height="20" rx="4" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="159" y1="260" x2="159" y2="272" stroke="#475569" stroke-width="1.2" marker-end="url(#ta)"/>
+      <rect x="142" y="274" width="34" height="20" rx="4" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="159" y1="294" x2="159" y2="306" stroke="#34d399" stroke-width="1.3" marker-end="url(#tg)"/>
+      <rect x="142" y="308" width="34" height="18" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <text x="108" y="336" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">POS tagging, NER</text>
+      <text x="108" y="347" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">Each word → its label</text>
+
+      <!-- TYPE 5: Many-to-Many (encoder-decoder, unaligned) -->
+      <text x="490" y="220" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">Many-to-Many (seq2seq)</text>
+      <text x="490" y="232" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">Encoder reads all inputs → Decoder generates outputs</text>
+
+      <!-- Encoder cells (blue border) -->
+      <rect x="360" y="248" width="34" height="20" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="377" y1="248" x2="377" y2="240" stroke="#38bdf8" stroke-width="1.2" marker-end="url(#ta)"/>
+      <text x="377" y="237" text-anchor="middle" font-family="Sora" font-size="7" fill="#38bdf8">x₁</text>
+      <rect x="406" y="248" width="34" height="20" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="423" y1="248" x2="423" y2="240" stroke="#38bdf8" stroke-width="1.2" marker-end="url(#ta)"/>
+      <text x="423" y="237" text-anchor="middle" font-family="Sora" font-size="7" fill="#38bdf8">x₂</text>
+      <rect x="452" y="248" width="34" height="20" rx="4" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="469" y1="248" x2="469" y2="240" stroke="#38bdf8" stroke-width="1.2" marker-end="url(#ta)"/>
+      <text x="469" y="237" text-anchor="middle" font-family="Sora" font-size="7" fill="#38bdf8">x₃</text>
+      <line x1="394" y1="258" x2="406" y2="258" stroke="#38bdf8" stroke-width="1.2" marker-end="url(#ta)"/>
+      <line x1="440" y1="258" x2="452" y2="258" stroke="#38bdf8" stroke-width="1.2" marker-end="url(#ta)"/>
+      <text x="415" y="278" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">Encoder</text>
+
+      <!-- Context vector -->
+      <line x1="486" y1="258" x2="510" y2="258" stroke="#fb923c" stroke-width="2" marker-end="url(#ta)"/>
+      <rect x="510" y="248" width="42" height="20" rx="4" fill="rgba(251,146,60,.2)" stroke="#fb923c" stroke-width="2"/>
+      <text x="531" y="261" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#fb923c">ctx</text>
+      <text x="531" y="278" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">bottleneck!</text>
+
+      <!-- Decoder cells (green border) -->
+      <line x1="552" y1="258" x2="568" y2="258" stroke="#fb923c" stroke-width="1.5" marker-end="url(#ta)"/>
+      <rect x="569" y="248" width="34" height="20" rx="4" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="1.2"/>
+      <line x1="586" y1="268" x2="586" y2="276" stroke="#34d399" stroke-width="1.2" marker-end="url(#tg)"/>
+      <rect x="569" y="278" width="34" height="18" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <text x="586" y="291" text-anchor="middle" font-family="Sora" font-size="7" fill="#34d399">y₁</text>
+      <line x1="603" y1="258" x2="619" y2="258" stroke="#34d399" stroke-width="1.2" marker-end="url(#tg)"/>
+      <rect x="620" y="248" width="34" height="20" rx="4" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="1.2"/>
+      <line x1="637" y1="268" x2="637" y2="276" stroke="#34d399" stroke-width="1.2" marker-end="url(#tg)"/>
+      <rect x="620" y="278" width="34" height="18" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <text x="637" y="291" text-anchor="middle" font-family="Sora" font-size="7" fill="#34d399">y₂</text>
+      <text x="615" y="310" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">Decoder</text>
+      <text x="490" y="336" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">Machine Translation, Summarisation (covered in detail on Page 3)</text>
+    </svg>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <tr><th>Configuration</th><th>Input → Output</th><th>Loss Computed At</th><th>Real Task Examples</th></tr>
+    <tr>
+      <td><strong style="color:#818cf8">Many-to-Many (aligned)</strong></td>
+      <td>Sequence → same-length sequence</td>
+      <td>Every time step</td>
+      <td>Part-of-speech tagging, Named Entity Recognition, video frame labelling</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#818cf8">Many-to-One</strong></td>
+      <td>Sequence → single vector</td>
+      <td>Final time step only</td>
+      <td>Sentiment analysis, document classification, music/video genre</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#818cf8">One-to-Many</strong></td>
+      <td>Single vector → sequence</td>
+      <td>Every output step</td>
+      <td>Image captioning (CNN encodes image, RNN generates caption), music generation</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#fb923c">Many-to-Many (seq2seq)</strong></td>
+      <td>Sequence → different-length sequence</td>
+      <td>Every decoder step</td>
+      <td>Machine translation, speech recognition, summarisation, dialogue</td>
+    </tr>
+  </table>
+
+  <h2 class="sub">Stacked (Deep) RNNs</h2>
+  <p>Just as deep CNNs outperform shallow ones by learning hierarchical features, stacking multiple RNN layers on top of each other often dramatically improves performance. In a stacked RNN, the hidden state sequence produced by layer 1 becomes the input sequence for layer 2. Each layer learns progressively more abstract temporal representations: lower layers learn low-level patterns (character n-grams, short-range syntax), higher layers learn higher-level abstractions (phrase-level meaning, discourse structure). In PyTorch this is simply <ic>nn.RNN(num_layers=2)</ic>.</p>
+
+  <h2 class="sub">Bidirectional RNNs</h2>
+  <p>A standard RNN processes the sequence from left to right, so the hidden state at position t only contains information from positions 1 through t. For many tasks this is a significant limitation — to predict the label for the word "bank" in a sentence, you want to look at words both before and after it. A <strong>Bidirectional RNN</strong> solves this by running two separate RNNs over the same sequence: one left-to-right (as normal) and one right-to-left. At each position, the hidden states from both directions are concatenated, giving the network access to full context in both directions. The trade-off is that bidirectional RNNs cannot be used for tasks requiring real-time left-to-right generation (like language modelling), but they are ideal for tasks like Named Entity Recognition where the full sequence is available at inference time.</p>
+
+  </div></div>
+</div>
+<!-- ══════ S7: PYTORCH ══════ -->
+<div class="section-block open" id="s7">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">07</div>
+      <div>
+        <div class="section-title">PyTorch Implementation — From Scratch and with nn.RNN</div>
+        <div class="section-sub">Building a vanilla RNN two ways: manually to understand every detail, then cleanly for real use</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Understanding the mathematics is one thing — seeing how every tensor flows through PyTorch's computational graph is what solidifies the understanding. We build the RNN two ways: first entirely from scratch using raw <ic>nn.Linear</ic> layers and a manual loop (so you can see every weight matrix and every hidden state update explicitly), then using PyTorch's built-in <ic>nn.RNN</ic> (which is what you use in practice).</p>
+
+  <h2 class="sub">Part 1 — RNN Built Entirely from Scratch</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Vanilla RNN from scratch — every detail exposed</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">VanillaRNNCell</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""A single RNN cell — implements: h_t = tanh(W_xh @ x_t + W_hh @ h_{t-1} + b_h)
+    
+    This is exactly the recurrence equation. By seeing each weight matrix
+    separately, you can understand what each one does:
+      W_xh: projects current input → hidden space (what's relevant now?)  
+      W_hh: projects previous hidden state → hidden space (what to remember?)
+      b_h:  bias for the hidden state update
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_size: <span class="fn">int</span>, hidden_size: <span class="fn">int</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.input_size  = input_size
+        self.hidden_size = hidden_size
+
+        <span class="cm"># W_xh: maps input to hidden space  shape: (hidden_size, input_size)</span>
+        self.W_xh = nn.<span class="cls">Linear</span>(input_size,  hidden_size, bias=<span class="kw">False</span>)
+        <span class="cm"># W_hh: maps prev hidden to hidden  shape: (hidden_size, hidden_size)</span>
+        self.W_hh = nn.<span class="cls">Linear</span>(hidden_size, hidden_size, bias=<span class="kw">True</span>)
+        <span class="cm"># bias b_h is inside W_hh (bias=True above) — PyTorch convention</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x_t, h_prev):
+        <span class="st">"""
+        Args:
+          x_t:    (batch, input_size)   — current input at this time step
+          h_prev: (batch, hidden_size)  — hidden state from previous step
+        Returns:
+          h_t:    (batch, hidden_size)  — new hidden state
+        """</span>
+        <span class="cm"># Core equation: h_t = tanh(W_xh @ x_t + W_hh @ h_{t-1} + b_h)</span>
+        h_t = torch.<span class="fn">tanh</span>(self.<span class="fn">W_xh</span>(x_t) + self.<span class="fn">W_hh</span>(h_prev))
+        <span class="kw">return</span> h_t
+
+
+<span class="kw">class</span> <span class="cls">VanillaRNN</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Full RNN that processes an entire sequence using VanillaRNNCell.
+    
+    Demonstrates the explicit time-step loop — this is what nn.RNN
+    does internally, but hidden from you.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_size, hidden_size, output_size):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.hidden_size = hidden_size
+        self.cell    = <span class="cls">VanillaRNNCell</span>(input_size, hidden_size)
+        <span class="cm"># W_hy: maps final hidden state → output predictions</span>
+        self.W_hy    = nn.<span class="cls">Linear</span>(hidden_size, output_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, h0=<span class="kw">None</span>):
+        <span class="st">"""
+        Args:
+          x:  (batch, seq_len, input_size) — full input sequence
+          h0: (batch, hidden_size) or None — initial hidden state
+        Returns:
+          outputs:    (batch, seq_len, output_size) — prediction at each step
+          h_all:      (batch, seq_len, hidden_size) — all hidden states
+          h_final:    (batch, hidden_size)           — final hidden state
+        """</span>
+        batch, seq_len, _ = x.<span class="fn">shape</span>
+
+        <span class="cm"># Initialise h_0 = zeros if not provided — "the network knows nothing yet"</span>
+        <span class="kw">if</span> h0 <span class="kw">is None</span>:
+            h0 = torch.<span class="fn">zeros</span>(batch, self.hidden_size, device=x.device)
+
+        h = h0
+        outputs = []
+        h_all   = []
+
+        <span class="cm"># ── The explicit time loop ────────────────────────────────────────
+        # This is the heart of an RNN: step through each position in the
+        # sequence, updating the hidden state at each step.
+        # x[:, t, :] extracts one time step across the whole batch.</span>
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(seq_len):
+            h = self.cell.<span class="fn">forward</span>(x[:, t, :], h)  <span class="cm"># (batch, hidden_size)</span>
+            h_all.<span class="fn">append</span>(h)
+
+            <span class="cm"># Compute output (prediction) at this step</span>
+            out_t = self.<span class="fn">W_hy</span>(h)                   <span class="cm"># (batch, output_size)</span>
+            outputs.<span class="fn">append</span>(out_t)
+
+        <span class="cm"># Stack list of tensors → (batch, seq_len, *)</span>
+        outputs = torch.<span class="fn">stack</span>(outputs, dim=<span class="num">1</span>)   <span class="cm"># (batch, seq_len, output_size)</span>
+        h_all   = torch.<span class="fn">stack</span>(h_all,   dim=<span class="num">1</span>)   <span class="cm"># (batch, seq_len, hidden_size)</span>
+        <span class="kw">return</span> outputs, h_all, h
+
+
+<span class="cm"># ── Quick test to verify shapes ───────────────────────────────────</span>
+batch_size  = <span class="num">4</span>
+seq_len     = <span class="num">10</span>
+input_size  = <span class="num">8</span>    <span class="cm"># e.g. 8-dim word embedding</span>
+hidden_size = <span class="num">16</span>
+output_size = <span class="num">5</span>    <span class="cm"># e.g. 5-class classification at each step</span>
+
+model   = <span class="cls">VanillaRNN</span>(input_size, hidden_size, output_size)
+x_dummy = torch.<span class="fn">randn</span>(batch_size, seq_len, input_size)
+
+outputs, h_all, h_final = model.<span class="fn">forward</span>(x_dummy)
+<span class="fn">print</span>(<span class="st">f"outputs shape:  {outputs.shape}"</span>)   <span class="cm"># → (4, 10, 5)</span>
+<span class="fn">print</span>(<span class="st">f"h_all shape:    {h_all.shape}"</span>)      <span class="cm"># → (4, 10, 16)</span>
+<span class="fn">print</span>(<span class="st">f"h_final shape:  {h_final.shape}"</span>)   <span class="cm"># → (4, 16)</span>
+
+<span class="cm"># Count parameters: W_xh + W_hh + b + W_hy + b_hy</span>
+total = <span class="fn">sum</span>(p.<span class="fn">numel</span>() <span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>())
+<span class="fn">print</span>(<span class="st">f"Total params: {total}"</span>)
+<span class="cm"># 8×16 + 16×16 + 16 + 16×5 + 5 = 128 + 256 + 16 + 80 + 5 = 485</span></code></pre></div>
+  </div>
+
+  <h2 class="sub">Part 2 — Using nn.RNN (Production Code)</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · PyTorch nn.RNN — understanding the API and tensor shapes</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># ── nn.RNN parameters ─────────────────────────────────────────────</span>
+rnn = nn.<span class="cls">RNN</span>(
+    input_size  = <span class="num">8</span>,     <span class="cm"># size of each input vector x_t</span>
+    hidden_size = <span class="num">16</span>,    <span class="cm"># size of hidden state h_t (your choice — the key hyperparameter)</span>
+    num_layers  = <span class="num">2</span>,     <span class="cm"># stacked RNN: layer2 input = layer1 hidden states</span>
+    nonlinearity= <span class="st">'tanh'</span>,<span class="cm"># 'tanh' (default) or 'relu'</span>
+    bias        = <span class="kw">True</span>,  <span class="cm"># include bias terms</span>
+    batch_first = <span class="kw">True</span>,  <span class="cm"># ← IMPORTANT: if True, input is (batch, seq, features)</span>
+                          <span class="cm">#             if False (default!), input is (seq, batch, features)</span>
+                          <span class="cm">#   Always use batch_first=True to avoid shape confusion</span>
+    dropout     = <span class="num">0.0</span>,   <span class="cm"># dropout between stacked layers (not applied to last layer)</span>
+    bidirectional=<span class="kw">False</span>, <span class="cm"># if True, runs forward + backward and concatenates</span>
+)
+
+<span class="cm"># ── Input and output shapes ───────────────────────────────────────
+# With batch_first=True:</span>
+batch_size = <span class="num">4</span>
+seq_len    = <span class="num">10</span>
+x = torch.<span class="fn">randn</span>(batch_size, seq_len, <span class="num">8</span>)   <span class="cm"># (batch, seq, input_size)</span>
+
+<span class="cm"># h0: initial hidden state — (num_layers, batch, hidden_size)
+# If not provided, defaults to zeros</span>
+h0 = torch.<span class="fn">zeros</span>(<span class="num">2</span>, batch_size, <span class="num">16</span>)   <span class="cm"># (num_layers=2, batch, hidden)</span>
+
+out, h_n = rnn.<span class="fn">forward</span>(x, h0)
+
+<span class="cm"># out:  (batch, seq_len, hidden_size)  — hidden state at EVERY time step
+#         useful for: sequence labelling (one output per input step)
+# h_n:  (num_layers, batch, hidden_size) — final hidden state of EACH layer
+#         useful for: sequence classification (use h_n[-1] as the summary)</span>
+
+<span class="fn">print</span>(<span class="st">f"out shape: {out.shape}"</span>)    <span class="cm"># → (4, 10, 16)</span>
+<span class="fn">print</span>(<span class="st">f"h_n shape: {h_n.shape}"</span>)    <span class="cm"># → (2, 4, 16)</span>
+
+
+<span class="cm"># ── Full sequence classifier: Many-to-One ─────────────────────────
+# Task: classify a whole sentence into one of N categories (e.g. sentiment)</span>
+<span class="kw">class</span> <span class="cls">SequenceClassifier</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim, hidden_size,
+                 num_layers, num_classes, dropout=<span class="num">0.3</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="cm"># Embedding layer: converts token indices → dense vectors
+        # This is learned jointly with the RNN — no pretrained embeddings needed</span>
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        self.rnn   = nn.<span class="cls">RNN</span>(
+            embed_dim, hidden_size,
+            num_layers=num_layers,
+            batch_first=<span class="kw">True</span>,
+            dropout=dropout <span class="kw">if</span> num_layers > <span class="num">1</span> <span class="kw">else</span> <span class="num">0.0</span>,
+        )
+        self.drop      = nn.<span class="cls">Dropout</span>(dropout)
+        self.classifier= nn.<span class="cls">Linear</span>(hidden_size, num_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids):
+        <span class="st">"""
+        token_ids: (batch, seq_len)  — integer token indices
+        Returns:   (batch, num_classes) — class logits
+        """</span>
+        x   = self.<span class="fn">embed</span>(token_ids)           <span class="cm"># (batch, seq, embed_dim)</span>
+        _out, h_n = self.<span class="fn">rnn</span>(x)               <span class="cm"># h_n: (num_layers, batch, hidden)</span>
+        <span class="cm"># Take the final layer's final hidden state as the sequence summary</span>
+        h_last = h_n[-<span class="num">1</span>]                      <span class="cm"># (batch, hidden_size)</span>
+        h_last = self.<span class="fn">drop</span>(h_last)
+        <span class="kw">return</span> self.<span class="fn">classifier</span>(h_last)         <span class="cm"># (batch, num_classes)</span>
+
+
+<span class="cm"># ── Sequence tagger: Many-to-Many (aligned) ───────────────────────
+# Task: label each token (e.g. POS tagging, Named Entity Recognition)</span>
+<span class="kw">class</span> <span class="cls">SequenceTagger</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim, hidden_size,
+                 num_layers, num_tags, dropout=<span class="num">0.3</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        <span class="cm"># Bidirectional: each position sees context from BOTH directions
+        # → hidden_size effectively doubles because forward + backward concat</span>
+        self.rnn   = nn.<span class="cls">RNN</span>(
+            embed_dim, hidden_size,
+            num_layers=num_layers,
+            batch_first=<span class="kw">True</span>,
+            dropout=dropout <span class="kw">if</span> num_layers > <span class="num">1</span> <span class="kw">else</span> <span class="num">0.0</span>,
+            bidirectional=<span class="kw">True</span>,  <span class="cm"># ← use both directions for labelling tasks</span>
+        )
+        <span class="cm"># Output size is hidden_size * 2 because bidirectional concatenates</span>
+        self.drop   = nn.<span class="cls">Dropout</span>(dropout)
+        self.tagger = nn.<span class="cls">Linear</span>(hidden_size * <span class="num">2</span>, num_tags)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids):
+        x   = self.<span class="fn">embed</span>(token_ids)            <span class="cm"># (batch, seq, embed)</span>
+        out, _ = self.<span class="fn">rnn</span>(x)                   <span class="cm"># out: (batch, seq, hidden*2)</span>
+        out = self.<span class="fn">drop</span>(out)
+        <span class="kw">return</span> self.<span class="fn">tagger</span>(out)               <span class="cm"># (batch, seq, num_tags)</span>
+        <span class="cm"># Loss: nn.CrossEntropyLoss over all (batch × seq_len) predictions</span></code></pre></div>
+  </div>
+
+  <h2 class="sub">The Training Loop — Including Gradient Clipping</h2>
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Complete training loop for a sequence classifier</span></div>
+    <div class="code-body"><pre><code>model     = <span class="cls">SequenceClassifier</span>(vocab_size=<span class="num">10000</span>, embed_dim=<span class="num">64</span>,
+                                hidden_size=<span class="num">128</span>, num_layers=<span class="num">2</span>, num_classes=<span class="num">3</span>)
+optimizer = torch.optim.<span class="cls">Adam</span>(model.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+criterion = nn.<span class="cls">CrossEntropyLoss</span>()
+
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(num_epochs):
+    model.<span class="fn">train</span>()
+    <span class="kw">for</span> token_ids, labels <span class="kw">in</span> train_loader:
+        optimizer.<span class="fn">zero_grad</span>()
+
+        logits = <span class="fn">model</span>(token_ids)          <span class="cm"># (batch, num_classes)</span>
+        loss   = <span class="fn">criterion</span>(logits, labels) <span class="cm"># scalar</span>
+        loss.<span class="fn">backward</span>()                    <span class="cm"># BPTT happens here automatically</span>
+
+        <span class="cm"># Clip gradients — essential for RNNs to prevent exploding gradients</span>
+        nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), max_norm=<span class="num">5.0</span>)
+
+        optimizer.<span class="fn">step</span>()</code></pre></div>
+  </div>
+
+  <div class="callout important">
+    <div class="callout-title">🔑 Always Use batch_first=True and Always Clip Gradients</div>
+    <div class="callout-body">PyTorch's default for <ic>nn.RNN</ic> is <ic>batch_first=False</ic>, meaning the input shape is <ic>(seq_len, batch, features)</ic>. This trips up almost every beginner because it is the opposite of every other PyTorch layer (which uses batch as the first dimension). Always pass <ic>batch_first=True</ic> unless you have a specific reason not to. And always call <ic>clip_grad_norm_</ic> before <ic>optimizer.step()</ic> — without it, vanilla RNNs will frequently diverge on longer sequences.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S8: APPLICATIONS ══════ -->
+<div class="section-block open" id="s8">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent2)">08</div>
+      <div>
+        <div class="section-title">Real Applications of Vanilla RNNs</div>
+        <div class="section-sub">Character-level language modelling, sentiment analysis, time series prediction — with full working code</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Application 1 — Character-Level Language Modelling</h2>
+  <p>The simplest and most illuminating application of vanilla RNNs is the character-level language model: given a sequence of characters so far, predict the next character. Despite its simplicity, this task forces the network to learn spelling, grammar, punctuation, code structure — anything that is predictable from context. Karpathy's 2015 demonstration that a small RNN trained on Shakespeare could generate plausible-sounding Shakespeare, and trained on Linux source code could generate compilable-looking C, remains one of the most striking demonstrations that sequence modelling can discover genuine linguistic structure without any linguistic supervision.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Character-level language model — training and generation</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">CharLM</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Character-level language model.
+    Trained to predict: given characters so far → what is the next character?
+    At each time step t, input  = one-hot(char_t)
+                          output = predicted distribution over all chars
+    Loss = cross-entropy between prediction and true next character.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, hidden_size, num_layers=<span class="num">1</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.vocab_size  = vocab_size
+        self.hidden_size = hidden_size
+        <span class="cm"># No embedding layer — we use one-hot vectors directly as input
+        # (for small vocabs like 65 chars, one-hot is fine)</span>
+        self.rnn = nn.<span class="cls">RNN</span>(vocab_size, hidden_size,
+                           num_layers=num_layers, batch_first=<span class="kw">True</span>)
+        self.head = nn.<span class="cls">Linear</span>(hidden_size, vocab_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, h0=<span class="kw">None</span>):
+        <span class="st">"""x: (batch, seq_len) — integer character indices"""</span>
+        <span class="cm"># One-hot encode: (batch, seq_len) → (batch, seq_len, vocab_size)</span>
+        x_onehot = nn.functional.<span class="fn">one_hot</span>(x, self.vocab_size).<span class="fn">float</span>()
+        out, h_n = self.<span class="fn">rnn</span>(x_onehot, h0)   <span class="cm"># out: (batch, seq, hidden)</span>
+        logits = self.<span class="fn">head</span>(out)              <span class="cm"># (batch, seq, vocab_size)</span>
+        <span class="kw">return</span> logits, h_n
+
+    <span class="kw">def</span> <span class="fn">generate</span>(self, seed_char_idx, length, temperature=<span class="num">1.0</span>, device=<span class="st">'cpu'</span>):
+        <span class="st">"""Generate text by repeatedly sampling from the predicted distribution.
+        
+        temperature > 1: more random / creative
+        temperature < 1: more conservative / repetitive
+        temperature = 1: sample from the raw predicted distribution
+        """</span>
+        self.<span class="fn">eval</span>()
+        generated = [seed_char_idx]
+        h = <span class="kw">None</span>   <span class="cm"># start with zero hidden state</span>
+
+        <span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(length):
+                <span class="cm"># Feed only the last generated character at each step</span>
+                x = torch.<span class="fn">tensor</span>([[generated[-<span class="num">1</span>]]], device=device)
+                logits, h = self.<span class="fn">forward</span>(x, h)  <span class="cm"># h carries context forward</span>
+
+                <span class="cm"># Apply temperature: divide logits before softmax
+                # Low T → sharper distribution → more predictable output
+                # High T → flatter distribution → more surprising output</span>
+                probs = torch.<span class="fn">softmax</span>(logits[<span class="num">0</span>, <span class="num">0</span>] / temperature, dim=-<span class="num">1</span>)
+                next_char = torch.<span class="fn">multinomial</span>(probs, <span class="num">1</span>).<span class="fn">item</span>()
+                generated.<span class="fn">append</span>(next_char)
+
+        <span class="kw">return</span> generated
+
+
+<span class="cm"># ── Training ──────────────────────────────────────────────────────</span>
+<span class="cm"># Build character vocabulary from text</span>
+text    = <span class="fn">open</span>(<span class="st">'shakespeare.txt'</span>).<span class="fn">read</span>()
+chars   = <span class="fn">sorted</span>(<span class="fn">set</span>(text))
+stoi    = {c: i <span class="kw">for</span> i, c <span class="kw">in</span> <span class="fn">enumerate</span>(chars)}  <span class="cm"># char → int</span>
+itos    = {i: c <span class="kw">for</span> c, i <span class="kw">in</span> stoi.<span class="fn">items</span>()}       <span class="cm"># int → char</span>
+data    = torch.<span class="fn">tensor</span>([stoi[c] <span class="kw">for</span> c <span class="kw">in</span> text], dtype=torch.<span class="cls">long</span>)
+
+model     = <span class="cls">CharLM</span>(vocab_size=<span class="fn">len</span>(chars), hidden_size=<span class="num">128</span>, num_layers=<span class="num">2</span>)
+optimizer = torch.optim.<span class="cls">Adam</span>(model.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+criterion = nn.<span class="cls">CrossEntropyLoss</span>()
+
+<span class="cm"># Input = chars[0..T-1], Target = chars[1..T] (next char prediction)</span>
+chunk_size = <span class="num">100</span>   <span class="cm"># truncated BPTT chunk length</span>
+<span class="kw">for</span> step <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10000</span>):
+    idx    = torch.<span class="fn">randint</span>(<span class="fn">len</span>(data) - chunk_size - <span class="num">1</span>, (<span class="num">32</span>,))
+    x_seq  = torch.<span class="fn">stack</span>([data[i  : i+chunk_size  ] <span class="kw">for</span> i <span class="kw">in</span> idx])
+    y_seq  = torch.<span class="fn">stack</span>([data[i+<span class="num">1</span>: i+chunk_size+<span class="num">1</span>] <span class="kw">for</span> i <span class="kw">in</span> idx])
+
+    optimizer.<span class="fn">zero_grad</span>()
+    logits, _ = <span class="fn">model</span>(x_seq)                    <span class="cm"># (32, 100, vocab)</span>
+    loss = <span class="fn">criterion</span>(logits.<span class="fn">reshape</span>(-<span class="num">1</span>, <span class="fn">len</span>(chars)),
+                      y_seq.<span class="fn">reshape</span>(-<span class="num">1</span>))          <span class="cm"># flatten for loss</span>
+    loss.<span class="fn">backward</span>()
+    nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), <span class="num">5.0</span>)
+    optimizer.<span class="fn">step</span>()</code></pre></div>
+  </div>
+
+  <h2 class="sub">Application 2 — Time Series Forecasting</h2>
+  <p>RNNs are a natural fit for time series: each time step's input is the current measurement (or a window of measurements), and the network learns temporal patterns to predict future values. The hidden state accumulates a learned summary of recent history that informs the prediction. This is used in stock price modelling, weather forecasting, IoT sensor anomaly detection, and energy consumption prediction.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Time series forecaster — predict next N values from a sequence</span></div>
+    <div class="code-body"><pre><code><span class="kw">class</span> <span class="cls">TimeSeriesRNN</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Predict the next `horizon` values from a sequence of `seq_len` steps.
+    
+    Each time step input is a vector of features (e.g. [temperature, humidity])
+    or just a single scalar (input_size=1 for univariate series).
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_size, hidden_size, num_layers, horizon):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.rnn  = nn.<span class="cls">RNN</span>(input_size, hidden_size,
+                            num_layers=num_layers, batch_first=<span class="kw">True</span>, dropout=<span class="num">0.2</span>)
+        <span class="cm"># Regression head: no activation — we predict real values</span>
+        self.head = nn.<span class="cls">Linear</span>(hidden_size, horizon)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="st">"""x: (batch, seq_len, input_size)"""</span>
+        _, h_n = self.<span class="fn">rnn</span>(x)         <span class="cm"># h_n: (num_layers, batch, hidden)</span>
+        h_last = h_n[-<span class="num">1</span>]              <span class="cm"># last layer's final hidden state</span>
+        <span class="kw">return</span> self.<span class="fn">head</span>(h_last)      <span class="cm"># (batch, horizon) — future predictions</span>
+
+<span class="cm"># Loss for regression: MSE or Smooth L1</span>
+criterion = nn.<span class="cls">MSELoss</span>()
+<span class="cm"># Note: for time series, LSTM almost always outperforms vanilla RNN
+# due to long-range dependencies in temporal patterns. This code structure
+# works identically with nn.LSTM — just swap the module name.</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S9: LIMITATIONS & CLIFFHANGER ══════ -->
+<div class="section-block open" id="s9">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">09</div>
+      <div>
+        <div class="section-title">Limitations of Vanilla RNNs — and What Comes Next</div>
+        <div class="section-sub">A complete honest assessment, and why every one of these limitations has a specific architectural solution</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Vanilla RNNs were a breakthrough when they were introduced, and they are still worth studying deeply — because every limitation they have directly motivated a specific architectural innovation. Understanding what breaks and <em>why</em> it breaks is the foundation for understanding every technique that comes after them. Let's be precise about the failure modes.</p>
+
+  <table class="tbl">
+    <tr>
+      <th style="width:28%">Limitation</th>
+      <th style="width:34%">Why It Happens</th>
+      <th style="width:18%">Real Consequence</th>
+      <th style="width:20%">Solution (coming next)</th>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Cannot learn long-range dependencies</strong></td>
+      <td>Vanishing gradients: multiplying many Jacobians (each with eigenvalues &lt; 1) makes the gradient exponentially small for steps far in the past. The signal from an important word 50 positions back contributes essentially zero gradient to the weights that process it.</td>
+      <td>In practice, effective memory is ≈ 5–10 steps. Cannot resolve coreference, cannot model document structure, cannot capture long musical phrases.</td>
+      <td><strong>LSTM / GRU</strong> — gated cell state acts as a gradient highway with additive (not multiplicative) updates.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Sequential computation — cannot parallelise</strong></td>
+      <td>Step t+1 cannot begin until step t is complete, because h_t is required to compute h_{t+1}. This is structural: the temporal dependency chain creates a sequential bottleneck regardless of how much hardware you have.</td>
+      <td>Training on long sequences (e.g. documents, audio) is slow. Cannot use modern massively parallel GPU compute efficiently. A sequence of 1000 steps requires 1000 sequential operations.</td>
+      <td><strong>Transformers</strong> — self-attention has no sequential dependency: all positions attend to all others simultaneously, enabling full GPU parallelisation.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Fixed-size hidden state bottleneck</strong></td>
+      <td>The entire history of a long sequence must be compressed into a single h_T vector of fixed dimensionality. Compressing a 1000-word document into 256 numbers is inherently lossy — important details from early in the sequence are overwritten by later information.</td>
+      <td>Encoder-decoder seq2seq models degrade severely on long input sequences: the context vector cannot hold enough information about the beginning of a long sentence to translate the end correctly.</td>
+      <td><strong>Attention mechanism</strong> — decoder can directly access all encoder hidden states instead of relying on a single bottleneck vector.</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">No global context at early steps</strong></td>
+      <td>A left-to-right RNN processes x_1 with only h_0 (zeros) as context. The representation of x_1 is formed before the network has seen any of x_2, x_3, ... x_T — even if later tokens are crucial for understanding x_1.</td>
+      <td>For tasks like NER and POS tagging, the label for a word depends on words that come after it. Unidirectional RNNs miss this. Bidirectional RNNs help but add complexity and preclude autoregressive generation.</td>
+      <td><strong>Bidirectional RNN</strong> (partial fix), then <strong>BERT-style Transformers</strong> (complete fix — every position attends to every other position simultaneously).</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f87171">Difficult to train reliably</strong></td>
+      <td>Vanishing and exploding gradients make the loss landscape steep and ill-conditioned. Gradient clipping helps with explosions but does not solve vanishing. Learning rates must be carefully tuned and often reduced over training.</td>
+      <td>Training instability — loss suddenly spikes, gradients explode to NaN, or training plateaus because gradients vanish before reaching early layers. Requires careful hyperparameter tuning and gradient monitoring.</td>
+      <td><strong>LSTM / GRU</strong> substantially mitigate this; <strong>LayerNorm + residual connections</strong> in Transformers make training nearly unconditionally stable.</td>
+    </tr>
+  </table>
+
+  <h2 class="sub">A Comparison: What Vanilla RNNs Can and Cannot Do</h2>
+
+  <div class="stats-row">
+    <div class="stat-box" style="border-color:rgba(52,211,153,.4)">
+      <div class="stat-val" style="color:var(--accent3);font-size:1.1rem">✓ Good At</div>
+      <div class="stat-lbl" style="margin-top:8px;line-height:1.6;text-transform:none;font-size:.78rem;color:var(--text-muted)">Short-range patterns · Character n-grams · Short sentiment · Brief time series · Learning with sequences under ~20 steps</div>
+    </div>
+    <div class="stat-box" style="border-color:rgba(248,113,113,.4)">
+      <div class="stat-val" style="color:var(--red);font-size:1.1rem">✗ Struggles With</div>
+      <div class="stat-lbl" style="margin-top:8px;line-height:1.6;text-transform:none;font-size:.78rem;color:var(--text-muted)">Long documents · Machine translation · Speech recognition · Anything requiring memory beyond ~10 steps</div>
+    </div>
+    <div class="stat-box" style="border-color:rgba(129,140,248,.4)">
+      <div class="stat-val" style="color:var(--accent);font-size:1.1rem">Still Useful For</div>
+      <div class="stat-lbl" style="margin-top:8px;line-height:1.6;text-transform:none;font-size:.78rem;color:var(--text-muted)">Learning concepts · Simple baselines · Embedded/resource-constrained systems · Teaching BPTT before LSTM</div>
+    </div>
+  </div>
+
+  <!-- <div class="next-page">
+    <div>
+      <div class="next-page-title">→ Page 2: LSTM &amp; GRU — Solving the Memory Problem</div>
+      <div class="next-page-text">Now that you understand <em>exactly</em> what breaks in vanilla RNNs and <em>why</em> — the vanishing gradient, the compression bottleneck, the sequential computation — Page 2 introduces the architectural fixes. The Long Short-Term Memory network (Hochreiter &amp; Schmidhuber, 1997) introduces a <strong>cell state</strong>: a separate memory pathway that flows through the network with only additive updates, keeping gradients alive over hundreds of steps. Every gate in an LSTM will make sense as a direct response to one of the failures you just learned about.</div>
+    </div>
+    <div style="font-size:2.5rem;flex-shrink:0">→</div>
+  </div>
+
+  </div></div>
+</div> -->
+
+<!-- ══════ FOOTER + JS ══════ -->
+<div class="footer">
+  Module IV · Sequential Models &amp; Recurrent Neural Networks &nbsp;·&nbsp; <strong>Page 1 of 4 — Vanilla RNNs</strong><br>
+  <span style="font-size:.75rem;margin-top:4px;display:block">Covers: why sequences · RNN cell mathematics · BPTT · vanishing gradients · RNN types · PyTorch implementation · character LM · limitations</span>
+</div>
+
+<script>
+/* Theme toggle */
+function toggleTheme(){
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = h.dataset.theme === 'dark' ? '☀️' : '🌙';
+}
+
+/* Accordion toggle */
+function tog(header){ header.parentElement.classList.toggle('open'); }
+
+/* Progress bar */
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('prog').style.width = pct + '%';
+});
+
+/* MathJax re-render after accordion opens */
+document.querySelectorAll('.section-header').forEach(h => {
+  h.addEventListener('click', () => {
+    setTimeout(() => { if(window.MathJax) MathJax.typesetPromise(); }, 50);
+  });
+});
+</script>
+</body>
+</html>

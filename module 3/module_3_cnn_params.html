@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNN Parameters — Deep Neural Networks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);--hero-glow:rgba(56,189,248,0.08);--code-bg:#0a0f1a;--code-header:#1a2035;--hover-overlay:rgba(255,255,255,0.03);--card-hover-shadow:0 8px 24px rgba(0,0,0,.4);--section-hover:0 0 0 1px rgba(56,189,248,.25);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0f9ff 100%);--hero-glow:rgba(56,189,248,0.12);--code-bg:#1e293b;--code-header:#0f172a;--hover-overlay:rgba(0,0,0,0.02);--card-hover-shadow:0 8px 24px rgba(0,0,0,.12);--section-hover:0 0 0 1px rgba(56,189,248,.4);--p-color:#334155;}
+:root{--accent:#38bdf8;--accent2:#818cf8;--accent3:#34d399;--accent4:#fb923c;--accent5:#f472b6;--red:#f87171;--yellow:#fbbf24;--green:#4ade80;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;}
+.progress-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent5));position:fixed;top:0;left:0;z-index:1000;transition:width .15s;}
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:56px 24px 44px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);pointer-events:none;}
+.hero-badge{display:inline-block;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(1.9rem,5vw,3.4rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;}
+.hero p{color:var(--text-muted);font-size:1rem;max-width:700px;margin:0 auto;line-height:1.7;}
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent);}
+.toc-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100;}
+.toc-label{color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-right:4px;font-weight:700;flex-shrink:0;}
+.toc-link{color:var(--text-muted);font-size:.78rem;text-decoration:none;padding:3px 10px;border-radius:5px;transition:all .2s;border:1px solid transparent;white-space:nowrap;}
+.toc-link:hover{color:var(--accent);border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.07);}
+.page{max-width:1060px;margin:0 auto;padding:36px 16px 80px;}
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden;transition:box-shadow .25s;}
+.section-block:hover{box-shadow:var(--section-hover);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;gap:14px;transition:background .2s;}
+.section-header:hover{background:var(--hover-overlay);}
+.section-title-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.section-num{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;}
+.section-title{font-size:1.05rem;font-weight:700;color:var(--text);line-height:1.3;}
+.section-sub{font-size:.76rem;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.chevron{color:var(--text-dim);font-size:1rem;transition:transform .3s cubic-bezier(.4,0,.2,1);flex-shrink:0;}
+.section-block.open .chevron{transform:rotate(180deg);}
+.section-body{display:none;padding:0 22px 28px;border-top:1px solid var(--border);}
+.section-block.open .section-body{display:block;}
+.section-body-inner{padding-top:24px;}
+h2.subsection{font-size:1.05rem;font-weight:700;color:var(--accent);margin:28px 0 12px;padding-bottom:7px;border-bottom:1px solid rgba(56,189,248,.18);}
+p{margin-bottom:12px;color:var(--p-color);line-height:1.85;}
+.callout{border-radius:9px;padding:15px 18px;margin:16px 0;border-left:4px solid;}
+.callout-title{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;display:flex;align-items:center;gap:7px;}
+.callout-body{font-size:.92rem;color:var(--p-color);line-height:1.8;}
+.callout.analogy{background:rgba(251,146,60,.08);border-color:var(--accent4);}
+.callout.analogy .callout-title{color:var(--accent4);}
+.callout.insight{background:rgba(52,211,153,.08);border-color:var(--accent3);}
+.callout.insight .callout-title{color:var(--accent3);}
+.callout.warning{background:rgba(251,191,36,.08);border-color:var(--yellow);}
+.callout.warning .callout-title{color:var(--yellow);}
+.callout.important{background:rgba(56,189,248,.08);border-color:var(--accent);}
+.callout.important .callout-title{color:var(--accent);}
+.callout.definition{background:rgba(129,140,248,.08);border-color:var(--accent2);}
+.callout.definition .callout-title{color:var(--accent2);}
+.math-block{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px 20px;margin:14px 0;overflow-x:auto;text-align:center;}
+.math-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:700;}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:16px 0;}
+.code-header{background:var(--code-header);padding:7px 14px;display:flex;align-items:center;border-bottom:1px solid var(--border);}
+.code-lang{font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.code-body{padding:16px 18px;overflow-x:auto;}
+.code-body pre{margin:0;}
+.code-body code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.9;white-space:pre;}
+.kw{color:#c792ea;}.fn{color:#82aaff;}.st{color:#c3e88d;}.cm{color:#607080;font-style:italic;}.num{color:#f78c6c;}.cls{color:#ffcb6b;}.op{color:#89ddff;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:16px 0;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:18px;transition:all .2s;}
+.card:hover{border-color:rgba(56,189,248,.4);transform:translateY(-2px);box-shadow:var(--card-hover-shadow);}
+.card-icon{font-size:1.5rem;margin-bottom:9px;}.card-title{font-weight:700;font-size:.9rem;color:var(--text);margin-bottom:5px;}
+.card-text{font-size:.82rem;color:var(--text-muted);line-height:1.6;}
+.compare-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.85rem;}
+.compare-table th{background:var(--surface2);color:var(--accent);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid rgba(56,189,248,.25);}
+.compare-table td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;}
+.compare-table tr:hover td{background:var(--hover-overlay);}
+ul.nice{list-style:none;padding:0;margin:10px 0;}
+ul.nice li{padding:5px 0 5px 20px;position:relative;color:var(--p-color);font-size:.92rem;}
+ul.nice li::before{content:'▸';position:absolute;left:0;color:var(--accent);}
+ic{font-family:'JetBrains Mono',monospace;font-size:.8em;background:rgba(56,189,248,.1);color:var(--accent);padding:1px 5px;border-radius:4px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;font-family:'Sora',sans-serif;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d1117;}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px);}
+.btn-secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.viz-container{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:18px;margin:16px 0;}
+.viz-title{font-size:.76rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;font-weight:700;text-align:center;}
+.svg-wrap{overflow-x:auto;margin:8px 0;}
+.footer{text-align:center;padding:36px 16px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.8rem;margin-top:32px;}
+@media(max-width:700px){
+  .toc-bar{padding:8px 12px;overflow-x:auto;flex-wrap:nowrap;}
+  .page{padding:20px 12px 60px;}
+  .section-header{padding:14px 16px;}
+  .section-body{padding:0 14px 22px;}
+  .theme-btn{top:8px;right:10px;width:34px;height:34px;font-size:.95rem;}
+  .code-body code{font-size:.76rem;}
+  .card-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:420px){.card-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="prog"></div>
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+<div class="hero">
+  <div class="hero-badge">Module 3 · CNN Fundamentals</div>
+  <h1>Parameters, Pooling &amp; Spatial Control</h1>
+  <p>Parameter sharing, receptive field, pooling layers, stride, padding, dilation, and transposed convolution — the complete design toolkit for building CNNs.</p>
+</div>
+<div class="toc-bar">
+  <span class="toc-label">Jump to</span>
+  <a class="toc-link" href="#s1">Param Sharing</a>
+  <a class="toc-link" href="#s2">Receptive Field</a>
+  <a class="toc-link" href="#s3">Pooling</a>
+  <a class="toc-link" href="#s4">Stride</a>
+  <a class="toc-link" href="#s5">Padding</a>
+  <a class="toc-link" href="#s6">Dilation</a>
+  <a class="toc-link" href="#s7">ConvTranspose2d</a>
+  <a class="toc-link" href="#s8">Summary</a>
+</div>
+<div class="page">
+<!-- ══════════ S1: PARAMETER SHARING ══════════ -->
+<div class="section-block open" id="s1">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">01</div>
+      <div><div class="section-title">Parameter Sharing</div>
+        <div class="section-sub">Why the same kernel weights scan the entire input — and why that's revolutionary</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <p>Parameter sharing is arguably the single most important design decision in CNNs. It means that <strong>one kernel's weights are reused at every spatial position</strong> across the entire input. This single idea reduces a 33-million-parameter layer down to 320 parameters — and often produces a <em>better</em> result.</p>
+
+  <h2 class="subsection">The Problem It Solves</h2>
+  <p>Imagine training a fully-connected network to recognise a horizontal edge. The network learns weights that fire for edges in the top-left region. Now the same edge appears bottom-right — those are completely different weights, so the network has to re-learn "horizontal edge" for every possible position. A 224×224 image has 50,176 pixels. The network must learn the same concept ~50,000 times over. That's catastrophic.</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">🔍 Analogy — One Stamp, Whole Document</div>
+    <div class="callout-body">Think of a rubber stamp shaped like the letter "A". To mark every "A" in a document you press the <em>same stamp</em> at each position — you do not carve a new stamp for each location. That stamp is the kernel. Its shape (the weights) is learned once and applied everywhere.</div>
+  </div>
+
+  <h2 class="subsection">Concrete Parameter Count</h2>
+  <p>Consider a 32×32 grayscale input processed into 32 output feature maps:</p>
+  <table class="compare-table">
+    <tr><th>Layer Type</th><th>Weights per output unit</th><th>Total Parameters</th></tr>
+    <tr><td>Fully Connected</td><td>32 × 32 = 1,024 (unique per unit)</td><td><strong style="color:var(--red)">33,554,432</strong></td></tr>
+    <tr><td>Conv2d 3×3 (32 filters)</td><td>3 × 3 = 9 <em>(shared everywhere)</em></td><td><strong style="color:var(--accent3)">320</strong> (9×32 + 32 bias)</td></tr>
+  </table>
+  <div class="callout insight">
+    <div class="callout-title">✅ 100,000× Reduction</div>
+    <div class="callout-body">For the same output tensor shape, parameter sharing reduces weights from 33.5 million to just 320 — over 100,000× fewer. And every one of those 9 kernel weights is trained on gradients from <em>all spatial positions</em>, giving a far richer learning signal than any single FC weight that sees only one corner of the image.</div>
+  </div>
+
+  <h2 class="subsection">The Math Behind It</h2>
+  <p>For a Conv2d layer the output at position \((i,j)\) for output channel \(c_{out}\) is:</p>
+  <div class="math-block">
+    <div class="math-label">Parameter Sharing — same W used at every (i, j)</div>
+    $$Y[c_{out},\; i,\; j] = \sum_{c_{in}} \sum_{p=0}^{K-1} \sum_{q=0}^{K-1} X[c_{in},\; i{+}p,\; j{+}q] \cdot \underbrace{W[c_{out},\; c_{in},\; p,\; q]}_{\text{identical at every }(i,j)}$$
+  </div>
+  <p>The indices \(p, q\) scan the kernel (size \(K \times K\)), while \(i, j\) loop over all \(H_{out} \times W_{out}\) spatial positions. The tensor \(W\) appears unchanged in every one of those spatial computations — that is parameter sharing.</p>
+
+  <h2 class="subsection">Two Key Consequences</h2>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">🔁</div><div class="card-title">Translation Equivariance</div><div class="card-text">If the input pattern shifts by \((dx, dy)\), the feature map shifts by the same amount. The network's response literally <em>moves with</em> the pattern.</div></div>
+    <div class="card"><div class="card-icon">📊</div><div class="card-title">Richer Gradients</div><div class="card-text">Each kernel weight receives gradients from <em>all</em> spatial positions during backprop — not just one region. This makes learning faster and more stable.</div></div>
+    <div class="card"><div class="card-icon">🧠</div><div class="card-title">Better Generalisation</div><div class="card-text">A feature detector learned in one corner works everywhere automatically. The network generalises to new positions it never saw during training.</div></div>
+    <div class="card"><div class="card-icon">⚡</div><div class="card-title">Hardware Efficiency</div><div class="card-text">Fewer parameters fit in L1/L2 cache. Convolution becomes a single batched matrix multiply — highly optimised on GPUs via cuDNN.</div></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Verifying parameter sharing in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+conv = nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, bias=<span class="kw">False</span>)
+
+<span class="cm"># Kernel has exactly 9 parameters — regardless of image size</span>
+<span class="fn">print</span>(conv.weight.shape)          <span class="cm"># torch.Size([1, 1, 3, 3])</span>
+<span class="fn">print</span>(conv.weight.numel())         <span class="cm"># 9</span>
+
+<span class="cm"># Prove same 9 weights handle ANY image size</span>
+<span class="kw">for</span> size <span class="kw">in</span> [<span class="num">32</span>, <span class="num">64</span>, <span class="num">224</span>, <span class="num">512</span>]:
+    x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">1</span>, size, size)
+    y = <span class="fn">conv</span>(x)
+    <span class="fn">print</span>(<span class="st">f"Input {size}×{size} → Output {y.shape[2]}×{y.shape[3]}, params={conv.weight.numel()}"</span>)
+<span class="cm"># Params stay 9 no matter how large the image — parameter sharing!</span>
+
+<span class="cm"># FC equivalent for 224×224 → 222×222 would need:</span>
+fc_params = (<span class="num">224</span>*<span class="num">224</span>) * (<span class="num">222</span>*<span class="num">222</span>)
+<span class="fn">print</span>(<span class="st">f"FC equivalent: {fc_params:,} parameters"</span>)   <span class="cm"># 2,458,813,056</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══════════ S2: RECEPTIVE FIELD ══════════ -->
+<div class="section-block open" id="s2">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent2)">02</div>
+      <div><div class="section-title">Receptive Field</div>
+        <div class="section-sub">How much of the original image each neuron "sees" — and how it grows with depth</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition</div>
+    <div class="callout-body">The <strong>receptive field</strong> of a neuron is the region of the original input that <em>influences</em> that neuron's output value. A neuron with a small RF detects fine local detail (edges). A neuron with a large RF can capture global context (objects, scenes). Growing the RF is one of the primary architectural goals in deep CNN design.</div>
+  </div>
+
+  <h2 class="subsection">Single Layer: Local RF</h2>
+  <p>For a single conv layer with kernel size \(K\), each output neuron directly looks at a \(K \times K\) patch of its input. After one 3×3 conv layer, every output neuron sees exactly a 3×3 region of the original image. That is its receptive field.</p>
+
+  <h2 class="subsection">How RF Grows With Depth</h2>
+  <p>The power of stacking layers is that the receptive field grows with each layer, even though each individual kernel is small. After two 3×3 conv layers, each neuron in layer 2 looks at a 3×3 patch of layer 1 — but each of those layer-1 neurons already sees a 3×3 patch of the input. So each layer-2 neuron indirectly covers a 5×5 region of the original image. After three layers: 7×7. This growth is the whole point of making networks deep.</p>
+
+  <!-- RF Growth SVG Diagram -->
+  <div class="viz-container">
+    <div class="viz-title">Receptive Field Grows Layer by Layer — 3×3 kernels, stride=1</div>
+    <div class="svg-wrap">
+    <svg width="660" height="195" viewBox="0 0 660 195" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+      <defs><marker id="ra" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#64748b"/></marker></defs>
+
+      <!-- Layer labels -->
+      <text x="55" y="14" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">Input</text>
+      <text x="200" y="14" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">After Layer 1</text>
+      <text x="360" y="14" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">After Layer 2</text>
+      <text x="510" y="14" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">After Layer 3</text>
+
+      <!-- Input: show 7x7 grid, highlight 7x7 RF block -->
+      <g transform="translate(10,20)">
+        <!-- 7 rows x 7 cols, cell=13px, gap=1 -->
+        <!-- highlight 7x7 center (whole thing for input) -->
+        <rect x="0" y="0" width="91" height="91" rx="4" fill="rgba(56,189,248,0.05)" stroke="#2d3748" stroke-width="0.5"/>
+        <!-- highlight 3x3 for L1 RF -->
+        <rect x="26" y="26" width="39" height="39" rx="3" fill="rgba(56,189,248,0.25)" stroke="#38bdf8" stroke-width="1.5"/>
+        <!-- centre pixel -->
+        <rect x="39" y="39" width="13" height="13" rx="2" fill="rgba(56,189,248,0.7)" stroke="#38bdf8" stroke-width="2"/>
+        <!-- grid lines -->
+        <line x1="13" y1="0" x2="13" y2="91" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="26" y1="0" x2="26" y2="91" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="39" y1="0" x2="39" y2="91" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="52" y1="0" x2="52" y2="91" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="65" y1="0" x2="65" y2="91" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="78" y1="0" x2="78" y2="91" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="13" x2="91" y2="13" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="26" x2="91" y2="26" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="39" x2="91" y2="39" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="52" x2="91" y2="52" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="65" x2="91" y2="65" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="78" x2="91" y2="78" stroke="#2d3748" stroke-width="0.4"/>
+      </g>
+      <text x="55" y="122" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">RF = 3×3</text>
+
+      <!-- Arrow -->
+      <line x1="105" y1="65" x2="135" y2="65" stroke="#64748b" stroke-width="1.5" marker-end="url(#ra)"/>
+      <text x="120" y="58" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">3×3</text>
+      <text x="120" y="80" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">conv</text>
+
+      <!-- After L1: 5x5, highlight 3x3 within it -->
+      <g transform="translate(143,33)">
+        <rect x="0" y="0" width="65" height="65" rx="4" fill="rgba(129,140,248,0.05)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="13" y="13" width="39" height="39" rx="3" fill="rgba(129,140,248,0.3)" stroke="#818cf8" stroke-width="1.5"/>
+        <rect x="26" y="26" width="13" height="13" rx="2" fill="rgba(129,140,248,0.7)" stroke="#818cf8" stroke-width="2"/>
+        <line x1="13" y1="0" x2="13" y2="65" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="26" y1="0" x2="26" y2="65" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="39" y1="0" x2="39" y2="65" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="52" y1="0" x2="52" y2="65" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="13" x2="65" y2="13" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="26" x2="65" y2="26" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="39" x2="65" y2="39" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="52" x2="65" y2="52" stroke="#2d3748" stroke-width="0.4"/>
+      </g>
+      <text x="175" y="122" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">RF = 5×5</text>
+      <text x="175" y="135" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">(in original input)</text>
+
+      <!-- Arrow -->
+      <line x1="215" y1="65" x2="248" y2="65" stroke="#64748b" stroke-width="1.5" marker-end="url(#ra)"/>
+      <text x="231" y="58" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">3×3</text>
+      <text x="231" y="80" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">conv</text>
+
+      <!-- After L2: 3x3, highlight within -->
+      <g transform="translate(255,46)">
+        <rect x="0" y="0" width="39" height="39" rx="4" fill="rgba(52,211,153,0.05)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="0" y="0" width="39" height="39" rx="4" fill="rgba(52,211,153,0.25)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="13" y="13" width="13" height="13" rx="2" fill="rgba(52,211,153,0.7)" stroke="#34d399" stroke-width="2"/>
+        <line x1="13" y1="0" x2="13" y2="39" stroke="#34d399" stroke-width="0.4" stroke-opacity="0.4"/>
+        <line x1="26" y1="0" x2="26" y2="39" stroke="#34d399" stroke-width="0.4" stroke-opacity="0.4"/>
+        <line x1="0" y1="13" x2="39" y2="13" stroke="#34d399" stroke-width="0.4" stroke-opacity="0.4"/>
+        <line x1="0" y1="26" x2="39" y2="26" stroke="#34d399" stroke-width="0.4" stroke-opacity="0.4"/>
+      </g>
+      <text x="275" y="122" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">RF = 7×7</text>
+      <text x="275" y="135" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">sees whole input!</text>
+
+      <!-- Arrow -->
+      <line x1="305" y1="65" x2="338" y2="65" stroke="#64748b" stroke-width="1.5" marker-end="url(#ra)"/>
+      <text x="321" y="58" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">3×3</text>
+      <text x="321" y="80" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">conv</text>
+
+      <!-- After L3: single neuron -->
+      <circle cx="380" cy="65" r="32" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="2.5"/>
+      <text x="380" y="61" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#fb923c">single</text>
+      <text x="380" y="76" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#fb923c">neuron</text>
+      <text x="380" y="122" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">RF = 9×9</text>
+
+      <!-- Formula box -->
+      <rect x="430" y="20" width="222" height="120" rx="9" fill="rgba(56,189,248,0.05)" stroke="rgba(56,189,248,0.25)" stroke-width="1"/>
+      <text x="541" y="42" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">RF Formula (stride=1)</text>
+      <text x="541" y="62" text-anchor="middle" font-family="Sora" font-size="11" fill="#94a3b8">RF = 1 + L × (K − 1)</text>
+      <line x1="440" y1="72" x2="642" y2="72" stroke="#2d3748" stroke-width="0.8"/>
+      <text x="541" y="89" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">L=1: 1 + 1×2 = 3</text>
+      <text x="541" y="104" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">L=2: 1 + 2×2 = 5</text>
+      <text x="541" y="119" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">L=3: 1 + 3×2 = 7</text>
+      <text x="541" y="134" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">L=4: 1 + 4×2 = 9</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="subsection">General RF Formula</h2>
+  <p>When layers have different kernel sizes or strides, we compute the receptive field recursively. Start at \(RF_0 = 1\) and apply this update for each layer:</p>
+  <div class="math-block">
+    <div class="math-label">General RF Formula — accounts for stride in earlier layers</div>
+    $$RF_L = RF_{L-1} + (K_L - 1) \times \prod_{i=1}^{L-1} S_i$$
+    <div style="margin-top:8px;font-size:.83rem;color:var(--text-muted)">The product term \(\prod S_i\) is the cumulative stride — each previous stride "stretches" how far a step in the current layer maps back to the input.</div>
+  </div>
+
+  <h2 class="subsection">Why RF Matters for Network Design</h2>
+  <p>To classify whether an image contains a cat, a neuron must eventually see the whole cat — its RF must be large enough to encompass the object. Too small an RF → the network can only detect textures, not shapes or objects. Too large and it's wasteful. This tension directly informs choices like: how many layers, whether to use pooling (which rapidly grows RF), and whether to use dilated convolutions.</p>
+
+  <table class="compare-table">
+    <tr><th>Approach</th><th>RF after 3 layers</th><th>Params (per filter)</th><th>Non-linearities</th></tr>
+    <tr><td>3 × Conv(3×3), stride=1</td><td>7×7</td><td>27</td><td>3</td></tr>
+    <tr><td>1 × Conv(7×7)</td><td>7×7</td><td>49</td><td>1</td></tr>
+    <tr><td>3 × Conv(3×3), stride=2</td><td>15×15</td><td>27</td><td>3</td></tr>
+    <tr><td>3×3 conv + 2×2 pool × 3</td><td>22×22</td><td>27</td><td>3</td></tr>
+  </table>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ VGGNet's Core Insight (2014)</div>
+    <div class="callout-body">Stacking small 3×3 convolutions achieves the same receptive field as one large kernel, but with <em>fewer parameters</em> and <em>more non-linearities</em> (one ReLU per layer). VGGNet proved that depth with small kernels consistently beats shallow networks with large kernels — and this is now universally accepted design wisdom.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Computing RF analytically for any architecture</span></div>
+    <div class="code-body"><pre><code><span class="kw">def</span> <span class="fn">compute_rf</span>(layers):
+    <span class="st">"""layers: list of (kernel_size, stride) tuples. Returns receptive field size."""</span>
+    rf, stride_product = <span class="num">1</span>, <span class="num">1</span>
+    <span class="kw">for</span> k, s <span class="kw">in</span> layers:
+        rf += (k - <span class="num">1</span>) * stride_product
+        stride_product *= s
+    <span class="kw">return</span> rf
+
+<span class="cm"># VGG-style: all 3×3 conv, stride=1, but with 2×2 max pool (stride=2) between blocks</span>
+<span class="cm"># Pool layers also grow RF: treat as (kernel=2, stride=2)</span>
+vgg_block1 = [(<span class="num">3</span>,<span class="num">1</span>), (<span class="num">3</span>,<span class="num">1</span>), (<span class="num">2</span>,<span class="num">2</span>)]   <span class="cm"># 2 convs + pool</span>
+vgg_block2 = [(<span class="num">3</span>,<span class="num">1</span>), (<span class="num">3</span>,<span class="num">1</span>), (<span class="num">2</span>,<span class="num">2</span>)]
+vgg_5layers = vgg_block1 + vgg_block2
+<span class="fn">print</span>(<span class="st">f"VGG after 2 blocks: RF = {compute_rf(vgg_5layers)}"</span>)   <span class="cm"># RF = 16</span>
+
+<span class="cm"># ResNet stem: 7×7 conv stride=2, then 3×3 conv stride=2 max pool</span>
+resnet_stem = [(<span class="num">7</span>,<span class="num">2</span>), (<span class="num">3</span>,<span class="num">2</span>)]
+<span class="fn">print</span>(<span class="st">f"ResNet stem: RF = {compute_rf(resnet_stem)}"</span>)             <span class="cm"># RF = 11</span>
+
+<span class="cm"># Compare: 3 layers of 3×3 stride=1 (no pool)</span>
+shallow = [(<span class="num">3</span>,<span class="num">1</span>)] * <span class="num">3</span>
+<span class="fn">print</span>(<span class="st">f"3x Conv3×3: RF = {compute_rf(shallow)}"</span>)                   <span class="cm"># RF = 7</span>
+
+<span class="cm"># Stride dramatically grows RF: 3 layers stride=2</span>
+strided = [(<span class="num">3</span>,<span class="num">2</span>)] * <span class="num">3</span>
+<span class="fn">print</span>(<span class="st">f"3x Conv3×3 stride=2: RF = {compute_rf(strided)}"</span>)          <span class="cm"># RF = 15</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════════ S3: POOLING ══════════ -->
+<div class="section-block open" id="s3">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">03</div>
+      <div><div class="section-title">Pooling Layers</div>
+        <div class="section-sub">Spatial downsampling — reducing resolution while preserving what matters</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition</div>
+    <div class="callout-body">A <strong>pooling layer</strong> reduces the spatial dimensions (H and W) of a feature map by aggregating values in local windows. Unlike convolution, pooling has <em>no learnable parameters</em> — it applies a fixed function (max, average) and intentionally discards fine spatial detail to produce a compact, spatially invariant representation.</div>
+  </div>
+
+  <h2 class="subsection">Why Do We Need Pooling?</h2>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">📉</div><div class="card-title">Reduce Computation</div><div class="card-text">Halving H and W cuts the feature map to ¼ its original size — every subsequent conv layer becomes 4× cheaper.</div></div>
+    <div class="card"><div class="card-icon">🔭</div><div class="card-title">Grow Receptive Field</div><div class="card-text">After pooling, each spatial position represents a larger region of the original image, giving later layers broader context.</div></div>
+    <div class="card"><div class="card-icon">🛡️</div><div class="card-title">Local Invariance</div><div class="card-text">Max pooling is insensitive to small translations within a pool window — if a feature shifts 1px, the max value often stays unchanged.</div></div>
+    <div class="card"><div class="card-icon">📦</div><div class="card-title">Hierarchical Features</div><div class="card-text">Progressively smaller feature maps force the network to build increasingly abstract, coarse representations — the semantic hierarchy.</div></div>
+  </div>
+
+  <h2 class="subsection">Max Pooling — "Was This Feature Detected?"</h2>
+  <p>Max pooling takes the <strong>maximum value</strong> in each local window. The intuition is that max pooling is asking a binary-style question: <em>was this feature active anywhere in this neighbourhood?</em> The maximum value captures the strongest activation, telling us that yes, the feature detector fired strongly somewhere in this region, without needing to remember exactly where.</p>
+
+  <div class="viz-container">
+    <div class="viz-title">2×2 Max Pooling, Stride=2 — each colour group maps to one output (its max)</div>
+    <div class="svg-wrap">
+    <svg width="500" height="195" viewBox="0 0 500 195" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+      <!-- Input 4x4 -->
+      <text x="90" y="16" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Input (4×4)</text>
+      <!-- Top-left blue quadrant -->
+      <rect x="10" y="22" width="40" height="40" rx="3" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="1.5"/><text x="30" y="48" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">1</text>
+      <rect x="52" y="22" width="40" height="40" rx="3" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="1.5"/><text x="72" y="48" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">3</text>
+      <rect x="10" y="64" width="40" height="40" rx="3" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="1.5"/><text x="30" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">2</text>
+      <rect x="52" y="64" width="40" height="40" rx="3" fill="rgba(56,189,248,0.5)" stroke="#38bdf8" stroke-width="2.5"/><text x="72" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="800" fill="#38bdf8">4</text>
+      <!-- Top-right purple -->
+      <rect x="94" y="22" width="40" height="40" rx="3" fill="rgba(129,140,248,0.2)" stroke="#818cf8" stroke-width="1.5"/><text x="114" y="48" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">5</text>
+      <rect x="136" y="22" width="40" height="40" rx="3" fill="rgba(129,140,248,0.5)" stroke="#818cf8" stroke-width="2.5"/><text x="156" y="48" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="800" fill="#818cf8">7</text>
+      <rect x="94" y="64" width="40" height="40" rx="3" fill="rgba(129,140,248,0.2)" stroke="#818cf8" stroke-width="1.5"/><text x="114" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">6</text>
+      <rect x="136" y="64" width="40" height="40" rx="3" fill="rgba(129,140,248,0.2)" stroke="#818cf8" stroke-width="1.5"/><text x="156" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">2</text>
+      <!-- Bottom-left orange -->
+      <rect x="10" y="106" width="40" height="40" rx="3" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="1.5"/><text x="30" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">3</text>
+      <rect x="52" y="106" width="40" height="40" rx="3" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="1.5"/><text x="72" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">1</text>
+      <rect x="10" y="148" width="40" height="40" rx="3" fill="rgba(251,146,60,0.5)" stroke="#fb923c" stroke-width="2.5"/><text x="30" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="800" fill="#fb923c">8</text>
+      <rect x="52" y="148" width="40" height="40" rx="3" fill="rgba(251,146,60,0.2)" stroke="#fb923c" stroke-width="1.5"/><text x="72" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">2</text>
+      <!-- Bottom-right green -->
+      <rect x="94" y="106" width="40" height="40" rx="3" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1.5"/><text x="114" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">9</text>
+      <rect x="136" y="106" width="40" height="40" rx="3" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1.5"/><text x="156" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">4</text>
+      <rect x="94" y="148" width="40" height="40" rx="3" fill="rgba(52,211,153,0.2)" stroke="#34d399" stroke-width="1.5"/><text x="114" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#94a3b8">3</text>
+      <rect x="136" y="148" width="40" height="40" rx="3" fill="rgba(52,211,153,0.5)" stroke="#34d399" stroke-width="2.5"/><text x="156" y="174" text-anchor="middle" font-family="JetBrains Mono" font-size="16" font-weight="800" fill="#34d399">11</text>
+      <!-- Arrow -->
+      <text x="215" y="100" text-anchor="middle" font-family="Sora" font-size="26" fill="#64748b">→</text>
+      <text x="215" y="118" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">MaxPool2d</text>
+      <text x="215" y="131" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">2×2, stride=2</text>
+      <!-- Output 2×2 -->
+      <text x="365" y="16" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Output (2×2)</text>
+      <rect x="283" y="65" width="60" height="60" rx="5" fill="rgba(56,189,248,0.3)" stroke="#38bdf8" stroke-width="2.5"/>
+      <text x="313" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="22" font-weight="800" fill="#38bdf8">4</text>
+      <rect x="347" y="65" width="60" height="60" rx="5" fill="rgba(129,140,248,0.3)" stroke="#818cf8" stroke-width="2.5"/>
+      <text x="377" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="22" font-weight="800" fill="#818cf8">7</text>
+      <rect x="283" y="129" width="60" height="60" rx="5" fill="rgba(251,146,60,0.3)" stroke="#fb923c" stroke-width="2.5"/>
+      <text x="313" y="166" text-anchor="middle" font-family="JetBrains Mono" font-size="22" font-weight="800" fill="#fb923c">8</text>
+      <rect x="347" y="129" width="60" height="60" rx="5" fill="rgba(52,211,153,0.3)" stroke="#34d399" stroke-width="2.5"/>
+      <text x="377" y="166" text-anchor="middle" font-family="JetBrains Mono" font-size="22" font-weight="800" fill="#34d399">11</text>
+      <!-- calcs -->
+      <text x="435" y="95" font-family="Sora" font-size="9" fill="#64748b">max(1,3,2,4)=4</text>
+      <text x="435" y="110" font-family="Sora" font-size="9" fill="#64748b">max(5,7,6,2)=7</text>
+      <text x="435" y="148" font-family="Sora" font-size="9" fill="#64748b">max(3,1,8,2)=8</text>
+      <text x="435" y="163" font-family="Sora" font-size="9" fill="#64748b">max(9,4,3,11)=11</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="subsection">Average Pooling — "How Active Was This Region?"</h2>
+  <p>Average pooling computes the mean of each window. Where max pooling asks <em>was the feature present</em>, average pooling asks <em>how active was this region overall</em>. It retains a contribution from every activation — even the weak ones — rather than discarding all but the strongest. This gives smoother downsampling and is often preferred for intermediate pooling in modern architectures, and almost universally used at the end of the network via Global Average Pooling.</p>
+  <div class="math-block">
+    <div class="math-label">Average Pooling on the same input — all four quadrants</div>
+    $$\text{avg}[0,0]=\frac{1+3+2+4}{4}=2.5 \quad \text{avg}[0,1]=\frac{5+7+6+2}{4}=5.0$$
+    $$\text{avg}[1,0]=\frac{3+1+8+2}{4}=3.5 \quad \text{avg}[1,1]=\frac{9+4+3+11}{4}=6.75$$
+  </div>
+
+  <h2 class="subsection">Global Average Pooling (GAP) — Modern Alternative to FC</h2>
+  <p>Global Average Pooling is arguably the most impactful pooling innovation in modern CNNs. Instead of flattening a feature map and feeding it to a huge FC layer, GAP simply averages every spatial position for each channel, producing a single number per channel. The result is a compact vector that can feed directly into a <ic>nn.Linear</ic> classifier with almost no parameters — and it significantly reduces overfitting.</p>
+  <div class="math-block">
+    <div class="math-label">Global Average Pooling — collapses all spatial positions</div>
+    $$\text{GAP}(X)[c] = \frac{1}{H \times W}\sum_{i=1}^{H}\sum_{j=1}^{W} X[c,i,j]$$
+    <div style="margin-top:8px;font-size:.83rem;color:var(--text-muted)">Input shape (B, C, H, W) → Output shape (B, C, 1, 1) — all spatial info collapsed to one value per channel</div>
+  </div>
+
+  <table class="compare-table">
+    <tr><th>Type</th><th>Operation</th><th>Learnable?</th><th>Used In</th></tr>
+    <tr><td>MaxPool2d</td><td>max in window</td><td>No</td><td>AlexNet, VGG, LeNet</td></tr>
+    <tr><td>AvgPool2d</td><td>mean of window</td><td>No</td><td>GoogLeNet intermediate</td></tr>
+    <tr><td>AdaptiveAvgPool2d(1)</td><td>mean over full H×W</td><td>No</td><td>ResNet, EfficientNet, MobileNet classifier</td></tr>
+    <tr><td>Strided Conv (stride=2)</td><td>learned weighted sum</td><td><strong>Yes</strong></td><td>Modern encoders, DCGAN discriminator</td></tr>
+  </table>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ Modern Trend — Replace Pooling with Strided Conv</div>
+    <div class="callout-body">Many recent architectures replace max pooling with <strong>strided convolutions</strong> (stride=2). The difference is that strided conv is <em>learnable</em> — the network decides <em>how</em> to downsample rather than always taking the maximum. In practice this often produces better results, especially in generative models and segmentation where the encoder must preserve information carefully.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · All pooling variants in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">32</span>, <span class="num">64</span>, <span class="num">64</span>)   <span class="cm"># batch=1, 32 channels, 64×64</span>
+
+<span class="cm"># Max pooling — halves H and W</span>
+<span class="fn">print</span>(nn.<span class="cls">MaxPool2d</span>(<span class="num">2</span>, <span class="num">2</span>)(x).shape)              <span class="cm"># [1, 32, 32, 32]</span>
+
+<span class="cm"># Average pooling — same shape effect, smoother values</span>
+<span class="fn">print</span>(nn.<span class="cls">AvgPool2d</span>(<span class="num">2</span>, <span class="num">2</span>)(x).shape)              <span class="cm"># [1, 32, 32, 32]</span>
+
+<span class="cm"># Global Average Pool — collapses all spatial dims</span>
+gap = nn.<span class="cls">AdaptiveAvgPool2d</span>(<span class="num">1</span>)
+<span class="fn">print</span>(<span class="fn">gap</span>(x).shape)                               <span class="cm"># [1, 32, 1, 1]</span>
+<span class="fn">print</span>(<span class="fn">gap</span>(x).flatten(<span class="num">1</span>).shape)                   <span class="cm"># [1, 32] — ready for classifier</span>
+
+<span class="cm"># Adaptive pool — always produces a fixed output size, regardless of input</span>
+<span class="fn">print</span>(nn.<span class="cls">AdaptiveMaxPool2d</span>((<span class="num">4</span>, <span class="num">4</span>))(x).shape)     <span class="cm"># [1, 32, 4, 4] always</span>
+
+<span class="cm"># ── Full ResNet-style classifier head using GAP ──────────────────</span>
+<span class="kw">class</span> <span class="cls">ResNetHead</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_channels=<span class="num">512</span>, num_classes=<span class="num">1000</span>):
+        <span class="fn">super</span>().__init__()
+        self.gap = nn.<span class="cls">AdaptiveAvgPool2d</span>(<span class="num">1</span>)      <span class="cm"># 512×H×W → 512×1×1</span>
+        self.fc  = nn.<span class="cls">Linear</span>(in_channels, num_classes)  <span class="cm"># 512 params × 1000</span>
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.<span class="fn">gap</span>(x).flatten(<span class="num">1</span>)  <span class="cm"># (B, 512)</span>
+        <span class="kw">return</span> self.<span class="fn">fc</span>(x)             <span class="cm"># (B, 1000)</span>
+
+<span class="cm"># vs. VGG-style FC head: flattened 512×7×7=25088 → 4096 → 4096 → 1000</span>
+<span class="cm"># ResNet GAP: 512 → 1000 = 512,000 params vs VGG FC: 102+16+4 million params</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══════════ S4: STRIDE ══════════ -->
+<div class="section-block" id="s4">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">04</div>
+      <div><div class="section-title">Stride</div>
+        <div class="section-sub">How many pixels the kernel jumps between positions — controls output resolution</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition</div>
+    <div class="callout-body"><strong>Stride</strong> \(S\) is the number of pixels the kernel moves between consecutive applications. Stride=1 means dense coverage — the kernel shifts one pixel at a time, maximally overlapping windows. Stride=2 means the kernel skips every other position, producing a smaller output with no overlap between adjacent windows.</div>
+  </div>
+
+  <div class="viz-container">
+    <div class="viz-title">Stride=1 vs Stride=2 — how far the 3-element kernel window jumps each step</div>
+    <div class="svg-wrap">
+    <svg width="600" height="195" viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+      <defs><marker id="rb" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#64748b"/></marker></defs>
+
+      <!-- STRIDE 1 -->
+      <text x="10" y="18" font-family="Sora" font-size="12" font-weight="700" fill="#fb923c">Stride = 1 — dense, overlapping windows</text>
+      <!-- 8 cells -->
+      <rect x="10" y="26" width="38" height="38" rx="4" fill="rgba(251,146,60,0.4)" stroke="#fb923c" stroke-width="2"/><text x="29" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">1</text>
+      <rect x="52" y="26" width="38" height="38" rx="4" fill="rgba(251,146,60,0.4)" stroke="#fb923c" stroke-width="2"/><text x="71" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">2</text>
+      <rect x="94" y="26" width="38" height="38" rx="4" fill="rgba(251,146,60,0.4)" stroke="#fb923c" stroke-width="2"/><text x="113" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">3</text>
+      <rect x="136" y="26" width="38" height="38" rx="4" fill="rgba(56,189,248,0.12)" stroke="#2d3748" stroke-width="1"/><text x="155" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#64748b">4</text>
+      <rect x="178" y="26" width="38" height="38" rx="4" fill="rgba(56,189,248,0.12)" stroke="#2d3748" stroke-width="1"/><text x="197" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#64748b">5</text>
+      <rect x="220" y="26" width="38" height="38" rx="4" fill="rgba(56,189,248,0.12)" stroke="#2d3748" stroke-width="1"/><text x="239" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#64748b">6</text>
+      <rect x="262" y="26" width="38" height="38" rx="4" fill="rgba(56,189,248,0.12)" stroke="#2d3748" stroke-width="1"/><text x="281" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#64748b">7</text>
+      <rect x="304" y="26" width="38" height="38" rx="4" fill="rgba(56,189,248,0.12)" stroke="#2d3748" stroke-width="1"/><text x="323" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#64748b">8</text>
+      <!-- kernel outline -->
+      <rect x="8" y="24" width="126" height="42" rx="5" fill="none" stroke="#fb923c" stroke-width="2" stroke-dasharray="5,3"/>
+      <text x="71" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c">pos 0</text>
+      <text x="113" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">pos 1 (shift 1)</text>
+      <text x="310" y="82" font-family="Sora" font-size="9" fill="#64748b">→ 6 output positions, heavy overlap</text>
+
+      <!-- STRIDE 2 -->
+      <text x="10" y="108" font-family="Sora" font-size="12" font-weight="700" fill="#818cf8">Stride = 2 — sparse, no overlap</text>
+      <rect x="10" y="116" width="38" height="38" rx="4" fill="rgba(129,140,248,0.45)" stroke="#818cf8" stroke-width="2"/><text x="29" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">1</text>
+      <rect x="52" y="116" width="38" height="38" rx="4" fill="rgba(129,140,248,0.45)" stroke="#818cf8" stroke-width="2"/><text x="71" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">2</text>
+      <rect x="94" y="116" width="38" height="38" rx="4" fill="rgba(129,140,248,0.45)" stroke="#818cf8" stroke-width="2"/><text x="113" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">3</text>
+      <rect x="136" y="116" width="38" height="38" rx="4" fill="rgba(56,189,248,0.08)" stroke="#2d3748" stroke-width="1"/><text x="155" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#64748b">4</text>
+      <rect x="178" y="116" width="38" height="38" rx="4" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="2"/><text x="197" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">5</text>
+      <rect x="220" y="116" width="38" height="38" rx="4" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="2"/><text x="239" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">6</text>
+      <rect x="262" y="116" width="38" height="38" rx="4" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="2"/><text x="281" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#e2e8f0">7</text>
+      <rect x="304" y="116" width="38" height="38" rx="4" fill="rgba(56,189,248,0.08)" stroke="#2d3748" stroke-width="1"/><text x="323" y="141" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#64748b">8</text>
+      <!-- jump arrow -->
+      <line x1="113" y1="158" x2="195" y2="158" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#rb)"/>
+      <text x="154" y="172" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">jump 2 pixels</text>
+      <text x="400" y="141" font-family="Sora" font-size="9" fill="#64748b">→ only 3 output positions, no overlap</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="subsection">Output Size Formula</h2>
+  <div class="math-block">
+    <div class="math-label">Output dimension with stride S and padding P</div>
+    $$H_{out} = \left\lfloor \frac{H_{in} + 2P - K}{S} \right\rfloor + 1$$
+    <div style="margin-top:10px;font-size:.83rem;color:var(--text-muted)">For K=3, P=1, S=1: \(H_{out} = H_{in}\) (same). For K=3, P=1, S=2: \(H_{out} = \lceil H_{in}/2 \rceil\) (halved).</div>
+  </div>
+
+  <table class="compare-table">
+    <tr><th>Input H</th><th>K</th><th>P</th><th>S</th><th>Output H</th><th>Notes</th></tr>
+    <tr><td>224</td><td>3</td><td>1</td><td>1</td><td>224</td><td>Same padding — keeps resolution</td></tr>
+    <tr><td>224</td><td>3</td><td>1</td><td>2</td><td>112</td><td>Learnable downsampling</td></tr>
+    <tr><td>224</td><td>7</td><td>3</td><td>2</td><td>112</td><td>ResNet stem pattern</td></tr>
+    <tr><td>224</td><td>3</td><td>0</td><td>4</td><td>56</td><td>Aggressive compression</td></tr>
+  </table>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ Strided Conv vs Max Pool — Key Trade-off</div>
+    <div class="callout-body">Both stride=2 conv and 2×2 max pool halve spatial dimensions. But strided conv is <strong>learnable</strong> — the network optimises the downsampling function for the task. Max pool always takes the maximum, which is a hand-designed choice. For discriminative tasks (classification), both work well. For generative or reconstruction tasks (autoencoders, U-Net), strided conv is strongly preferred because the learned downsampling better preserves information that the decoder needs to reconstruct.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Stride in PyTorch — practical examples</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">3</span>, <span class="num">224</span>, <span class="num">224</span>)
+
+<span class="cm"># stride=1: output almost same size (222×222 without padding)</span>
+c1 = nn.<span class="cls">Conv2d</span>(<span class="num">3</span>, <span class="num">64</span>, <span class="num">3</span>, stride=<span class="num">1</span>)
+<span class="fn">print</span>(<span class="fn">c1</span>(x).shape)          <span class="cm"># → [1, 64, 222, 222]</span>
+
+<span class="cm"># stride=2: output halved — same as max pool but learnable</span>
+c2 = nn.<span class="cls">Conv2d</span>(<span class="num">3</span>, <span class="num">64</span>, <span class="num">3</span>, stride=<span class="num">2</span>, padding=<span class="num">1</span>)
+<span class="fn">print</span>(<span class="fn">c2</span>(x).shape)          <span class="cm"># → [1, 64, 112, 112]</span>
+
+<span class="cm"># ResNet stem: 7×7 conv, stride=2 — aggressive early compression</span>
+resnet_stem = nn.<span class="cls">Conv2d</span>(<span class="num">3</span>, <span class="num">64</span>, <span class="num">7</span>, stride=<span class="num">2</span>, padding=<span class="num">3</span>)
+<span class="fn">print</span>(<span class="fn">resnet_stem</span>(x).shape)  <span class="cm"># → [1, 64, 112, 112]</span>
+
+<span class="cm"># Asymmetric stride — useful for non-square inputs (panoramic images, etc.)</span>
+c3 = nn.<span class="cls">Conv2d</span>(<span class="num">3</span>, <span class="num">64</span>, <span class="num">3</span>, stride=(<span class="num">2</span>, <span class="num">1</span>))
+<span class="fn">print</span>(<span class="fn">c3</span>(x).shape)          <span class="cm"># → [1, 64, 111, 222]  — only height halved</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════════ S5: PADDING ══════════ -->
+<div class="section-block" id="s5">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(244,114,182,.15);color:var(--accent5)">05</div>
+      <div><div class="section-title">Padding</div>
+        <div class="section-sub">Adding border values to control output size and preserve edge information</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition</div>
+    <div class="callout-body"><strong>Padding</strong> adds extra values around the border of the input before the convolution is applied. Without padding, every conv layer shrinks the spatial dimensions by \(K-1\) pixels (a 3×3 kernel shrinks H by 2, a 5×5 shrinks by 4). In a 50-layer network this would reduce a 224×224 image to nothing. Padding prevents shrinkage and also lets the kernel centre itself on the very edge pixels, giving border regions equal attention to interior regions.</div>
+  </div>
+
+  <h2 class="subsection">The Border Problem</h2>
+  <p>Without padding, consider what happens to a corner pixel. The kernel can only be centred on positions where all K×K weights land inside the input. A 3×3 kernel centred on position (0,0) would need pixels at row −1, col −1 — which don't exist. So without padding, the kernel never covers corner pixels as a centre point; it only reaches them indirectly. This means corner and edge information contributes less to the output than central information. Padding fixes this by giving the kernel a valid neighbourhood everywhere.</p>
+
+  <div class="viz-container">
+    <div class="viz-title">Zero Padding p=1 — one ring of zeros added around a 4×4 input, enabling a 3×3 kernel to centre on every original pixel</div>
+    <div class="svg-wrap">
+    <svg width="520" height="210" viewBox="0 0 520 210" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+      <!-- 6×6 padded grid (p=1 around 4×4) -->
+      <!-- Row 0: all padding -->
+      <rect x="10" y="10" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="25" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="42" y="10" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="57" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="74" y="10" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="89" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="106" y="10" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="121" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="138" y="10" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="153" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="170" y="10" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="185" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <!-- Rows 1–4: p | data (4 cells) | p -->
+      <!-- row 1 -->
+      <rect x="10" y="42" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="25" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="42" y="42" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="57" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">2</text>
+      <rect x="74" y="42" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="89" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">4</text>
+      <rect x="106" y="42" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="121" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">1</text>
+      <rect x="138" y="42" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="153" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">3</text>
+      <rect x="170" y="42" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="185" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <!-- row 2 -->
+      <rect x="10" y="74" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="25" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="42" y="74" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="57" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">5</text>
+      <rect x="74" y="74" width="30" height="30" rx="2" fill="rgba(56,189,248,0.55)" stroke="#38bdf8" stroke-width="2"/><text x="89" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#38bdf8">7</text>
+      <rect x="106" y="74" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="121" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">2</text>
+      <rect x="138" y="74" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="153" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">8</text>
+      <rect x="170" y="74" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="185" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <!-- row 3 -->
+      <rect x="10" y="106" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="25" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="42" y="106" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="57" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">3</text>
+      <rect x="74" y="106" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="89" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">1</text>
+      <rect x="106" y="106" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="121" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">6</text>
+      <rect x="138" y="106" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="153" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">4</text>
+      <rect x="170" y="106" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="185" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <!-- row 4 -->
+      <rect x="10" y="138" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="25" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="42" y="138" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="57" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">9</text>
+      <rect x="74" y="138" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="89" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">2</text>
+      <rect x="106" y="138" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="121" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">5</text>
+      <rect x="138" y="138" width="30" height="30" rx="2" fill="rgba(56,189,248,0.28)" stroke="#38bdf8" stroke-width="1.4"/><text x="153" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#e2e8f0">1</text>
+      <rect x="170" y="138" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="185" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <!-- Row 5 padding -->
+      <rect x="10" y="170" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="25" y="190" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="42" y="170" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="57" y="190" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="74" y="170" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="89" y="190" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="106" y="170" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="121" y="190" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="138" y="170" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="153" y="190" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <rect x="170" y="170" width="30" height="30" rx="2" fill="rgba(100,116,139,0.22)" stroke="#2d3748" stroke-width="0.7"/><text x="185" y="190" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#64748b">0</text>
+      <!-- legend + result -->
+      <rect x="230" y="22" width="12" height="12" rx="2" fill="rgba(100,116,139,0.35)" stroke="#2d3748"/>
+      <text x="247" y="33" font-family="Sora" font-size="10" fill="#64748b">Padding zeros</text>
+      <rect x="230" y="40" width="12" height="12" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8"/>
+      <text x="247" y="51" font-family="Sora" font-size="10" fill="#64748b">Original data</text>
+      <rect x="225" y="80" width="290" height="110" rx="8" fill="rgba(52,211,153,0.06)" stroke="rgba(52,211,153,0.25)" stroke-width="1"/>
+      <text x="370" y="103" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#34d399">Result: K=3, P=1, S=1</text>
+      <text x="370" y="122" text-anchor="middle" font-family="Sora" font-size="11" fill="#94a3b8">H_out = (4 + 2×1 − 3)/1 + 1 = 4</text>
+      <text x="370" y="140" text-anchor="middle" font-family="Sora" font-size="11" fill="#94a3b8">Output H = Input H ✓</text>
+      <text x="370" y="162" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">"Same" padding: P = ⌊K/2⌋ always preserves size (stride=1)</text>
+      <text x="370" y="178" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">K=3 → P=1, K=5 → P=2, K=7 → P=3</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="subsection">Padding Modes</h2>
+
+  <table class="compare-table">
+    <tr><th>Mode</th><th>What gets added</th><th>Output size</th><th>Best for</th></tr>
+    <tr><td><strong>Valid</strong> (P=0)</td><td>Nothing — valid cross-correlations only</td><td>Shrinks by K−1</td><td>When intentional shrinkage is desired</td></tr>
+    <tr><td><strong>Same</strong> / Zero</td><td>Zeros, amount P=⌊K/2⌋</td><td>Same as input (stride=1)</td><td>Deep networks — prevents feature map collapse</td></tr>
+    <tr><td><strong>Reflect</strong></td><td>Mirrors edge pixels inward</td><td>Same as input</td><td>Image stylisation — avoids zero-value border artifacts</td></tr>
+    <tr><td><strong>Replicate</strong></td><td>Repeats the edge pixel value outward</td><td>Same as input</td><td>Reduces discontinuity at borders</td></tr>
+    <tr><td><strong>Circular</strong></td><td>Wraps the opposite edge around</td><td>Same as input</td><td>Periodic signals, panoramic images</td></tr>
+  </table>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ Zero Padding Artifact in Image Generation</div>
+    <div class="callout-body">When generating images (GANs, VAEs), zero padding can create a visible border artifact — the network learns to recognise padded zeros as "edge of image" and may produce darker or blurrier borders. Reflect or replicate padding avoids this because the padded values are natural continuations of the image content, not foreign zeros. This is why many image generation architectures use reflect padding.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · All padding modes in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">8</span>, <span class="num">8</span>)   <span class="cm"># 8×8 input</span>
+
+<span class="cm"># Valid — output shrinks</span>
+c_v = nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, padding=<span class="num">0</span>)
+<span class="fn">print</span>(<span class="fn">c_v</span>(x).shape)                            <span class="cm"># [1,1,6,6]</span>
+
+<span class="cm"># Same — p=1 for K=3, output = input size</span>
+c_s = nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, padding=<span class="num">1</span>)
+<span class="fn">print</span>(<span class="fn">c_s</span>(x).shape)                            <span class="cm"># [1,1,8,8] ✓</span>
+
+<span class="cm"># PyTorch shorthand — auto-computes padding='same' (works stride=1 only)</span>
+c_auto = nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, padding=<span class="st">'same'</span>)
+<span class="fn">print</span>(<span class="fn">c_auto</span>(x).shape)                         <span class="cm"># [1,1,8,8] ✓</span>
+
+<span class="cm"># Reflect padding — no zero-border artifact, great for image tasks</span>
+c_r = nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, padding=<span class="num">1</span>, padding_mode=<span class="st">'reflect'</span>)
+<span class="fn">print</span>(<span class="fn">c_r</span>(x).shape)                            <span class="cm"># [1,1,8,8]</span>
+
+<span class="cm"># For p=5 on K=3 (unusual large padding): output BIGGER than input</span>
+c_big = nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, padding=<span class="num">5</span>)
+<span class="fn">print</span>(<span class="fn">c_big</span>(x).shape)                          <span class="cm"># [1,1,16,16] — used in ConvTranspose tricks</span>
+
+<span class="cm"># Asymmetric padding via nn.ZeroPad2d(left, right, top, bottom)</span>
+pad = nn.<span class="cls">ZeroPad2d</span>((<span class="num">2</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">1</span>))
+<span class="fn">print</span>(<span class="fn">pad</span>(x).shape)                            <span class="cm"># [1,1,10,12]</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══════════ S6: DILATION ══════════ -->
+<div class="section-block" id="s6">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">06</div>
+      <div><div class="section-title">Dilation (Atrous Convolution)</div>
+        <div class="section-sub">Expanding the receptive field exponentially without adding parameters or losing resolution</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition — "à trous" = "with holes"</div>
+    <div class="callout-body"><strong>Dilation</strong> (also called <em>atrous convolution</em>) inserts gaps of \(d-1\) zeros between each kernel element before applying it. With dilation factor \(d=1\), the kernel works normally — consecutive elements. With \(d=2\), the kernel samples every other input element, effectively looking at twice the area with the same 9 parameters. With \(d=4\), it samples every 4th element. Crucially, the number of parameters stays exactly the same — only the receptive field grows.</div>
+  </div>
+
+  <h2 class="subsection">Visualising Dilation</h2>
+
+  <div class="viz-container">
+    <div class="viz-title">Same 3×3 kernel, three dilation factors — receptive field grows from 3×3 to 7×7 to 13×13</div>
+    <div class="svg-wrap">
+    <svg width="660" height="265" viewBox="0 0 660 265" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+
+      <!-- d=1: 7x7 input grid, kernel covers 3x3 (rows 2-4, cols 2-4) -->
+      <text x="90" y="16" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#38bdf8">d = 1 (standard)</text>
+      <text x="90" y="30" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">9 params, RF = 3×3</text>
+      <g transform="translate(10,36)">
+        <!-- 7×7 grid at 22px per cell -->
+        <!-- rows: inactive grey, active-kernel coloured -->
+        <!-- kernel at (2,2)-(4,4) for d=1 -->
+        <rect x="0" y="0" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="23" y="0" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="46" y="0" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="69" y="0" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="92" y="0" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="115" y="0" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="138" y="0" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="0" y="23" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="23" y="23" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="46" y="23" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="69" y="23" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="92" y="23" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="115" y="23" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="138" y="23" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <!-- Kernel positions (d=1): rows 2-4, cols 2-4 -->
+        <rect x="46" y="46" width="22" height="22" rx="2" fill="rgba(56,189,248,0.55)" stroke="#38bdf8" stroke-width="2"/>
+        <rect x="69" y="46" width="22" height="22" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/>
+        <rect x="92" y="46" width="22" height="22" rx="2" fill="rgba(56,189,248,0.55)" stroke="#38bdf8" stroke-width="2"/>
+        <rect x="46" y="69" width="22" height="22" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/>
+        <rect x="69" y="69" width="22" height="22" rx="2" fill="rgba(56,189,248,0.7)" stroke="#38bdf8" stroke-width="2.5"/>
+        <rect x="92" y="69" width="22" height="22" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/>
+        <rect x="46" y="92" width="22" height="22" rx="2" fill="rgba(56,189,248,0.55)" stroke="#38bdf8" stroke-width="2"/>
+        <rect x="69" y="92" width="22" height="22" rx="2" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/>
+        <rect x="92" y="92" width="22" height="22" rx="2" fill="rgba(56,189,248,0.55)" stroke="#38bdf8" stroke-width="2"/>
+        <!-- inactive rows 0,1,5,6 cols 0-6 -->
+        <rect x="0" y="46" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="23" y="46" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="115" y="46" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="138" y="46" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="0" y="69" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="23" y="69" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="115" y="69" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="138" y="69" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="0" y="92" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="23" y="92" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="115" y="92" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="138" y="92" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="0" y="115" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="23" y="115" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="46" y="115" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="69" y="115" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="92" y="115" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="115" y="115" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="138" y="115" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="0" y="138" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="23" y="138" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="46" y="138" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="69" y="138" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="92" y="138" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="115" y="138" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <rect x="138" y="138" width="22" height="22" rx="2" fill="rgba(56,189,248,0.06)" stroke="#2d3748" stroke-width="0.5"/>
+        <!-- RF outline -->
+        <rect x="44" y="44" width="72" height="72" rx="4" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="5,3"/>
+      </g>
+      <text x="90" y="204" text-anchor="middle" font-family="Sora" font-size="10" fill="#38bdf8" font-weight="700">Covers 3×3 = 9 cells</text>
+
+      <!-- d=2: 13x13 input shown as 7x7 with every-other sampling -->
+      <text x="310" y="16" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#fb923c">d = 2</text>
+      <text x="310" y="30" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Still 9 params, RF = 5×5</text>
+      <g transform="translate(225,36)">
+        <!-- 9x9 grid, skip every other — show 9 kernel hits and gaps -->
+        <!-- All cells inactive first -->
+        <rect x="0" y="0" width="170" height="170" rx="4" fill="rgba(251,146,60,0.03)" stroke="#2d3748" stroke-width="0.5"/>
+        <!-- 9×9 grid lines -->
+        <line x1="0" y1="19" x2="170" y2="19" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="38" x2="170" y2="38" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="57" x2="170" y2="57" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="76" x2="170" y2="76" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="95" x2="170" y2="95" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="114" x2="170" y2="114" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="133" x2="170" y2="133" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="0" y1="152" x2="170" y2="152" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="19" y1="0" x2="19" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="38" y1="0" x2="38" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="57" y1="0" x2="57" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="76" y1="0" x2="76" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="95" y1="0" x2="95" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="114" y1="0" x2="114" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="133" y1="0" x2="133" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <line x1="152" y1="0" x2="152" y2="170" stroke="#2d3748" stroke-width="0.4"/>
+        <!-- d=2 samples: centre at (4,4) → hits rows 0,2,4 × cols 0,2,4 in a 5×5 window -->
+        <!-- shifted to sit at rows 2,4,6 cols 2,4,6 in a 9x9 grid -->
+        <rect x="38" y="38" width="19" height="19" rx="2" fill="rgba(251,146,60,0.6)" stroke="#fb923c" stroke-width="2"/>
+        <rect x="76" y="38" width="19" height="19" rx="2" fill="rgba(251,146,60,0.4)" stroke="#fb923c" stroke-width="1.5"/>
+        <rect x="114" y="38" width="19" height="19" rx="2" fill="rgba(251,146,60,0.6)" stroke="#fb923c" stroke-width="2"/>
+        <rect x="38" y="76" width="19" height="19" rx="2" fill="rgba(251,146,60,0.4)" stroke="#fb923c" stroke-width="1.5"/>
+        <rect x="76" y="76" width="19" height="19" rx="2" fill="rgba(251,146,60,0.75)" stroke="#fb923c" stroke-width="2.5"/>
+        <rect x="114" y="76" width="19" height="19" rx="2" fill="rgba(251,146,60,0.4)" stroke="#fb923c" stroke-width="1.5"/>
+        <rect x="38" y="114" width="19" height="19" rx="2" fill="rgba(251,146,60,0.6)" stroke="#fb923c" stroke-width="2"/>
+        <rect x="76" y="114" width="19" height="19" rx="2" fill="rgba(251,146,60,0.4)" stroke="#fb923c" stroke-width="1.5"/>
+        <rect x="114" y="114" width="19" height="19" rx="2" fill="rgba(251,146,60,0.6)" stroke="#fb923c" stroke-width="2"/>
+        <!-- RF outline -->
+        <rect x="36" y="36" width="100" height="100" rx="4" fill="none" stroke="#fb923c" stroke-width="2" stroke-dasharray="5,3"/>
+        <!-- "hole" labels -->
+        <text x="57" y="51" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">gap</text>
+        <text x="95" y="51" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">gap</text>
+        <text x="57" y="89" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">gap</text>
+        <text x="95" y="89" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">gap</text>
+      </g>
+      <text x="310" y="204" text-anchor="middle" font-family="Sora" font-size="10" fill="#fb923c" font-weight="700">Samples 9 cells, covers 5×5 area</text>
+
+      <!-- d=4 quick visual -->
+      <text x="560" y="16" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#f472b6">d = 4</text>
+      <text x="560" y="30" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">Still 9 params, RF = 9×9</text>
+      <g transform="translate(468,36)">
+        <rect x="0" y="0" width="184" height="184" rx="4" fill="rgba(244,114,182,0.03)" stroke="#2d3748" stroke-width="0.5"/>
+        <!-- sparse grid lines 12 cells -->
+        <line x1="0" y1="15" x2="184" y2="15" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="30" x2="184" y2="30" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="46" x2="184" y2="46" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="61" x2="184" y2="61" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="76" x2="184" y2="76" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="92" x2="184" y2="92" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="107" x2="184" y2="107" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="122" x2="184" y2="122" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="138" x2="184" y2="138" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="153" x2="184" y2="153" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="0" y1="168" x2="184" y2="168" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="15" y1="0" x2="15" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="30" y1="0" x2="30" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="46" y1="0" x2="46" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="61" y1="0" x2="61" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="76" y1="0" x2="76" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="92" y1="0" x2="92" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="107" y1="0" x2="107" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="122" y1="0" x2="122" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="138" y1="0" x2="138" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="153" y1="0" x2="153" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <line x1="168" y1="0" x2="168" y2="184" stroke="#2d3748" stroke-width="0.3"/>
+        <!-- d=4 kernel hits every 4 cells: rows 0,4,8, cols 0,4,8 -->
+        <rect x="1" y="1" width="14" height="14" rx="2" fill="rgba(244,114,182,0.6)" stroke="#f472b6" stroke-width="1.5"/>
+        <rect x="61" y="1" width="14" height="14" rx="2" fill="rgba(244,114,182,0.4)" stroke="#f472b6" stroke-width="1.2"/>
+        <rect x="122" y="1" width="14" height="14" rx="2" fill="rgba(244,114,182,0.6)" stroke="#f472b6" stroke-width="1.5"/>
+        <rect x="1" y="61" width="14" height="14" rx="2" fill="rgba(244,114,182,0.4)" stroke="#f472b6" stroke-width="1.2"/>
+        <rect x="61" y="61" width="14" height="14" rx="2" fill="rgba(244,114,182,0.75)" stroke="#f472b6" stroke-width="2"/>
+        <rect x="122" y="61" width="14" height="14" rx="2" fill="rgba(244,114,182,0.4)" stroke="#f472b6" stroke-width="1.2"/>
+        <rect x="1" y="122" width="14" height="14" rx="2" fill="rgba(244,114,182,0.6)" stroke="#f472b6" stroke-width="1.5"/>
+        <rect x="61" y="122" width="14" height="14" rx="2" fill="rgba(244,114,182,0.4)" stroke="#f472b6" stroke-width="1.2"/>
+        <rect x="122" y="122" width="14" height="14" rx="2" fill="rgba(244,114,182,0.6)" stroke="#f472b6" stroke-width="1.5"/>
+        <!-- RF outline -->
+        <rect x="0" y="0" width="137" height="137" rx="4" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="5,3"/>
+      </g>
+      <text x="560" y="204" text-anchor="middle" font-family="Sora" font-size="10" fill="#f472b6" font-weight="700">Samples 9 cells, covers 9×9 area</text>
+
+      <!-- Formula row -->
+      <rect x="10" y="218" width="640" height="40" rx="8" fill="rgba(56,189,248,0.05)" stroke="rgba(56,189,248,0.2)" stroke-width="1"/>
+      <text x="330" y="233" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">RF formula for dilated 3×3 kernel: RF = d × (K−1) + 1 = d × 2 + 1</text>
+      <text x="330" y="250" text-anchor="middle" font-family="Sora" font-size="10" fill="#94a3b8">d=1 → RF=3   |   d=2 → RF=5   |   d=3 → RF=7   |   d=4 → RF=9   |   d=8 → RF=17  — exponential growth, zero parameter increase</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="subsection">The Key Advantage Over Alternatives</h2>
+  <p>To get a large receptive field without dilation, you have two options: use larger kernels (more parameters, more computation) or add more layers (more memory, more compute). Dilation is a third path — it gets you a large RF with the same 9-parameter 3×3 kernel, at the same output resolution, at roughly the same computational cost. The only thing you "pay" is that the kernel now samples sparsely rather than densely.</p>
+
+  <table class="compare-table">
+    <tr><th>Strategy</th><th>RF achieved</th><th>Params (C=64)</th><th>Output size</th><th>Cost</th></tr>
+    <tr><td>3×3 conv, d=1</td><td>3×3</td><td>576</td><td>Same</td><td>Baseline</td></tr>
+    <tr><td>3×3 conv, d=2</td><td>5×5</td><td>576</td><td>Same</td><td>Same!</td></tr>
+    <tr><td>3×3 conv, d=4</td><td>9×9</td><td>576</td><td>Same</td><td>Same!</td></tr>
+    <tr><td>5×5 conv, d=1</td><td>5×5</td><td>1600</td><td>Same</td><td>2.8× more params</td></tr>
+    <tr><td>7×7 conv, d=1</td><td>7×7</td><td>3136</td><td>Same</td><td>5.4× more params</td></tr>
+  </table>
+
+  <h2 class="subsection">Where Dilation Is Used</h2>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">🖼️</div><div class="card-title">Semantic Segmentation</div><div class="card-text">DeepLab series (v1–v4) uses dilated convolutions throughout the encoder to maintain full resolution while growing the RF to capture whole-object context.</div></div>
+    <div class="card"><div class="card-icon">🌊</div><div class="card-title">WaveNet (Audio)</div><div class="card-text">Stacks dilated 1D convolutions with exponentially growing d: 1, 2, 4, 8, 16, 32… to cover thousands of audio timesteps with just a few layers.</div></div>
+    <div class="card"><div class="card-icon">🔍</div><div class="card-title">Object Detection</div><div class="card-text">Used in backbone networks to maintain high-resolution feature maps for detecting small objects, which disappear after aggressive downsampling.</div></div>
+    <div class="card"><div class="card-icon">📊</div><div class="card-title">Time Series (TCN)</div><div class="card-text">Temporal Convolutional Networks (TCN) use exponential dilation on 1D sequences — doubles d each layer to cover exponentially growing history.</div></div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Dilation in PyTorch — Conv2d and Conv1d</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">32</span>, <span class="num">32</span>)
+
+<span class="cm"># Same 3×3 kernel, three dilation factors — all have 9 params</span>
+<span class="kw">for</span> d <span class="kw">in</span> [<span class="num">1</span>, <span class="num">2</span>, <span class="num">4</span>, <span class="num">8</span>]:
+    <span class="cm"># padding = d keeps output same size as input</span>
+    c = nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">3</span>, padding=d, dilation=d)
+    rf = d * (<span class="num">3</span> - <span class="num">1</span>) + <span class="num">1</span>
+    <span class="fn">print</span>(<span class="st">f"dilation={d}: output={c(x).shape[2]}×{c(x).shape[3]}, RF={rf}×{rf}, params={c.weight.numel()}"</span>)
+<span class="cm"># dilation=1: output=32×32, RF=3×3, params=9</span>
+<span class="cm"># dilation=2: output=32×32, RF=5×5, params=9</span>
+<span class="cm"># dilation=4: output=32×32, RF=9×9, params=9</span>
+<span class="cm"># dilation=8: output=32×32, RF=17×17, params=9</span>
+
+<span class="cm"># ── WaveNet-style dilated causal 1D convolutions ─────────────────</span>
+<span class="kw">class</span> <span class="cls">DilatedStack</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Exponentially growing dilation — covers 1+(2^n - 1)*2 timesteps after n layers."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, channels=<span class="num">64</span>, n_layers=<span class="num">8</span>):
+        <span class="fn">super</span>().__init__()
+        self.layers = nn.<span class="cls">ModuleList</span>([
+            nn.<span class="cls">Conv1d</span>(channels, channels, kernel_size=<span class="num">2</span>,
+                       dilation=<span class="num">2</span>**i, padding=<span class="num">2</span>**i)  <span class="cm"># causal padding</span>
+            <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n_layers)                  <span class="cm"># d = 1,2,4,8,16,32,64,128</span>
+        ])
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">for</span> layer <span class="kw">in</span> self.layers:
+            x = x + layer(x)[..., :x.shape[-<span class="num">1</span>]]    <span class="cm"># residual + trim to length</span>
+        <span class="kw">return</span> x
+
+<span class="cm"># After 8 layers: RF = 1 + 2*(1+2+4+8+16+32+64+128) = 511 timesteps</span>
+<span class="cm"># That's 511 samples of context using only 8 layers!</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════════ S7: CONVTRANSPOSE2D ══════════ -->
+<div class="section-block" id="s7">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,191,36,.15);color:var(--yellow)">07</div>
+      <div><div class="section-title">ConvTranspose2d — Transposed Convolution</div>
+        <div class="section-sub">Learned upsampling — going from small to large feature maps</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Definition</div>
+    <div class="callout-body">A <strong>transposed convolution</strong> (also called a <em>fractionally strided convolution</em> or incorrectly a <em>deconvolution</em>) is a learned upsampling operation. It maps each input value to a \(K \times K\) patch in the output via a kernel, with overlapping patches being summed. This is the spatial "reverse" of a strided convolution — where stride=2 conv halves resolution, ConvTranspose2d with stride=2 doubles it.</div>
+  </div>
+
+  <h2 class="subsection">Intuition — Spreading Each Value Into a Patch</h2>
+  <p>Regular convolution is a many-to-one operation at each position: it takes a K×K neighbourhood and produces <em>one</em> output value. Transposed convolution is the opposite — it takes <em>one</em> input value and spreads it into a K×K patch in the output, weighted by the kernel. Where adjacent patches overlap, the contributions are added together. The kernel weights are still learned by gradient descent.</p>
+
+  <div class="viz-container">
+    <div class="viz-title">ConvTranspose2d — each input value fans out into a kernel-sized patch, overlapping regions are summed</div>
+    <div class="svg-wrap">
+    <svg width="620" height="260" viewBox="0 0 620 260" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto;">
+      <defs>
+        <marker id="rc" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#64748b"/></marker>
+      </defs>
+
+      <!-- Input 2x2 -->
+      <text x="40" y="15" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Input (2×2)</text>
+      <rect x="10" y="22" width="55" height="55" rx="5" fill="rgba(56,189,248,0.3)" stroke="#38bdf8" stroke-width="2"/>
+      <text x="37" y="57" text-anchor="middle" font-family="JetBrains Mono" font-size="20" font-weight="700" fill="#38bdf8">a</text>
+      <rect x="68" y="22" width="55" height="55" rx="5" fill="rgba(129,140,248,0.3)" stroke="#818cf8" stroke-width="2"/>
+      <text x="95" y="57" text-anchor="middle" font-family="JetBrains Mono" font-size="20" font-weight="700" fill="#818cf8">b</text>
+      <rect x="10" y="80" width="55" height="55" rx="5" fill="rgba(251,146,60,0.3)" stroke="#fb923c" stroke-width="2"/>
+      <text x="37" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="20" font-weight="700" fill="#fb923c">c</text>
+      <rect x="68" y="80" width="55" height="55" rx="5" fill="rgba(52,211,153,0.3)" stroke="#34d399" stroke-width="2"/>
+      <text x="95" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="20" font-weight="700" fill="#34d399">d</text>
+
+      <!-- Arrow -->
+      <line x1="145" y1="90" x2="188" y2="90" stroke="#64748b" stroke-width="2" marker-end="url(#rc)"/>
+      <text x="167" y="82" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">ConvT2d</text>
+      <text x="167" y="107" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">K=3,S=2</text>
+
+      <!-- Output 5x5 -->
+      <text x="340" y="15" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Output (5×5) — overlapping patches summed</text>
+      <g transform="translate(200,22)">
+        <!-- 5x5 grid — 40px cells -->
+        <!-- value a affects top-left 3x3 -->
+        <rect x="0" y="0" width="38" height="38" rx="3" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#38bdf8">a·w₀</text>
+        <rect x="40" y="0" width="38" height="38" rx="3" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><text x="59" y="24" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#38bdf8">a·w₁</text>
+        <rect x="80" y="0" width="38" height="38" rx="3" fill="rgba(56,189,248,0.22)" stroke="#818cf8" stroke-width="1.5"/><text x="99" y="24" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#818cf8">b·w₀</text>
+        <rect x="120" y="0" width="38" height="38" rx="3" fill="rgba(129,140,248,0.35)" stroke="#818cf8" stroke-width="1.5"/><text x="139" y="24" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#818cf8">b·w₁</text>
+        <rect x="160" y="0" width="38" height="38" rx="3" fill="rgba(129,140,248,0.35)" stroke="#818cf8" stroke-width="1.5"/><text x="179" y="24" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#818cf8">b·w₂</text>
+
+        <rect x="0" y="40" width="38" height="38" rx="3" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><text x="19" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#38bdf8">a·w₃</text>
+        <!-- overlap cell a+b -->
+        <rect x="40" y="40" width="38" height="38" rx="3" fill="rgba(56,189,248,0.15)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="59" y="58" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">a·w₄</text>
+        <text x="59" y="72" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">+b·w₃</text>
+        <rect x="80" y="40" width="38" height="38" rx="3" fill="rgba(56,189,248,0.15)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="99" y="58" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">a·w₅</text>
+        <text x="99" y="72" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">+b·w₄</text>
+        <rect x="120" y="40" width="38" height="38" rx="3" fill="rgba(129,140,248,0.35)" stroke="#818cf8" stroke-width="1.5"/><text x="139" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#818cf8">b·w₅</text>
+        <rect x="160" y="40" width="38" height="38" rx="3" fill="rgba(129,140,248,0.35)" stroke="#818cf8" stroke-width="1.5"/>
+
+        <!-- Row 3 -->
+        <rect x="0" y="80" width="38" height="38" rx="3" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="1.5"/><text x="19" y="104" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#38bdf8">a·w₆</text>
+        <rect x="40" y="80" width="38" height="38" rx="3" fill="rgba(56,189,248,0.15)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="59" y="98" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">a·w₇</text><text x="59" y="112" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">+c·w₁</text>
+        <rect x="80" y="80" width="38" height="38" rx="3" fill="rgba(56,189,248,0.1)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="99" y="98" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">a·w₈</text><text x="99" y="112" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">+b·w₆</text><text x="99" y="120" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">+…</text>
+        <rect x="120" y="80" width="38" height="38" rx="3" fill="rgba(129,140,248,0.15)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <rect x="160" y="80" width="38" height="38" rx="3" fill="rgba(129,140,248,0.35)" stroke="#818cf8" stroke-width="1.5"/>
+
+        <!-- Row 4 -->
+        <rect x="0" y="120" width="38" height="38" rx="3" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1.5"/>
+        <rect x="40" y="120" width="38" height="38" rx="3" fill="rgba(251,146,60,0.15)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <rect x="80" y="120" width="38" height="38" rx="3" fill="rgba(251,146,60,0.1)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <rect x="120" y="120" width="38" height="38" rx="3" fill="rgba(52,211,153,0.15)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <rect x="160" y="120" width="38" height="38" rx="3" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="1.5"/>
+
+        <!-- Row 5 -->
+        <rect x="0" y="160" width="38" height="38" rx="3" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1.5"/>
+        <rect x="40" y="160" width="38" height="38" rx="3" fill="rgba(251,146,60,0.35)" stroke="#fb923c" stroke-width="1.5"/>
+        <rect x="80" y="160" width="38" height="38" rx="3" fill="rgba(52,211,153,0.15)" stroke="#64748b" stroke-width="1" stroke-dasharray="3,2"/>
+        <rect x="120" y="160" width="38" height="38" rx="3" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="1.5"/>
+        <rect x="160" y="160" width="38" height="38" rx="3" fill="rgba(52,211,153,0.35)" stroke="#34d399" stroke-width="1.5"/>
+      </g>
+      <!-- overlap legend -->
+      <rect x="200" y="240" width="14" height="12" rx="2" fill="rgba(56,189,248,0.15)" stroke="#64748b" stroke-width="0.7" stroke-dasharray="2,1"/>
+      <text x="218" y="251" font-family="Sora" font-size="9" fill="#64748b">Overlap: values from multiple input cells summed</text>
+      <!-- output size formula -->
+      <text x="490" y="245" text-anchor="middle" font-family="Sora" font-size="10" fill="#94a3b8">H_out = (H_in−1)·S − 2P + K = (2−1)·2 − 0 + 3 = 5</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="subsection">Output Size Formula</h2>
+  <p>The output size of a transposed convolution is the inverse relationship to a regular convolution with the same hyperparameters:</p>
+  <div class="math-block">
+    <div class="math-label">ConvTranspose2d Output Size</div>
+    $$H_{out} = (H_{in} - 1) \times S - 2P + K + \text{output\_padding}$$
+    <div style="margin-top:8px;font-size:.83rem;color:var(--text-muted)">The <ic>output_padding</ic> parameter adds extra rows/cols to resolve ambiguity: multiple input sizes can map to the same ConvTranspose2d output, so you sometimes need to specify which one you want.</div>
+  </div>
+
+  <table class="compare-table">
+    <tr><th>Input H</th><th>K</th><th>S</th><th>P</th><th>Output H</th><th>Effect</th></tr>
+    <tr><td>4</td><td>2</td><td>2</td><td>0</td><td>(4−1)×2+2 = 8</td><td>Doubles resolution</td></tr>
+    <tr><td>4</td><td>4</td><td>2</td><td>1</td><td>(4−1)×2−2+4 = 8</td><td>Doubles (with overlap control)</td></tr>
+    <tr><td>1</td><td>4</td><td>1</td><td>0</td><td>(1−1)×1+4 = 4</td><td>1→4 expansion</td></tr>
+    <tr><td>7</td><td>3</td><td>1</td><td>1</td><td>(7−1)×1−2+3 = 7</td><td>Same size (stride=1)</td></tr>
+  </table>
+
+  <h2 class="subsection">The Checkerboard Artifact Problem</h2>
+  <p>Transposed convolution is infamous for producing <strong>checkerboard artifacts</strong> in generated images — a visible grid pattern caused by uneven overlap. This happens when the kernel size is not divisible by the stride: different positions in the output receive contributions from different numbers of input pixels, creating a systematic pattern of stronger and weaker activations.</p>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ Checkerboard Fix — Two Approaches</div>
+    <div class="callout-body"><strong>Option 1:</strong> Use kernel sizes divisible by stride — K=2,S=2 or K=4,S=2 — so every output position receives exactly the same number of input contributions. This mathematically prevents uneven overlap.<br><br><strong>Option 2 (preferred in practice):</strong> Replace ConvTranspose2d with <ic>nn.Upsample(scale_factor=2, mode='bilinear')</ic> followed by a regular <ic>nn.Conv2d</ic>. This separates the "make bigger" step (bilinear interpolation — no learned params) from the "refine features" step (conv — learned). This approach is now used in most state-of-the-art image generation and segmentation architectures.</div>
+  </div>
+
+  <h2 class="subsection">ConvTranspose2d vs Upsample + Conv</h2>
+  <table class="compare-table">
+    <tr><th>Method</th><th>Learnable Upsampling?</th><th>Checkerboard?</th><th>Params</th><th>Used In</th></tr>
+    <tr><td>ConvTranspose2d (K=2,S=2)</td><td>Yes</td><td>Low (K÷S=1)</td><td>K×K×C²</td><td>U-Net encoder-decoder</td></tr>
+    <tr><td>ConvTranspose2d (K=4,S=2)</td><td>Yes</td><td>None (K÷S=2)</td><td>4K×K×C²</td><td>DCGAN generator</td></tr>
+    <tr><td>Bilinear + Conv2d</td><td>Yes (via conv)</td><td>None</td><td>K×K×C²</td><td>Pix2Pix, modern GANs</td></tr>
+    <tr><td>nn.Upsample (bilinear)</td><td>No</td><td>None</td><td>0</td><td>Quick baseline</td></tr>
+    <tr><td>PixelShuffle (sub-pixel)</td><td>Yes</td><td>None</td><td>K×K×C²×r²</td><td>Super-resolution (ESRGAN)</td></tr>
+  </table>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · ConvTranspose2d — all key use cases</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn, torch.nn.functional <span class="kw">as</span> F
+
+<span class="cm"># ── Basic upsampling ────────────────────────────────────────────────</span>
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">64</span>, <span class="num">16</span>, <span class="num">16</span>)
+
+<span class="cm"># Double resolution: H_out = (16−1)*2 + 2 = 32</span>
+up1 = nn.<span class="cls">ConvTranspose2d</span>(<span class="num">64</span>, <span class="num">32</span>, kernel_size=<span class="num">2</span>, stride=<span class="num">2</span>)
+<span class="fn">print</span>(<span class="fn">up1</span>(x).shape)        <span class="cm"># → [1, 32, 32, 32]</span>
+
+<span class="cm"># Same but with K=4 — no checkerboard (K divisible by S)</span>
+up2 = nn.<span class="cls">ConvTranspose2d</span>(<span class="num">64</span>, <span class="num">32</span>, kernel_size=<span class="num">4</span>, stride=<span class="num">2</span>, padding=<span class="num">1</span>)
+<span class="fn">print</span>(<span class="fn">up2</span>(x).shape)        <span class="cm"># → [1, 32, 32, 32] — same output, no artifact</span>
+
+<span class="cm"># ── output_padding: needed when S does not evenly divide size ───────</span>
+x7 = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">64</span>, <span class="num">7</span>, <span class="num">7</span>)
+<span class="cm"># Without output_padding: (7-1)*2 + 2 = 14</span>
+<span class="fn">print</span>(nn.<span class="cls">ConvTranspose2d</span>(<span class="num">64</span>, <span class="num">32</span>, <span class="num">2</span>, <span class="num">2</span>)(x7).shape)              <span class="cm"># [1,32,14,14]</span>
+<span class="cm"># With output_padding=1: get 15×15 if needed</span>
+<span class="fn">print</span>(nn.<span class="cls">ConvTranspose2d</span>(<span class="num">64</span>, <span class="num">32</span>, <span class="num">2</span>, <span class="num">2</span>, output_padding=<span class="num">1</span>)(x7).shape) <span class="cm"># [1,32,15,15]</span>
+
+<span class="cm"># ── Modern alternative: Upsample + Conv (no checkerboard at all) ────</span>
+<span class="kw">class</span> <span class="cls">UpsampleConv</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Preferred approach in modern architectures — separates size from features."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, out_ch, scale=<span class="num">2</span>):
+        <span class="fn">super</span>().__init__()
+        self.up   = nn.<span class="cls">Upsample</span>(scale_factor=scale, mode=<span class="st">'bilinear'</span>, align_corners=<span class="kw">False</span>)
+        self.conv = nn.<span class="cls">Conv2d</span>(in_ch, out_ch, <span class="num">3</span>, padding=<span class="num">1</span>)
+        self.bn   = nn.<span class="cls">BatchNorm2d</span>(out_ch)
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">return</span> F.<span class="fn">relu</span>(self.<span class="fn">bn</span>(self.<span class="fn">conv</span>(self.<span class="fn">up</span>(x))))
+
+uc = <span class="cls">UpsampleConv</span>(<span class="num">64</span>, <span class="num">32</span>)
+<span class="fn">print</span>(<span class="fn">uc</span>(x).shape)          <span class="cm"># → [1, 32, 32, 32] — same result, smoother output</span>
+
+<span class="cm"># ── U-Net decoder block combining skip connections ──────────────────</span>
+<span class="kw">class</span> <span class="cls">UNetDecoder</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Typical U-Net decoder: upsample encoder output, concat skip, refine."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, skip_ch, out_ch):
+        <span class="fn">super</span>().__init__()
+        self.up   = nn.<span class="cls">ConvTranspose2d</span>(in_ch, in_ch // <span class="num">2</span>, kernel_size=<span class="num">2</span>, stride=<span class="num">2</span>)
+        self.conv = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Conv2d</span>(in_ch // <span class="num">2</span> + skip_ch, out_ch, <span class="num">3</span>, padding=<span class="num">1</span>),
+            nn.<span class="cls">BatchNorm2d</span>(out_ch), nn.<span class="cls">ReLU</span>(),
+            nn.<span class="cls">Conv2d</span>(out_ch, out_ch, <span class="num">3</span>, padding=<span class="num">1</span>),
+            nn.<span class="cls">BatchNorm2d</span>(out_ch), nn.<span class="cls">ReLU</span>()
+        )
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, skip):
+        x = self.<span class="fn">up</span>(x)
+        x = torch.<span class="fn">cat</span>([x, skip], dim=<span class="num">1</span>)   <span class="cm"># concat along channels</span>
+        <span class="kw">return</span> self.<span class="fn">conv</span>(x)</code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+
+<!-- ══════════ S8: SUMMARY ══════════ -->
+<div class="section-block open" id="s8">
+  <div class="section-header" onclick="toggle(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">08</div>
+      <div><div class="section-title">Summary — The Complete Design Toolkit</div>
+        <div class="section-sub">What to remember and when to use each hyperparameter</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="section-body-inner">
+
+  <table class="compare-table">
+    <tr><th>Concept</th><th>Core Idea</th><th>Key Formula</th><th>When to Tune</th></tr>
+    <tr><td><strong>Param Sharing</strong></td><td>One kernel scans everywhere — 100,000× fewer params than FC</td><td>Params = K²×C_in×C_out + C_out</td><td>Always present; choose # filters for capacity</td></tr>
+    <tr><td><strong>Receptive Field</strong></td><td>How much of the input one neuron sees — grows with depth</td><td>RF = 1 + L×(K−1) (stride=1)</td><td>Make RF ≥ largest relevant object size</td></tr>
+    <tr><td><strong>Max Pooling</strong></td><td>"Was this feature present?" — takes max in window</td><td>H_out = (H_in − K_pool)/S + 1</td><td>Classic discriminative CNNs</td></tr>
+    <tr><td><strong>Global Avg Pool</strong></td><td>Collapses all spatial dims — replaces huge FC layers</td><td>(B,C,H,W) → (B,C,1,1)</td><td>Almost always use instead of flattening</td></tr>
+    <tr><td><strong>Stride</strong></td><td>How far kernel jumps — stride=2 halves resolution</td><td>H_out = ⌊(H_in+2P−K)/S⌋+1</td><td>Use stride=2 instead of pooling in modern nets</td></tr>
+    <tr><td><strong>Padding (same)</strong></td><td>Adds zeros so output = input size (stride=1)</td><td>P = ⌊K/2⌋</td><td>Use P=K//2 by default to preserve size</td></tr>
+    <tr><td><strong>Dilation</strong></td><td>Inserts gaps — grows RF with zero extra params</td><td>RF = d×(K−1)+1</td><td>Segmentation, audio, when resolution must be preserved</td></tr>
+    <tr><td><strong>ConvTranspose2d</strong></td><td>Learned upsampling — spreads each value into a patch</td><td>H_out = (H_in−1)×S−2P+K</td><td>Decoders, U-Net, GANs; prefer bilinear+conv for quality</td></tr>
+  </table>
+
+  <div class="callout important">
+    <div class="callout-title">📌 The Design Checklist</div>
+    <div class="callout-body">
+      When designing a CNN layer, ask yourself these questions in order:<br><br>
+      <strong>1. Size:</strong> Should this layer keep the resolution (stride=1, padding=K//2) or reduce it (stride=2)?<br>
+      <strong>2. RF:</strong> Is the receptive field growing large enough to capture the relevant context? Add dilation or more layers if not.<br>
+      <strong>3. Pooling:</strong> Are you using Global Average Pooling at the end instead of flattening into a huge FC?<br>
+      <strong>4. Upsampling:</strong> If you need to grow resolution (decoder), use ConvTranspose2d(K=2,S=2) or bilinear+conv to avoid checkerboard artifacts.
+    </div>
+  </div>
+
+  <h2 class="subsection">How These Hyperparameters Interact</h2>
+  <p>These seven concepts are not independent — they interact to determine the overall information flow through the network. Stride reduces resolution and grows the effective RF. Padding counteracts stride's shrinkage effect. Dilation grows RF without reducing resolution. Pooling reduces resolution aggressively while also growing RF. ConvTranspose2d is the inverse of strided conv. Understanding these interactions lets you read and design network architectures rather than just copying them.</p>
+
+  <h2 class="subsection">Coming Next</h2>
+  <ul class="nice">
+    <li><strong>CNN Architectures</strong> — LeNet → AlexNet → VGG → GoogLeNet → ResNet: how these building blocks were assembled into landmark models</li>
+    <li><strong>Batch Normalisation</strong> — why it works, where to place it, and its interaction with stride and padding</li>
+    <li><strong>Depthwise Separable Convolution</strong> — MobileNet's trick for 8-9× parameter reduction</li>
+    <li><strong>Residual Connections</strong> — skip connections, the gradient highway that makes 100+ layer networks trainable</li>
+    <li><strong>U-Net and Encoder-Decoder Architectures</strong> — using ConvTranspose2d and skip connections for segmentation</li>
+  </ul>
+
+  </div></div>
+</div>
+
+</div><!-- /.page -->
+<div class="footer">
+  <p>Deep Neural Networks Course &nbsp;·&nbsp; <strong>CNN Fundamentals — Parameters, Pooling &amp; Spatial Control</strong></p>
+</div>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  const b=document.getElementById('themeBtn');
+  h.dataset.theme = h.dataset.theme==='dark' ? 'light' : 'dark';
+  b.textContent = h.dataset.theme==='dark' ? '☀️' : '🌙';
+}
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+  document.getElementById('prog').style.width=pct+'%';
+});
+function toggle(header){
+  header.parentElement.classList.toggle('open');
+}
+</script>
+</body>
+</html>

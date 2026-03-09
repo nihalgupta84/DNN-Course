@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 3: Convolutional Neural Networks — Deep Neural Networks</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');
+
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);--hero-glow:rgba(56,189,248,0.08);--card-hover-shadow:0 8px 24px rgba(0,0,0,.4);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0f9ff 100%);--hero-glow:rgba(56,189,248,0.12);--card-hover-shadow:0 8px 24px rgba(0,0,0,.12);--p-color:#334155;}
+
+:root{--accent:#38bdf8;--accent2:#818cf8;--accent3:#34d399;--accent4:#fb923c;--accent5:#f472b6;}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;min-height:100vh;}
+
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:80px 24px 60px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);pointer-events:none;}
+.hero-badge{display:inline-block;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(2rem,5vw,3.8rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;}
+.hero p{color:var(--text-muted);font-size:1.05rem;max-width:800px;margin:0 auto 32px;line-height:1.7;}
+
+.container{max-width:1200px;margin:0 auto;padding:60px 24px 80px;}
+
+.section-title{font-size:1.8rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:16px;}
+.section-desc{text-align:center;color:var(--text-muted);font-size:1rem;max-width:700px;margin:0 auto 48px;line-height:1.7;}
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:80px;}
+
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 28px;transition:all .3s;cursor:pointer;text-decoration:none;display:block;position:relative;overflow:hidden;}
+.module-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 0%,rgba(56,189,248,0.03) 100%);opacity:0;transition:opacity .3s;}
+.module-card:hover{transform:translateY(-4px);box-shadow:var(--card-hover-shadow);border-color:rgba(56,189,248,.4);}
+.module-card:hover::before{opacity:1;}
+
+.card-number{font-size:.7rem;font-weight:800;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;}
+.card-icon{font-size:2.5rem;margin-bottom:16px;display:block;}
+.card-title{font-size:1.35rem;font-weight:800;color:var(--text);margin-bottom:12px;line-height:1.3;}
+.card-desc{color:var(--text-muted);font-size:.92rem;line-height:1.7;margin-bottom:20px;}
+.card-topics{display:flex;flex-wrap:wrap;gap:8px;}
+.topic-tag{font-size:.7rem;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:6px;font-weight:600;}
+
+.card-1{border-left:3px solid var(--accent);}
+.card-2{border-left:3px solid var(--accent3);}
+.card-3{border-left:3px solid var(--accent4);}
+.card-4{border-left:3px solid var(--accent5);}
+
+.arrow{position:absolute;right:24px;bottom:24px;font-size:1.2rem;color:var(--text-dim);transition:transform .3s;}
+.module-card:hover .arrow{transform:translateX(4px);color:var(--accent);}
+
+.overview{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:48px;}
+.overview h2{font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:16px;}
+.overview-list{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;}
+.overview-list li{padding:10px 0 10px 24px;position:relative;color:var(--p-color);font-size:.92rem;}
+.overview-list li::before{content:'▸';position:absolute;left:0;color:var(--accent);font-weight:700;}
+
+.footer{text-align:center;padding:40px 24px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.85rem;}
+
+@media(max-width:768px){
+  .hero{padding:60px 20px 40px;}
+  .hero h1{font-size:2rem;}
+  .container{padding:40px 16px 60px;}
+  .card-grid{grid-template-columns:1fr;gap:20px;}
+}
+</style>
+</head>
+<body>
+
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+
+<div class="hero">
+  <div class="hero-badge">Module 3 · Deep Neural Networks</div>
+  <h1>Convolutional Neural Networks & Transfer Learning</h1>
+  <p>A comprehensive guide to CNNs — from convolution fundamentals to state-of-the-art architectures and practical transfer learning strategies.</p>
+</div>
+
+<div class="container">
+
+  <div class="overview">
+    <h2>📚 What You'll Learn</h2>
+    <ul class="overview-list">
+      <li>Basics of convolution operation and kernels</li>
+      <li>1D, 2D, and 3D convolutions</li>
+      <li>Parameter sharing and receptive fields</li>
+      <li>Pooling, stride, padding, and dilation</li>
+      <li>Evolution of CNN architectures (LeNet → DenseNet)</li>
+      <li>Transfer learning and fine-tuning strategies</li>
+    </ul>
+  </div>
+
+  <div class="section-title">Course Content</div>
+  <div class="section-desc">Click on any topic below to dive into detailed explanations, visualizations, and hands-on PyTorch code examples.</div>
+
+  <div class="card-grid">
+    
+    <!-- Card 1: Convolution Operations -->
+    <a href="module_3_convolution_operations.html" class="module-card card-1">
+      <div class="card-number">Topic 1</div>
+      <div class="card-icon">🔄</div>
+      <div class="card-title">Convolution Operations</div>
+      <div class="card-desc">Understanding the convolution operation from first principles — the mathematical foundation of CNNs.</div>
+      <div class="card-topics">
+        <span class="topic-tag">Convolution Basics</span>
+        <span class="topic-tag">Kernels</span>
+        <span class="topic-tag">1D/2D/3D</span>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <!-- Card 2: CNN Parameters -->
+    <a href="module_3_cnn_params.html" class="module-card card-2">
+      <div class="card-number">Topic 2</div>
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">CNN Parameters</div>
+      <div class="card-desc">Deep dive into parameter sharing, receptive fields, pooling, stride, padding, and how they control network behavior.</div>
+      <div class="card-topics">
+        <span class="topic-tag">Parameter Sharing</span>
+        <span class="topic-tag">Pooling</span>
+        <span class="topic-tag">Stride & Padding</span>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <!-- Card 3: CNN Architectures -->
+    <a href="module_3_cnn_architectures.html" class="module-card card-3">
+      <div class="card-number">Topic 3</div>
+      <div class="card-icon">🏛️</div>
+      <div class="card-title">CNN Architectures</div>
+      <div class="card-desc">The evolution of CNN design — from LeNet (1998) to DenseNet (2017). Each architecture solved what the previous one failed at.</div>
+      <div class="card-topics">
+        <span class="topic-tag">LeNet</span>
+        <span class="topic-tag">AlexNet</span>
+        <span class="topic-tag">VGG</span>
+        <span class="topic-tag">ResNet</span>
+        <span class="topic-tag">DenseNet</span>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+    <!-- Card 4: Transfer Learning -->
+    <a href="module_3_transfer_learning.html" class="module-card card-4">
+      <div class="card-number">Topic 4</div>
+      <div class="card-icon">🚀</div>
+      <div class="card-title">Transfer Learning & Fine-Tuning</div>
+      <div class="card-desc">Leverage pre-trained models to solve new tasks with limited data — the practical breakthrough that democratized deep learning.</div>
+      <div class="card-topics">
+        <span class="topic-tag">Feature Extraction</span>
+        <span class="topic-tag">Fine-Tuning</span>
+        <span class="topic-tag">Domain Adaptation</span>
+      </div>
+      <div class="arrow">→</div>
+    </a>
+
+  </div>
+
+</div>
+
+<div class="footer">
+  <p><strong>Module 3: Convolutional Neural Networks & Transfer Learning</strong></p>
+  <p>Amity University — Deep Neural Networks Course</p>
+</div>
+
+<script>
+function toggleTheme(){
+  const html = document.documentElement;
+  const btn = document.getElementById('themeBtn');
+  const curr = html.getAttribute('data-theme');
+  const next = curr === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  btn.textContent = next === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('theme', next);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
+});
+</script>
+</body>
+</html>

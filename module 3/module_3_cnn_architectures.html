@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNN Architectures — Deep Neural Networks</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);--hero-glow:rgba(56,189,248,0.08);--code-bg:#0a0f1a;--code-header:#1a2035;--hover-overlay:rgba(255,255,255,0.03);--card-hover-shadow:0 8px 24px rgba(0,0,0,.4);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0f9ff 100%);--hero-glow:rgba(56,189,248,0.12);--code-bg:#1e293b;--code-header:#0f172a;--hover-overlay:rgba(0,0,0,0.02);--card-hover-shadow:0 8px 24px rgba(0,0,0,.12);--p-color:#334155;}
+:root{--accent:#38bdf8;--accent2:#818cf8;--accent3:#34d399;--accent4:#fb923c;--accent5:#f472b6;--red:#f87171;--yellow:#fbbf24;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;}
+.progress-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent5));position:fixed;top:0;left:0;z-index:1000;transition:width .15s;}
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:56px 24px 44px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);}
+.hero-badge{display:inline-block;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;}
+.hero p{color:var(--text-muted);font-size:1rem;max-width:720px;margin:0 auto;line-height:1.7;}
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.toc-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100;}
+.toc-label{color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-right:4px;font-weight:700;flex-shrink:0;}
+.toc-link{color:var(--text-muted);font-size:.78rem;text-decoration:none;padding:3px 10px;border-radius:5px;transition:all .2s;border:1px solid transparent;white-space:nowrap;}
+.toc-link:hover{color:var(--accent);border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.07);}
+.page{max-width:1080px;margin:0 auto;padding:36px 16px 80px;}
+/* sections */
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;transition:box-shadow .25s;}
+.section-block:hover{box-shadow:0 0 0 1px rgba(56,189,248,.25);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;gap:14px;transition:background .2s;}
+.section-header:hover{background:var(--hover-overlay);}
+.section-title-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.section-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;}
+.section-title{font-size:1.08rem;font-weight:700;color:var(--text);line-height:1.3;}
+.section-sub{font-size:.76rem;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.chevron{color:var(--text-dim);font-size:1rem;transition:transform .3s;flex-shrink:0;}
+.section-block.open .chevron{transform:rotate(180deg);}
+.section-body{display:none;padding:0 22px 28px;border-top:1px solid var(--border);}
+.section-block.open .section-body{display:block;}
+.inner{padding-top:24px;}
+h2.sub{font-size:1.02rem;font-weight:700;color:var(--accent);margin:28px 0 12px;padding-bottom:7px;border-bottom:1px solid rgba(56,189,248,.18);}
+p{margin-bottom:12px;color:var(--p-color);line-height:1.85;}
+/* callouts */
+.callout{border-radius:9px;padding:15px 18px;margin:16px 0;border-left:4px solid;}
+.callout-title{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.callout-body{font-size:.92rem;color:var(--p-color);line-height:1.8;}
+.callout.insight{background:rgba(52,211,153,.08);border-color:var(--accent3);}.callout.insight .callout-title{color:var(--accent3);}
+.callout.warning{background:rgba(251,191,36,.08);border-color:var(--yellow);}.callout.warning .callout-title{color:var(--yellow);}
+.callout.important{background:rgba(56,189,248,.08);border-color:var(--accent);}.callout.important .callout-title{color:var(--accent);}
+.callout.novelty{background:rgba(244,114,182,.08);border-color:var(--accent5);}.callout.novelty .callout-title{color:var(--accent5);}
+.callout.problem{background:rgba(248,113,113,.08);border-color:var(--red);}.callout.problem .callout-title{color:var(--red);}
+.callout.analogy{background:rgba(251,146,60,.08);border-color:var(--accent4);}.callout.analogy .callout-title{color:var(--accent4);}
+/* code */
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:16px 0;}
+.code-header{background:var(--code-header);padding:7px 14px;border-bottom:1px solid var(--border);}
+.code-lang{font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.code-body{padding:16px 18px;overflow-x:auto;}.code-body pre{margin:0;}
+.code-body code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.9;white-space:pre;}
+.kw{color:#c792ea;}.fn{color:#82aaff;}.st{color:#c3e88d;}.cm{color:#607080;font-style:italic;}.num{color:#f78c6c;}.cls{color:#ffcb6b;}
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:.84rem;}
+.tbl th{background:var(--surface2);color:var(--accent);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid rgba(56,189,248,.25);}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;line-height:1.6;}
+.tbl tr:hover td{background:var(--hover-overlay);}
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:16px 0;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px;text-align:center;}
+.stat-val{font-size:1.35rem;font-weight:800;line-height:1.2;}
+.stat-lbl{font-size:.7rem;color:var(--text-dim);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+/* cards */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;transition:all .2s;}
+.card:hover{border-color:rgba(56,189,248,.4);transform:translateY(-2px);box-shadow:var(--card-hover-shadow);}
+.card-icon{font-size:1.4rem;margin-bottom:8px;}.card-title{font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:5px;}
+.card-text{font-size:.81rem;color:var(--text-muted);line-height:1.6;}
+/* inline code */
+ic{font-family:'JetBrains Mono',monospace;font-size:.8em;background:rgba(56,189,248,.1);color:var(--accent);padding:1px 5px;border-radius:4px;}
+/* viz */
+.viz{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:20px 16px;margin:16px 0;}
+.viz-title{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;font-weight:700;text-align:center;}
+.svg-wrap{overflow-x:auto;}
+/* arch block system */
+.arch-canvas{display:flex;align-items:center;gap:4px;padding:8px 0;overflow-x:auto;flex-wrap:nowrap;}
+.ab{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;padding:7px 10px;font-size:.7rem;font-weight:700;text-align:center;white-space:nowrap;border:1.5px solid;min-width:62px;line-height:1.4;flex-shrink:0;}
+.ab-inp{background:rgba(100,116,139,.12);border-color:rgba(100,116,139,.5);color:#94a3b8;}
+.ab-conv{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.5);color:var(--accent);}
+.ab-pool{background:rgba(251,146,60,.12);border-color:rgba(251,146,60,.5);color:var(--accent4);}
+.ab-fc{background:rgba(129,140,248,.12);border-color:rgba(129,140,248,.5);color:var(--accent2);}
+.ab-bn{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.5);color:var(--accent3);}
+.ab-drop{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.5);color:var(--red);}
+.ab-gap{background:rgba(244,114,182,.12);border-color:rgba(244,114,182,.5);color:var(--accent5);}
+.ab-incep{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.5);color:var(--yellow);}
+.ab-res{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.6);color:var(--accent3);}
+.ab-dense{background:rgba(244,114,182,.15);border-color:rgba(244,114,182,.6);color:var(--accent5);}
+.arr{color:var(--text-dim);font-size:.9rem;flex-shrink:0;padding:0 2px;}
+.arch-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.leg{display:flex;align-items:center;gap:5px;font-size:.74rem;color:var(--text-muted);}
+.leg-dot{width:10px;height:10px;border-radius:3px;}
+/* footer */
+.footer{text-align:center;padding:36px 16px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.8rem;margin-top:32px;}
+@media(max-width:700px){.toc-bar{overflow-x:auto;flex-wrap:nowrap;}.page{padding:20px 10px 60px;}.code-body code{font-size:.75rem;}.stats-row{grid-template-columns:1fr 1fr;}.card-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="prog"></div>
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+<div class="hero">
+  <div class="hero-badge">Module 4 · CNN Architectures</div>
+  <h1>The Evolution of CNN Architectures</h1>
+  <p>From LeNet's handwritten digit recogniser in 1998 to DenseNet's fully-connected feature highways in 2017 — each architecture answered a specific failure of its predecessor, and every novelty it introduced permanently changed how we build deep networks.</p>
+</div>
+<div class="toc-bar">
+  <span class="toc-label">Jump to</span>
+  <a class="toc-link" href="#s0">Timeline</a>
+  <a class="toc-link" href="#s1">LeNet-5</a>
+  <a class="toc-link" href="#s2">AlexNet</a>
+  <a class="toc-link" href="#s3">VGGNet</a>
+  <a class="toc-link" href="#s4">GoogLeNet</a>
+  <a class="toc-link" href="#s5">ResNet</a>
+  <a class="toc-link" href="#s6">DenseNet</a>
+  <a class="toc-link" href="#s7">Grand Comparison</a>
+</div>
+<div class="page">
+<!-- ══════ SECTION 0: TIMELINE ══════ -->
+<div class="section-block open" id="s0">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">⏱</div>
+      <div><div class="section-title">The Grand Timeline — Why Each Architecture Was Born</div>
+        <div class="section-sub">Every breakthrough happened because researchers hit a wall with the previous model</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+  <p>Understanding CNN architectures is not about memorising layer counts — it is about understanding the <strong>chain of problems and solutions</strong> that drove 20 years of innovation. Each architecture below was born from a specific failure of its predecessor. Keep that narrative in mind as you read each section.</p>
+
+  <div class="viz">
+    <div class="viz-title">ImageNet Top-5 Error Rate vs Year — each dot is a paradigm shift</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 820 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L8,3 L0,6z" fill="#475569"/>
+        </marker>
+      </defs>
+      <!-- axes -->
+      <line x1="70" y1="20" x2="70" y2="230" stroke="#2d3748" stroke-width="1.5"/>
+      <line x1="70" y1="230" x2="790" y2="230" stroke="#2d3748" stroke-width="1.5" marker-end="url(#arr)"/>
+      <!-- Y axis labels (top-5 error %) -->
+      <text x="60" y="25" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#64748b">28%</text>
+      <line x1="68" y1="22" x2="74" y2="22" stroke="#2d3748" stroke-width="1"/>
+      <text x="60" y="75" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#64748b">20%</text>
+      <line x1="68" y1="72" x2="74" y2="72" stroke="#2d3748" stroke-width="1"/>
+      <text x="60" y="125" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#64748b">12%</text>
+      <line x1="68" y1="122" x2="74" y2="122" stroke="#2d3748" stroke-width="1"/>
+      <text x="60" y="175" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#64748b">6%</text>
+      <line x1="68" y1="172" x2="74" y2="172" stroke="#2d3748" stroke-width="1"/>
+      <text x="60" y="225" text-anchor="end" font-family="JetBrains Mono" font-size="10" fill="#64748b">~3.5%</text>
+      <!-- horizontal guides -->
+      <line x1="71" y1="22" x2="789" y2="22" stroke="#1f2937" stroke-width="0.6" stroke-dasharray="4,4"/>
+      <line x1="71" y1="72" x2="789" y2="72" stroke="#1f2937" stroke-width="0.6" stroke-dasharray="4,4"/>
+      <line x1="71" y1="122" x2="789" y2="122" stroke="#1f2937" stroke-width="0.6" stroke-dasharray="4,4"/>
+      <line x1="71" y1="172" x2="789" y2="172" stroke="#1f2937" stroke-width="0.6" stroke-dasharray="4,4"/>
+      <!-- human error line -->
+      <line x1="71" y1="220" x2="789" y2="220" stroke="rgba(52,211,153,0.3)" stroke-width="1" stroke-dasharray="6,3"/>
+      <text x="795" y="223" font-family="Sora" font-size="9" fill="#34d399">Human ~5%</text>
+
+      <!-- data points: (year, error%) mapped to svg coords -->
+      <!-- x: 1998→115, 2012→230, 2014a→400, 2014b→530, 2015→640, 2017→760 -->
+      <!-- y: error% → 230 - (error-3.5)/(28-3.5)*210 -->
+      <!-- Pre-CNN baseline 2011: ~26%, x=150, y= 230-(26-3.5)/24.5*210 = 230-192=38 -->
+      <!-- AlexNet 2012: 16.4%, x=230, y=230-(16.4-3.5)/24.5*210=230-110=120 -->
+      <!-- VGG  2014: 7.3%,  x=400, y=230-(7.3-3.5)/24.5*210=230-32=198 -->
+      <!-- GoogLeNet 2014: 6.7%, x=470, y=230-(6.7-3.5)/24.5*210=230-27=203 -->
+      <!-- ResNet 2015: 3.57%, x=620, y=230-(3.57-3.5)/24.5*210≈229 -->
+      <!-- DenseNet 2017: 3.46%, x=750, y≈229 -->
+
+      <!-- connecting line -->
+      <polyline points="150,38 230,120 400,192 470,197 620,225 760,224"
+        fill="none" stroke="rgba(56,189,248,0.35)" stroke-width="2" stroke-dasharray="6,3"/>
+
+      <!-- PRE-CNN (SIFT+SVM) -->
+      <circle cx="150" cy="38" r="10" fill="rgba(100,116,139,0.3)" stroke="#94a3b8" stroke-width="2"/>
+      <text x="150" y="16" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">Pre-CNN</text>
+      <text x="150" y="29" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">~26% err</text>
+      <text x="150" y="58" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">2011</text>
+
+      <!-- AlexNet 2012 -->
+      <circle cx="230" cy="120" r="12" fill="rgba(56,189,248,0.3)" stroke="#38bdf8" stroke-width="2.5"/>
+      <text x="230" y="98" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">AlexNet</text>
+      <text x="230" y="111" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">16.4%</text>
+      <text x="230" y="142" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">2012</text>
+      <!-- drop arrow -->
+      <line x1="230" y1="52" x2="230" y2="105" stroke="#38bdf8" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="3,2"/>
+      <text x="250" y="78" font-family="Sora" font-size="9" fill="#38bdf8" font-weight="700">−10%!</text>
+
+      <!-- VGGNet 2014 -->
+      <circle cx="400" cy="192" r="12" fill="rgba(129,140,248,0.3)" stroke="#818cf8" stroke-width="2.5"/>
+      <text x="400" y="170" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">VGGNet</text>
+      <text x="400" y="182" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">7.3%</text>
+      <text x="400" y="212" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">2014</text>
+
+      <!-- GoogLeNet 2014 -->
+      <circle cx="490" cy="197" r="12" fill="rgba(251,146,60,0.3)" stroke="#fb923c" stroke-width="2.5"/>
+      <text x="490" y="175" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">GoogleNet</text>
+      <text x="490" y="187" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">6.7%</text>
+      <text x="490" y="217" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">2014</text>
+
+      <!-- ResNet 2015 -->
+      <circle cx="630" cy="225" r="14" fill="rgba(52,211,153,0.3)" stroke="#34d399" stroke-width="2.5"/>
+      <text x="630" y="203" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">ResNet</text>
+      <text x="630" y="215" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">3.57%</text>
+      <text x="630" y="248" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">2015</text>
+      <text x="630" y="260" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399" font-weight="700">Beats humans!</text>
+
+      <!-- DenseNet 2017 -->
+      <circle cx="750" cy="224" r="12" fill="rgba(244,114,182,0.3)" stroke="#f472b6" stroke-width="2.5"/>
+      <text x="750" y="202" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f472b6">DenseNet</text>
+      <text x="750" y="213" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">~3.5%</text>
+      <text x="750" y="248" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">2017</text>
+
+      <!-- Y axis label -->
+      <text x="12" y="130" font-family="Sora" font-size="10" fill="#64748b" transform="rotate(-90,12,130)">ImageNet Top-5 Error Rate</text>
+    </svg>
+    </div>
+  </div>
+
+  <p>Notice that AlexNet (2012) was the <em>earthquake</em> — a single model slashed error from 26% to 16.4% overnight, convincing the entire computer vision community to abandon hand-crafted features forever. Every architecture after that was asking: <em>"What is still wrong, and how do we fix it?"</em></p>
+
+  <div class="callout important">
+    <div class="callout-title">🧭 The Core Questions Each Architecture Answered</div>
+    <div class="callout-body">
+      <strong>LeNet (1998):</strong> Can we use convolution for digit recognition at all?<br>
+      <strong>AlexNet (2012):</strong> Can we scale CNNs to real-world images using GPUs?<br>
+      <strong>VGGNet (2014):</strong> Does <em>depth alone</em> (with small kernels) improve accuracy?<br>
+      <strong>GoogLeNet (2014):</strong> Can we get deeper <em>without</em> exploding the parameter count?<br>
+      <strong>ResNet (2015):</strong> Can we train networks with <em>100+ layers</em> without the gradient dying?<br>
+      <strong>DenseNet (2017):</strong> What if every layer could see every previous layer's features?
+    </div>
+  </div>
+  </div></div>
+</div>
+<!-- ══════ SECTION 1: LeNet ══════ -->
+<div class="section-block open" id="s1">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(100,116,139,.2);color:#94a3b8">01</div>
+      <div>
+        <div class="section-title">LeNet-5 &nbsp;<span style="font-size:.72rem;background:rgba(100,116,139,.2);color:#94a3b8;padding:2px 9px;border-radius:99px;font-weight:700;border:1px solid rgba(100,116,139,.4);">1998</span></div>
+        <div class="section-sub">Yann LeCun · The proof of concept that started it all</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">The Problem It Solved</h2>
+  <p>In the early 1990s, recognising handwritten digits — for things like postal code sorting or cheque reading — was an unsolved industrial problem. Hand-crafted feature engineering (measuring stroke angles, loop counts, etc.) was brittle and error-prone. Yann LeCun and his team at AT&T Bell Labs asked: what if a network could <em>learn the features itself</em>, directly from pixels?</p>
+  <div class="callout novelty">
+    <div class="callout-title">✨ Core Novelty</div>
+    <div class="callout-body">The first practical demonstration that a neural network using <strong>shared convolutional filters + pooling + a fully-connected classifier</strong> could outperform all hand-engineered alternatives on a real-world task. The three-stage pipeline (convolution → pool → convolution → pool → FC) is still the skeleton of virtually every CNN today.</div>
+  </div>
+
+  <h2 class="sub">Architecture Diagram</h2>
+  <div class="viz">
+    <div class="viz-title">LeNet-5 — Input 32×32 greyscale → 10-class digit output</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 860 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="a1" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+      </defs>
+
+      <!-- INPUT 32x32 -->
+      <rect x="10" y="60" width="60" height="80" rx="6" fill="rgba(100,116,139,.15)" stroke="#475569" stroke-width="1.5"/>
+      <text x="40" y="96" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">INPUT</text>
+      <text x="40" y="110" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">32×32×1</text>
+      <line x1="70" y1="100" x2="88" y2="100" stroke="#475569" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- C1: Conv 5×5 → 28×28×6 -->
+      <rect x="90" y="45" width="70" height="110" rx="6" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="125" y="88" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">C1</text>
+      <text x="125" y="101" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Conv 5×5</text>
+      <text x="125" y="113" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">6 filters</text>
+      <text x="125" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">28×28×6</text>
+      <line x1="160" y1="100" x2="178" y2="100" stroke="#475569" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- S2: AvgPool 2×2 → 14×14×6 -->
+      <rect x="180" y="55" width="68" height="90" rx="6" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="214" y="94" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">S2</text>
+      <text x="214" y="107" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">AvgPool 2×2</text>
+      <text x="214" y="119" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">14×14×6</text>
+      <line x1="248" y1="100" x2="266" y2="100" stroke="#475569" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- C3: Conv 5×5 → 10×10×16 -->
+      <rect x="268" y="40" width="70" height="120" rx="6" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="303" y="83" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">C3</text>
+      <text x="303" y="96" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Conv 5×5</text>
+      <text x="303" y="108" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">16 filters</text>
+      <text x="303" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">10×10×16</text>
+      <line x1="338" y1="100" x2="356" y2="100" stroke="#475569" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- S4: AvgPool 2×2 → 5×5×16 -->
+      <rect x="358" y="55" width="68" height="90" rx="6" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="392" y="94" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">S4</text>
+      <text x="392" y="107" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">AvgPool 2×2</text>
+      <text x="392" y="119" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">5×5×16</text>
+      <line x1="426" y1="100" x2="444" y2="100" stroke="#475569" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- C5: Conv 5×5 → 1×1×120 (fully connected in effect) -->
+      <rect x="446" y="65" width="70" height="70" rx="6" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="481" y="96" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">C5</text>
+      <text x="481" y="109" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Conv 5×5</text>
+      <text x="481" y="121" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">1×1×120</text>
+      <line x1="516" y1="100" x2="534" y2="100" stroke="#475569" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- F6: FC → 84 -->
+      <rect x="536" y="72" width="60" height="56" rx="6" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="566" y="97" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">F6</text>
+      <text x="566" y="109" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">FC · 84</text>
+      <text x="566" y="121" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">tanh</text>
+      <line x1="596" y1="100" x2="614" y2="100" stroke="#475569" stroke-width="1.2" marker-end="url(#a1)"/>
+
+      <!-- OUTPUT: RBF → 10 -->
+      <rect x="616" y="72" width="70" height="56" rx="6" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="651" y="97" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f472b6">OUTPUT</text>
+      <text x="651" y="109" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">FC · 10</text>
+      <text x="651" y="121" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">softmax</text>
+
+      <!-- Param counts below -->
+      <text x="125" y="168" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">156 params</text>
+      <text x="303" y="168" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">2,416 params</text>
+      <text x="481" y="168" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">48,120 params</text>
+      <text x="566" y="168" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">10,164 params</text>
+
+      <!-- total -->
+      <rect x="720" y="70" width="130" height="60" rx="8" fill="rgba(56,189,248,.05)" stroke="rgba(56,189,248,.25)" stroke-width="1"/>
+      <text x="785" y="93" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">Total</text>
+      <text x="785" y="109" text-anchor="middle" font-family="JetBrains Mono" font-size="12" font-weight="700" fill="#e2e8f0">~60,000</text>
+      <text x="785" y="123" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">parameters</text>
+    </svg>
+    </div>
+    <div class="arch-legend">
+      <div class="leg"><div class="leg-dot" style="background:rgba(56,189,248,.5)"></div>Convolutional layer</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(251,146,60,.5)"></div>Pooling (Average)</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(129,140,248,.5)"></div>Fully Connected</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(244,114,182,.5)"></div>Output / Classifier</div>
+    </div>
+  </div>
+
+  <h2 class="sub">Layer-by-Layer Walkthrough</h2>
+  <p>The input is a 32×32 greyscale image of a handwritten digit. The first convolutional layer (C1) applies 6 learnable 5×5 filters, producing 6 feature maps of size 28×28 — each filter learning a different local pattern (edges, curves). S2 then applies 2×2 average pooling, halving each map to 14×14 and making the representation position-tolerant. The second convolution (C3) applies 16 filters of 5×5, reducing to 10×10×16. Another average pool (S4) shrinks to 5×5×16. C5 is a special convolution with a 5×5 kernel on a 5×5 input — this is mathematically identical to a fully connected layer, producing a 120-dimensional vector. F6 is a fully connected layer to 84 units with tanh activation. Finally, a 10-class output layer gives the digit probability.</p>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">7</div><div class="stat-lbl">Trainable Layers</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">~60K</div><div class="stat-lbl">Parameters</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent3)">32×32</div><div class="stat-lbl">Input Size</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent4)">10</div><div class="stat-lbl">Output Classes</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent5)">tanh</div><div class="stat-lbl">Activation</div></div>
+  </div>
+
+  <h2 class="sub">Key Design Choices (and Their Limitations)</h2>
+  <div class="card-grid">
+    <div class="card"><div class="card-icon">✅</div><div class="card-title">Parameter Sharing</div><div class="card-text">Each kernel scans the full image — revolutionary compared to fully-connected alternatives with millions of parameters.</div></div>
+    <div class="card"><div class="card-icon">✅</div><div class="card-title">Hierarchical Features</div><div class="card-text">Layer 1 detects edges. Layer 2 detects curves and corners. The FC head combines them into digit identity.</div></div>
+    <div class="card"><div class="card-icon">⚠️</div><div class="card-title">Average Pooling</div><div class="card-text">Takes the mean of the window — later, max pooling would prove much more effective for preserving feature presence.</div></div>
+    <div class="card"><div class="card-icon">⚠️</div><div class="card-title">tanh Activation</div><div class="card-text">Saturates and causes vanishing gradients in deep nets. ReLU would solve this 14 years later.</div></div>
+    <div class="card"><div class="card-icon">❌</div><div class="card-title">Only 32×32 Input</div><div class="card-text">Designed for tiny, centred, greyscale digits. Cannot scale to 224×224 natural images without fundamental redesign.</div></div>
+    <div class="card"><div class="card-icon">❌</div><div class="card-title">No Dropout/BN</div><div class="card-text">No regularisation beyond weight decay. Overfitting on small datasets was a serious risk.</div></div>
+  </div>
+
+  <h2 class="sub">Where It Is Used</h2>
+  <p>LeNet is still used for <strong>educational demonstrations</strong> of CNN fundamentals, for benchmarking on MNIST, and as a lightweight model in embedded systems where the input truly is small (like reading serial numbers or barcodes on printed labels). It was deployed commercially by AT&T for cheque digit recognition in the 1990s and early 2000s — an early real-world deep learning deployment that most people have forgotten about.</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">🤔 Why Didn't LeNet Dominate Earlier?</div>
+    <div class="callout-body">LeNet worked beautifully for small greyscale digits, but there were two blockers for natural images: <strong>compute</strong> (training on large images on a CPU took days) and <strong>data</strong> (large labelled datasets like ImageNet didn't exist yet). The moment GPUs and big datasets arrived, the floodgates opened — which is exactly what AlexNet demonstrated in 2012.</div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · LeNet-5 in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">LeNet5</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes=<span class="num">10</span>):
+        <span class="fn">super</span>().__init__()
+        <span class="cm"># Feature extractor: Conv → Pool → Conv → Pool</span>
+        self.features = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Conv2d</span>(<span class="num">1</span>, <span class="num">6</span>, kernel_size=<span class="num">5</span>),   <span class="cm"># 32→28, 6 filters</span>
+            nn.<span class="cls">Tanh</span>(),
+            nn.<span class="cls">AvgPool2d</span>(<span class="num">2</span>, <span class="num">2</span>),               <span class="cm"># 28→14</span>
+            nn.<span class="cls">Conv2d</span>(<span class="num">6</span>, <span class="num">16</span>, kernel_size=<span class="num">5</span>),  <span class="cm"># 14→10, 16 filters</span>
+            nn.<span class="cls">Tanh</span>(),
+            nn.<span class="cls">AvgPool2d</span>(<span class="num">2</span>, <span class="num">2</span>),               <span class="cm"># 10→5</span>
+            nn.<span class="cls">Conv2d</span>(<span class="num">16</span>, <span class="num">120</span>, kernel_size=<span class="num">5</span>), <span class="cm"># 5→1, acts as FC</span>
+            nn.<span class="cls">Tanh</span>(),
+        )
+        <span class="cm"># Classifier head: FC → FC → Output</span>
+        self.classifier = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Linear</span>(<span class="num">120</span>, <span class="num">84</span>),
+            nn.<span class="cls">Tanh</span>(),
+            nn.<span class="cls">Linear</span>(<span class="num">84</span>, num_classes),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.features(x)          <span class="cm"># (B,1,32,32) → (B,120,1,1)</span>
+        x = x.flatten(<span class="num">1</span>)             <span class="cm"># (B,120)</span>
+        <span class="kw">return</span> self.classifier(x)     <span class="cm"># (B,10)</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ SECTION 2: AlexNet ══════ -->
+<div class="section-block open" id="s2">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">02</div>
+      <div>
+        <div class="section-title">AlexNet &nbsp;<span style="font-size:.72rem;background:rgba(56,189,248,.15);color:var(--accent);padding:2px 9px;border-radius:99px;font-weight:700;border:1px solid rgba(56,189,248,.3);">2012</span></div>
+        <div class="section-sub">Krizhevsky, Sutskever, Hinton · The model that ignited the deep learning revolution</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Why Was AlexNet Needed? (The Problem with LeNet)</h2>
+  <p>LeNet worked on 32×32 greyscale digits. But natural images are 224×224 in full colour — that is <strong>140× more pixels</strong>, with vastly more complex variation (lighting, viewpoint, occlusion, background clutter). Scaling LeNet naively was impossible: the parameter count would explode, training would take months on CPUs, and the network would overfit catastrophically on any dataset available at the time.</p>
+  <p>Then three things happened simultaneously in 2012: <strong>ImageNet</strong> (1.2 million labelled images) became available, <strong>NVIDIA GPUs</strong> became fast enough to train large networks, and Krizhevsky implemented his entire model in CUDA. The result was AlexNet — which crushed the second-best entry in ImageNet 2012 by nearly 10 percentage points.</p>
+
+  <div class="callout novelty">
+    <div class="callout-title">✨ Five Novelties That Made AlexNet Historic</div>
+    <div class="callout-body">
+      <strong>1. ReLU instead of tanh/sigmoid</strong> — solved vanishing gradients and trained ~6× faster.<br>
+      <strong>2. Multi-GPU training</strong> — split the network across two GTX 580s (each with only 3GB RAM).<br>
+      <strong>3. Dropout (p=0.5)</strong> — stochastic regularisation; reduced overfitting without reducing capacity.<br>
+      <strong>4. Local Response Normalisation (LRN)</strong> — a lateral inhibition idea (mostly replaced by BatchNorm today).<br>
+      <strong>5. Data augmentation</strong> — random crops, flips, colour jitter; artificially enlarged training data 2048×.
+    </div>
+  </div>
+
+  <h2 class="sub">Architecture Diagram</h2>
+  <div class="viz">
+    <div class="viz-title">AlexNet — 224×224 RGB input → 1000-class ImageNet output (8 layers total)</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:900px;display:block;margin:0 auto;">
+      <defs><marker id="a2" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker></defs>
+
+      <!-- INPUT -->
+      <rect x="8" y="65" width="55" height="90" rx="5" fill="rgba(100,116,139,.15)" stroke="#475569" stroke-width="1.5"/>
+      <text x="35" y="103" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#94a3b8">INPUT</text>
+      <text x="35" y="116" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">224×224</text>
+      <text x="35" y="128" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">×3 RGB</text>
+      <line x1="63" y1="110" x2="78" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- Conv1: 11×11 stride=4 → 55×55×96 -->
+      <rect x="80" y="40" width="72" height="140" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="116" y="94" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">Conv1</text>
+      <text x="116" y="107" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">11×11,s=4</text>
+      <text x="116" y="119" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">96 filters</text>
+      <text x="116" y="131" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">ReLU+LRN</text>
+      <text x="116" y="144" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">55×55×96</text>
+      <line x1="152" y1="110" x2="167" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- MaxPool1 -->
+      <rect x="169" y="55" width="56" height="110" rx="5" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="197" y="103" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">MaxPool</text>
+      <text x="197" y="116" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3×3, s=2</text>
+      <text x="197" y="129" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">27×27×96</text>
+      <line x1="225" y1="110" x2="240" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- Conv2: 5×5 → 27×27×256 -->
+      <rect x="242" y="48" width="68" height="124" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="276" y="96" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">Conv2</text>
+      <text x="276" y="109" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">5×5, p=2</text>
+      <text x="276" y="121" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">256 filters</text>
+      <text x="276" y="133" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">ReLU+LRN</text>
+      <text x="276" y="146" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">27×27×256</text>
+      <line x1="310" y1="110" x2="325" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- MaxPool2 -->
+      <rect x="327" y="62" width="56" height="96" rx="5" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="355" y="106" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">MaxPool</text>
+      <text x="355" y="119" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3×3, s=2</text>
+      <text x="355" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">13×13×256</text>
+      <line x1="383" y1="110" x2="398" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- Conv3,4,5 grouped -->
+      <rect x="400" y="68" width="66" height="84" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="433" y="100" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Conv3</text>
+      <text x="433" y="112" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3×3, 384f</text>
+      <text x="433" y="124" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">13×13×384</text>
+      <line x1="466" y1="110" x2="478" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <rect x="480" y="68" width="66" height="84" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="513" y="100" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Conv4</text>
+      <text x="513" y="112" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3×3, 384f</text>
+      <text x="513" y="124" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">13×13×384</text>
+      <line x1="546" y1="110" x2="558" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <rect x="560" y="68" width="66" height="84" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="593" y="100" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Conv5</text>
+      <text x="593" y="112" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3×3, 256f</text>
+      <text x="593" y="124" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">13×13×256</text>
+      <line x1="626" y1="110" x2="638" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- MaxPool3 -->
+      <rect x="640" y="74" width="52" height="72" rx="5" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="666" y="105" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">MaxPool</text>
+      <text x="666" y="118" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3×3, s=2</text>
+      <text x="666" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#94a3b8">6×6×256</text>
+      <line x1="692" y1="110" x2="705" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- FC6, FC7 -->
+      <rect x="707" y="76" width="56" height="68" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="735" y="103" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">FC6</text>
+      <text x="735" y="115" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">4096</text>
+      <text x="735" y="127" text-anchor="middle" font-family="Sora" font-size="8" fill="#f87171">Dropout</text>
+      <line x1="763" y1="110" x2="775" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <rect x="777" y="76" width="56" height="68" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="805" y="103" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">FC7</text>
+      <text x="805" y="115" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">4096</text>
+      <text x="805" y="127" text-anchor="middle" font-family="Sora" font-size="8" fill="#f87171">Dropout</text>
+      <line x1="833" y1="110" x2="845" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a2)"/>
+
+      <!-- Output -->
+      <rect x="847" y="82" width="46" height="56" rx="5" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="870" y="107" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">FC8</text>
+      <text x="870" y="119" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">1000</text>
+      <text x="870" y="131" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">softmax</text>
+
+      <!-- dropout annotation -->
+      <rect x="707" y="175" width="176" height="22" rx="5" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.3)" stroke-width="1"/>
+      <text x="795" y="190" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">Dropout p=0.5 applied here — first ever use in vision!</text>
+    </svg>
+    </div>
+    <div class="arch-legend">
+      <div class="leg"><div class="leg-dot" style="background:rgba(56,189,248,.5)"></div>Conv + ReLU</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(251,146,60,.5)"></div>Max Pooling</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(129,140,248,.5)"></div>FC + Dropout</div>
+      <div class="leg"><div class="leg-dot" style="background:rgba(244,114,182,.5)"></div>Softmax Output</div>
+    </div>
+  </div>
+
+  <h2 class="sub">The ReLU Revolution — Why It Matters So Much</h2>
+  <p>Before AlexNet, everyone used tanh or sigmoid activations. These functions squash their output into a small range (−1 to 1, or 0 to 1), which sounds nice — but creates a catastrophic problem: when values are in the saturated region of the curve (very positive or negative inputs), the gradient is nearly zero. In a deep network, multiplying near-zero gradients through many layers means the early layers receive almost no training signal — this is the <strong>vanishing gradient problem</strong>.</p>
+  <p>ReLU (<ic>f(x) = max(0, x)</ic>) has a gradient of exactly 1 for all positive inputs — it never saturates on the positive side. This means gradients flow back cleanly through the network, and training is dramatically faster. AlexNet trained 6× faster with ReLU than with tanh for the same accuracy. This single change unlocked the ability to train deep networks on real data.</p>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">8</div><div class="stat-lbl">Trainable Layers</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">60M</div><div class="stat-lbl">Parameters</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent3)">16.4%</div><div class="stat-lbl">Top-5 Error</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent4)">2 GPUs</div><div class="stat-lbl">Training Setup</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent5)">~5–6 days</div><div class="stat-lbl">Training Time</div></div>
+  </div>
+
+  <h2 class="sub">The Bottleneck: Huge FC Layers</h2>
+  <p>AlexNet's biggest weakness is architectural: 60 million parameters sounds large, but <strong>58 million of them live in just the three FC layers</strong> (FC6: 9216×4096 = 37.7M, FC7: 4096×4096 = 16.8M, FC8: 4096×1000 = 4.1M). The five convolutional layers that do all the real feature extraction only account for about 2.3 million parameters. This is enormously wasteful and prone to overfitting — which is why Dropout was essential and why VGGNet and everything after would ultimately move away from giant FC heads.</p>
+
+  <h2 class="sub">Where AlexNet Is Used Today</h2>
+  <p>AlexNet's direct use is now primarily educational and historical — its architecture has been superseded. However, its cultural impact cannot be overstated: it is the single paper that caused every major tech company to pivot toward deep learning. Its ideas live on: ReLU is universal, dropout is in every toolbox, and GPU training is the default. Transfer learning using AlexNet features was the dominant approach from 2012–2014.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · AlexNet in PyTorch (simplified)</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">AlexNet</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes=<span class="num">1000</span>):
+        <span class="fn">super</span>().__init__()
+        self.features = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Conv2d</span>(<span class="num">3</span>, <span class="num">96</span>, <span class="num">11</span>, stride=<span class="num">4</span>, padding=<span class="num">2</span>),  <span class="cm"># 224→55</span>
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">MaxPool2d</span>(<span class="num">3</span>, stride=<span class="num">2</span>),                  <span class="cm"># 55→27</span>
+            nn.<span class="cls">Conv2d</span>(<span class="num">96</span>, <span class="num">256</span>, <span class="num">5</span>, padding=<span class="num">2</span>),           <span class="cm"># 27→27</span>
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">MaxPool2d</span>(<span class="num">3</span>, stride=<span class="num">2</span>),                  <span class="cm"># 27→13</span>
+            nn.<span class="cls">Conv2d</span>(<span class="num">256</span>, <span class="num">384</span>, <span class="num">3</span>, padding=<span class="num">1</span>),          <span class="cm"># 13→13</span>
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">Conv2d</span>(<span class="num">384</span>, <span class="num">384</span>, <span class="num">3</span>, padding=<span class="num">1</span>),          <span class="cm"># 13→13</span>
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">Conv2d</span>(<span class="num">384</span>, <span class="num">256</span>, <span class="num">3</span>, padding=<span class="num">1</span>),          <span class="cm"># 13→13</span>
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">MaxPool2d</span>(<span class="num">3</span>, stride=<span class="num">2</span>),                  <span class="cm"># 13→6</span>
+        )
+        self.classifier = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Dropout</span>(<span class="num">0.5</span>),                            <span class="cm"># ← THE NOVELTY</span>
+            nn.<span class="cls">Linear</span>(<span class="num">256</span> * <span class="num">6</span> * <span class="num">6</span>, <span class="num">4096</span>),  <span class="cm"># 9216 → 4096 (37.7M params alone!)</span>
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">Dropout</span>(<span class="num">0.5</span>),
+            nn.<span class="cls">Linear</span>(<span class="num">4096</span>, <span class="num">4096</span>),
+            nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>),
+            nn.<span class="cls">Linear</span>(<span class="num">4096</span>, num_classes),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.features(x)     <span class="cm"># (B,3,224,224) → (B,256,6,6)</span>
+        x = x.flatten(<span class="num">1</span>)        <span class="cm"># (B, 9216)</span>
+        <span class="kw">return</span> self.classifier(x) <span class="cm"># (B, 1000)</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ SECTION 3: VGGNet ══════ -->
+<div class="section-block open" id="s3">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent2)">03</div>
+      <div>
+        <div class="section-title">VGGNet &nbsp;<span style="font-size:.72rem;background:rgba(129,140,248,.15);color:var(--accent2);padding:2px 9px;border-radius:99px;font-weight:700;border:1px solid rgba(129,140,248,.3);">2014</span></div>
+        <div class="section-sub">Simonyan &amp; Zisserman, Oxford · Depth is all you need — but the FC head is still a problem</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Why Was VGGNet Needed? (The Problem with AlexNet)</h2>
+  <p>AlexNet proved that deep CNNs work, but it was a somewhat ad hoc design — large 11×11 kernels in the first layer, inconsistent filter sizes, a split across two GPUs due to memory constraints. Researchers asked a very clean scientific question: <em>if we hold everything else constant and just increase depth using exclusively 3×3 convolutions, how much better do we get?</em> VGGNet was a rigorous ablation study answering that exact question.</p>
+
+  <div class="callout novelty">
+    <div class="callout-title">✨ Core Novelty — The 3×3 Principle</div>
+    <div class="callout-body">
+      Use <strong>only 3×3 convolutions throughout the entire network</strong>. Two stacked 3×3 convs have the same receptive field as one 5×5 but use 18 parameters instead of 25 — and have an extra non-linearity. Three stacked 3×3s match a 7×7 with 27 params instead of 49, plus two extra ReLUs. The key insight: <strong>depth with small kernels beats width with large kernels</strong>, both in accuracy and parameter efficiency.
+    </div>
+  </div>
+
+  <h2 class="sub">Architecture Diagram (VGG-16)</h2>
+  <div class="viz">
+    <div class="viz-title">VGG-16 — Five conv blocks, each followed by max pool; ends with three FC layers</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:900px;display:block;margin:0 auto;">
+      <defs><marker id="a3" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker></defs>
+
+      <!-- INPUT -->
+      <rect x="8" y="70" width="48" height="80" rx="5" fill="rgba(100,116,139,.15)" stroke="#475569" stroke-width="1.5"/>
+      <text x="32" y="107" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#94a3b8">INPUT</text>
+      <text x="32" y="119" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">224×224</text>
+      <text x="32" y="131" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">×3</text>
+      <line x1="56" y1="110" x2="70" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <!-- BLOCK 1: 2× Conv64 + Pool -->
+      <rect x="72" y="48" width="84" height="124" rx="6" fill="rgba(56,189,248,.07)" stroke="rgba(56,189,248,.4)" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="114" y="65" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Block 1</text>
+      <rect x="78" y="70" width="72" height="30" rx="4" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1"/>
+      <text x="114" y="83" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">Conv 3×3 × 64</text>
+      <text x="114" y="94" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">224×224×64</text>
+      <rect x="78" y="103" width="72" height="30" rx="4" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1"/>
+      <text x="114" y="116" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">Conv 3×3 × 64</text>
+      <text x="114" y="127" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">224×224×64</text>
+      <rect x="78" y="136" width="72" height="24" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="114" y="150" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">MaxPool 2×2</text>
+      <text x="114" y="162" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">→ 112×112×64</text>
+      <line x1="156" y1="110" x2="170" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <!-- BLOCK 2: 2× Conv128 + Pool -->
+      <rect x="172" y="48" width="84" height="124" rx="6" fill="rgba(129,140,248,.07)" stroke="rgba(129,140,248,.4)" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="214" y="65" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">Block 2</text>
+      <rect x="178" y="70" width="72" height="30" rx="4" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1"/>
+      <text x="214" y="83" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">Conv 3×3 × 128</text>
+      <text x="214" y="94" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">112×112×128</text>
+      <rect x="178" y="103" width="72" height="30" rx="4" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1"/>
+      <text x="214" y="116" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">Conv 3×3 × 128</text>
+      <text x="214" y="127" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">112×112×128</text>
+      <rect x="178" y="136" width="72" height="24" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="214" y="150" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">MaxPool 2×2</text>
+      <text x="214" y="162" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">→ 56×56×128</text>
+      <line x1="256" y1="110" x2="270" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <!-- BLOCK 3: 3× Conv256 + Pool -->
+      <rect x="272" y="42" width="84" height="130" rx="6" fill="rgba(52,211,153,.07)" stroke="rgba(52,211,153,.4)" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="314" y="58" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">Block 3</text>
+      <rect x="278" y="63" width="72" height="24" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1"/>
+      <text x="314" y="78" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">Conv 3×3 × 256</text>
+      <rect x="278" y="90" width="72" height="24" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1"/>
+      <text x="314" y="105" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">Conv 3×3 × 256</text>
+      <rect x="278" y="117" width="72" height="24" rx="4" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1"/>
+      <text x="314" y="132" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">Conv 3×3 × 256</text>
+      <rect x="278" y="144" width="72" height="22" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="314" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">MaxPool → 28×28×256</text>
+      <line x1="356" y1="110" x2="370" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <!-- BLOCK 4: 3× Conv512 + Pool -->
+      <rect x="372" y="42" width="84" height="130" rx="6" fill="rgba(251,146,60,.07)" stroke="rgba(251,146,60,.4)" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="414" y="58" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">Block 4</text>
+      <rect x="378" y="63" width="72" height="24" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="414" y="78" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">Conv 3×3 × 512</text>
+      <rect x="378" y="90" width="72" height="24" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="414" y="105" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">Conv 3×3 × 512</text>
+      <rect x="378" y="117" width="72" height="24" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="414" y="132" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">Conv 3×3 × 512</text>
+      <rect x="378" y="144" width="72" height="22" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="414" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">MaxPool → 14×14×512</text>
+      <line x1="456" y1="110" x2="470" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <!-- BLOCK 5: 3× Conv512 + Pool -->
+      <rect x="472" y="42" width="84" height="130" rx="6" fill="rgba(244,114,182,.07)" stroke="rgba(244,114,182,.4)" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="514" y="58" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">Block 5</text>
+      <rect x="478" y="63" width="72" height="24" rx="4" fill="rgba(244,114,182,.15)" stroke="#f472b6" stroke-width="1"/>
+      <text x="514" y="78" text-anchor="middle" font-family="Sora" font-size="8" fill="#f472b6">Conv 3×3 × 512</text>
+      <rect x="478" y="90" width="72" height="24" rx="4" fill="rgba(244,114,182,.15)" stroke="#f472b6" stroke-width="1"/>
+      <text x="514" y="105" text-anchor="middle" font-family="Sora" font-size="8" fill="#f472b6">Conv 3×3 × 512</text>
+      <rect x="478" y="117" width="72" height="24" rx="4" fill="rgba(244,114,182,.15)" stroke="#f472b6" stroke-width="1"/>
+      <text x="514" y="132" text-anchor="middle" font-family="Sora" font-size="8" fill="#f472b6">Conv 3×3 × 512</text>
+      <rect x="478" y="144" width="72" height="22" rx="4" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1"/>
+      <text x="514" y="158" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">MaxPool → 7×7×512</text>
+      <line x1="556" y1="110" x2="570" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <!-- Classifier -->
+      <rect x="572" y="68" width="66" height="84" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="605" y="91" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">FC</text>
+      <text x="605" y="104" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">4096</text>
+      <text x="605" y="116" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">ReLU+Drop</text>
+      <text x="605" y="128" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">4096</text>
+      <text x="605" y="140" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">ReLU+Drop</text>
+      <line x1="638" y1="110" x2="652" y2="110" stroke="#475569" stroke-width="1.2" marker-end="url(#a3)"/>
+
+      <rect x="654" y="80" width="56" height="60" rx="5" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="682" y="107" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">FC</text>
+      <text x="682" y="119" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">1000</text>
+      <text x="682" y="131" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">softmax</text>
+
+      <!-- parameter annotation -->
+      <rect x="570" y="175" width="280" height="22" rx="5" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.3)" stroke-width="1"/>
+      <text x="710" y="190" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">These 3 FC layers contain 102M of the 138M total parameters — 74% of the model!</text>
+
+      <!-- depth annotation -->
+      <text x="440" y="200" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">5 conv blocks · 13 conv layers · 3 FC layers · 16 trainable layers total (VGG-16)</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">16</div><div class="stat-lbl">Layers (VGG-16)</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">138M</div><div class="stat-lbl">Parameters</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent3)">7.3%</div><div class="stat-lbl">Top-5 Error</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent4)">3×3</div><div class="stat-lbl">Only Kernel Size</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent5)">500MB</div><div class="stat-lbl">Model Size</div></div>
+  </div>
+
+  <h2 class="sub">The Remaining Problem: The FC Head is Still Enormous</h2>
+  <p>VGGNet achieved state of the art and proved the depth hypothesis, but it inherited AlexNet's worst design choice — the three-layer FC classifier. Of its 138 million parameters, <strong>102 million (74%) live in FC6, FC7, FC8</strong>, which are just three matrix multiplications. These layers have no spatial awareness, can't handle variable-size inputs, and are extremely expensive to store (the model alone weighs 500MB). The VGG features learned by the conv blocks are incredibly rich and are still used for transfer learning today, but the head needed a redesign. That redesign came from GoogLeNet.</p>
+
+  <h2 class="sub">Where VGGNet Is Used Today</h2>
+  <p>VGGNet's conv features remain widely used for <strong>perceptual loss in image style transfer and super-resolution</strong> (the VGG loss), <strong>feature extraction for small datasets</strong>, and as a baseline in comparison studies. The VGG-16 feature extractor is a go-to backbone in medical imaging, satellite imagery analysis, and any domain where transfer learning from ImageNet is needed and compute is not the primary constraint. Its simple, uniform architecture also makes it very easy to modify and understand.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · VGG-16 block structure in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">def</span> <span class="fn">vgg_block</span>(num_convs, in_ch, out_ch):
+    <span class="st">"""Standard VGG block: N×(Conv3×3+ReLU) then MaxPool."""</span>
+    layers = []
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(num_convs):
+        layers += [nn.<span class="cls">Conv2d</span>(in_ch, out_ch, <span class="num">3</span>, padding=<span class="num">1</span>), nn.<span class="cls">ReLU</span>()]
+        in_ch = out_ch
+    layers.append(nn.<span class="cls">MaxPool2d</span>(<span class="num">2</span>, <span class="num">2</span>))
+    <span class="kw">return</span> nn.<span class="cls">Sequential</span>(*layers)
+
+<span class="kw">class</span> <span class="cls">VGG16</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_classes=<span class="num">1000</span>):
+        <span class="fn">super</span>().__init__()
+        self.features = nn.<span class="cls">Sequential</span>(
+            <span class="fn">vgg_block</span>(<span class="num">2</span>, <span class="num">3</span>,   <span class="num">64</span>),   <span class="cm"># 224→112, 2 convs</span>
+            <span class="fn">vgg_block</span>(<span class="num">2</span>, <span class="num">64</span>,  <span class="num">128</span>),   <span class="cm"># 112→56,  2 convs</span>
+            <span class="fn">vgg_block</span>(<span class="num">3</span>, <span class="num">128</span>, <span class="num">256</span>),   <span class="cm"># 56→28,   3 convs</span>
+            <span class="fn">vgg_block</span>(<span class="num">3</span>, <span class="num">256</span>, <span class="num">512</span>),   <span class="cm"># 28→14,   3 convs</span>
+            <span class="fn">vgg_block</span>(<span class="num">3</span>, <span class="num">512</span>, <span class="num">512</span>),   <span class="cm"># 14→7,    3 convs</span>
+        )
+        self.classifier = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Linear</span>(<span class="num">512</span>*<span class="num">7</span>*<span class="num">7</span>, <span class="num">4096</span>), nn.<span class="cls">ReLU</span>(), nn.<span class="cls">Dropout</span>(<span class="num">0.5</span>),
+            nn.<span class="cls">Linear</span>(<span class="num">4096</span>, <span class="num">4096</span>),    nn.<span class="cls">ReLU</span>(), nn.<span class="cls">Dropout</span>(<span class="num">0.5</span>),
+            nn.<span class="cls">Linear</span>(<span class="num">4096</span>, num_classes),
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.features(x).flatten(<span class="num">1</span>)
+        <span class="kw">return</span> self.classifier(x)</code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ SECTION 4: GoogLeNet / Inception ══════ -->
+<div class="section-block open" id="s4">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">04</div>
+      <div>
+        <div class="section-title">GoogLeNet / Inception-v1 &nbsp;<span style="font-size:.72rem;background:rgba(251,146,60,.15);color:var(--accent4);padding:2px 9px;border-radius:99px;font-weight:700;border:1px solid rgba(251,146,60,.3);">2014</span></div>
+        <div class="section-sub">Szegedy et al., Google · Going deeper with fewer parameters — the Inception module</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Why Was GoogLeNet Needed? (The Problem with VGGNet)</h2>
+  <p>VGGNet was accurate but brutally expensive: 138 million parameters, 500MB of storage, and enormous compute at inference time. Google needed models that could run on real products — phones, web servers handling millions of requests — where every millisecond and every megabyte matters. They asked a fundamental question: <em>instead of going wider (more filters) or simply deeper, can we redesign the basic building block to be more computationally efficient while still capturing multi-scale features?</em></p>
+  <p>A related observation motivated the design: objects in images appear at different scales and positions. A small kernel captures fine details; a large kernel captures global context. Why force the network to choose one scale per layer — why not look at <em>all scales simultaneously</em>?</p>
+
+  <div class="callout novelty">
+    <div class="callout-title">✨ Core Novelty — The Inception Module + Global Average Pooling</div>
+    <div class="callout-body">
+      <strong>Inception module:</strong> At each layer, apply 1×1, 3×3, and 5×5 convolutions <em>in parallel</em>, plus a 3×3 max pool branch — then concatenate all outputs channel-wise. The network learns which scale is useful for each feature, at every spatial location.<br><br>
+      <strong>1×1 convolution as bottleneck:</strong> Before the 3×3 and 5×5 convolutions, apply a 1×1 conv to reduce the channel dimension. This acts as a learnable feature selector and slashes computation dramatically.<br><br>
+      <strong>Global Average Pooling replaces FC:</strong> Instead of the giant FC head, GoogLeNet ends with GAP (averaging each feature map to a single number) → one small FC layer → softmax. This eliminates 100M+ parameters.
+    </div>
+  </div>
+
+  <h2 class="sub">The Inception Module — Diagram</h2>
+  <div class="viz">
+    <div class="viz-title">One Inception Module — four parallel branches, concatenated along the channel axis</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 310" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs><marker id="a4" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker></defs>
+
+      <!-- Input node -->
+      <rect x="300" y="10" width="160" height="35" rx="7" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.5"/>
+      <text x="380" y="32" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">Input Feature Map</text>
+
+      <!-- 4 vertical lines down to branch boxes -->
+      <line x1="330" y1="45" x2="90" y2="100" stroke="#2d3748" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="352" y1="45" x2="252" y2="100" stroke="#2d3748" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="408" y1="45" x2="448" y2="100" stroke="#2d3748" stroke-width="1" stroke-dasharray="4,3"/>
+      <line x1="430" y1="45" x2="610" y2="100" stroke="#2d3748" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- BRANCH 1: 1×1 conv -->
+      <rect x="20" y="100" width="140" height="50" rx="7" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="90" y="122" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">1×1 Conv</text>
+      <text x="90" y="138" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">e.g. 64 filters</text>
+
+      <!-- BRANCH 2: 1×1 bottleneck → 3×3 -->
+      <rect x="182" y="100" width="140" height="50" rx="7" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="252" y="118" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">1×1 Conv</text>
+      <text x="252" y="132" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">bottleneck 96f</text>
+      <text x="252" y="144" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">↓ channel reduction</text>
+      <line x1="252" y1="150" x2="252" y2="172" stroke="#818cf8" stroke-width="1.2" marker-end="url(#a4)"/>
+      <rect x="182" y="174" width="140" height="40" rx="7" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="252" y="192" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">3×3 Conv</text>
+      <text x="252" y="206" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">128 filters</text>
+
+      <!-- BRANCH 3: 1×1 bottleneck → 5×5 -->
+      <rect x="344" y="100" width="140" height="50" rx="7" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="414" y="118" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">1×1 Conv</text>
+      <text x="414" y="132" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">bottleneck 16f</text>
+      <text x="414" y="144" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">↓ channel reduction</text>
+      <line x1="414" y1="150" x2="414" y2="172" stroke="#34d399" stroke-width="1.2" marker-end="url(#a4)"/>
+      <rect x="344" y="174" width="140" height="40" rx="7" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="414" y="192" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">5×5 Conv</text>
+      <text x="414" y="206" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">32 filters</text>
+
+      <!-- BRANCH 4: MaxPool → 1×1 -->
+      <rect x="506" y="100" width="140" height="50" rx="7" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="576" y="118" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">3×3 MaxPool</text>
+      <text x="576" y="132" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">stride=1, pad=1</text>
+      <text x="576" y="144" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">same spatial size</text>
+      <line x1="576" y1="150" x2="576" y2="172" stroke="#fb923c" stroke-width="1.2" marker-end="url(#a4)"/>
+      <rect x="506" y="174" width="140" height="40" rx="7" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="576" y="192" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">1×1 Conv</text>
+      <text x="576" y="206" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">32 filters</text>
+
+      <!-- lines to concat bar -->
+      <line x1="90" y1="150" x2="90" y2="248" stroke="#38bdf8" stroke-width="1.2"/>
+      <line x1="252" y1="214" x2="252" y2="248" stroke="#818cf8" stroke-width="1.2"/>
+      <line x1="414" y1="214" x2="414" y2="248" stroke="#34d399" stroke-width="1.2"/>
+      <line x1="576" y1="214" x2="576" y2="248" stroke="#fb923c" stroke-width="1.2"/>
+      <line x1="90" y1="248" x2="576" y2="248" stroke="#2d3748" stroke-width="1.2"/>
+      <line x1="333" y1="248" x2="333" y2="265" stroke="#e2e8f0" stroke-width="1.5" marker-end="url(#a4)"/>
+
+      <!-- CONCAT output -->
+      <rect x="100" y="266" width="466" height="38" rx="8" fill="rgba(56,189,248,.08)" stroke="rgba(56,189,248,.5)" stroke-width="2"/>
+      <text x="333" y="283" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">Concatenate along channel axis</text>
+      <text x="333" y="297" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">output: 64 + 128 + 32 + 32 = 256 channels — same H×W as input</text>
+
+      <!-- branch labels at top -->
+      <text x="90" y="97" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8" font-weight="700">Branch 1</text>
+      <text x="252" y="97" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8" font-weight="700">Branch 2</text>
+      <text x="414" y="97" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399" font-weight="700">Branch 3</text>
+      <text x="576" y="97" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c" font-weight="700">Branch 4</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Why Does the 1×1 Bottleneck Matter So Much?</h2>
+  <p>A 5×5 convolution on 192 input channels with 32 output filters requires <strong>5×5×192×32 = 153,600 multiply-adds</strong> per output location. If you first apply a 1×1 conv to reduce 192 channels down to 16, then apply the 5×5, the cost becomes <strong>1×1×192×16 + 5×5×16×32 = 3,072 + 12,800 = 15,872</strong> — almost <strong>10× cheaper</strong>, with no spatial information lost. The 1×1 conv selects and recombines channels before the expensive spatial convolution. This idea — the bottleneck — would become foundational in ResNet and virtually every efficient architecture after it.</p>
+
+  <h2 class="sub">GoogLeNet Full Architecture (22 layers deep)</h2>
+  <div class="viz">
+    <div class="viz-title">GoogLeNet overview — 9 Inception modules stacked, no FC head, auxiliary classifiers for gradient flow</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 880 120" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:880px;display:block;margin:0 auto;">
+      <defs><marker id="a4b" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#475569"/></marker></defs>
+      <!-- stem -->
+      <rect x="5" y="35" width="48" height="50" rx="5" fill="rgba(100,116,139,.15)" stroke="#475569" stroke-width="1.3"/>
+      <text x="29" y="58" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">Input</text>
+      <text x="29" y="70" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">224×224</text>
+      <text x="29" y="80" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">×3</text>
+      <line x1="53" y1="60" x2="64" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <!-- conv+pool stem -->
+      <rect x="66" y="38" width="55" height="44" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="93" y="57" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#38bdf8">Stem</text>
+      <text x="93" y="69" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">Conv+Pool</text>
+      <text x="93" y="79" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">×2</text>
+      <line x1="121" y1="60" x2="132" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <!-- 9 inception modules -->
+      <rect x="134" y="35" width="48" height="50" rx="5" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1.3"/>
+      <text x="158" y="58" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#fbbf24">Inc</text>
+      <text x="158" y="70" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">(3a)</text>
+      <line x1="182" y1="60" x2="192" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <rect x="194" y="35" width="48" height="50" rx="5" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1.3"/>
+      <text x="218" y="58" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#fbbf24">Inc</text>
+      <text x="218" y="70" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">(3b)</text>
+      <line x1="242" y1="60" x2="252" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <!-- MaxPool -->
+      <rect x="254" y="40" width="38" height="40" rx="4" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.3"/>
+      <text x="273" y="58" text-anchor="middle" font-family="Sora" font-size="7" font-weight="700" fill="#fb923c">MaxPool</text>
+      <text x="273" y="70" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">28→14</text>
+      <line x1="292" y1="60" x2="302" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <rect x="304" y="35" width="48" height="50" rx="5" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1.3"/>
+      <text x="328" y="54" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#fbbf24">Inc×4</text>
+      <text x="328" y="66" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">(4a-4e)</text>
+      <text x="328" y="78" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">14×14</text>
+      <line x1="352" y1="60" x2="362" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <!-- Auxiliary classifier 1 (from 4a) -->
+      <line x1="328" y1="35" x2="328" y2="18" stroke="#f472b6" stroke-width="1" stroke-dasharray="3,2"/>
+      <rect x="290" y="4" width="76" height="18" rx="4" fill="rgba(244,114,182,.1)" stroke="#f472b6" stroke-width="1"/>
+      <text x="328" y="16" text-anchor="middle" font-family="Sora" font-size="8" fill="#f472b6">Aux Classifier 1</text>
+
+      <!-- MaxPool -->
+      <rect x="364" y="40" width="38" height="40" rx="4" fill="rgba(251,146,60,.12)" stroke="#fb923c" stroke-width="1.3"/>
+      <text x="383" y="58" text-anchor="middle" font-family="Sora" font-size="7" font-weight="700" fill="#fb923c">MaxPool</text>
+      <text x="383" y="70" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">14→7</text>
+      <line x1="402" y1="60" x2="412" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <rect x="414" y="35" width="48" height="50" rx="5" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1.3"/>
+      <text x="438" y="54" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#fbbf24">Inc×2</text>
+      <text x="438" y="66" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">(5a-5b)</text>
+      <text x="438" y="78" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">7×7</text>
+      <line x1="462" y1="60" x2="472" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <!-- Auxiliary classifier 2 (from 4d) -->
+      <line x1="438" y1="35" x2="438" y2="18" stroke="#f472b6" stroke-width="1" stroke-dasharray="3,2"/>
+      <rect x="400" y="4" width="76" height="18" rx="4" fill="rgba(244,114,182,.1)" stroke="#f472b6" stroke-width="1"/>
+      <text x="438" y="16" text-anchor="middle" font-family="Sora" font-size="8" fill="#f472b6">Aux Classifier 2</text>
+
+      <!-- GAP -->
+      <rect x="474" y="40" width="52" height="40" rx="5" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.3"/>
+      <text x="500" y="57" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#f472b6">Global</text>
+      <text x="500" y="69" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#f472b6">AvgPool</text>
+      <line x1="526" y1="60" x2="536" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <!-- Dropout + FC -->
+      <rect x="538" y="40" width="52" height="40" rx="5" fill="rgba(248,113,113,.12)" stroke="#f87171" stroke-width="1.3"/>
+      <text x="564" y="57" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#f87171">Dropout</text>
+      <text x="564" y="69" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">p=0.4</text>
+      <line x1="590" y1="60" x2="600" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <rect x="602" y="40" width="52" height="40" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.3"/>
+      <text x="628" y="57" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#818cf8">FC</text>
+      <text x="628" y="69" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1000</text>
+      <line x1="654" y1="60" x2="664" y2="60" stroke="#475569" stroke-width="1" marker-end="url(#a4b)"/>
+
+      <rect x="666" y="42" width="52" height="36" rx="5" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="692" y="57" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#34d399">Softmax</text>
+      <text x="692" y="69" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">output</text>
+
+      <!-- param highlight -->
+      <rect x="474" y="95" width="246" height="18" rx="4" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.3)" stroke-width="1"/>
+      <text x="597" y="107" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">GAP eliminates 100M+ params — 5M total vs VGG's 138M</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">22</div><div class="stat-lbl">Layers Deep</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">5M</div><div class="stat-lbl">Parameters</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent3)">6.7%</div><div class="stat-lbl">Top-5 Error</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent4)">9</div><div class="stat-lbl">Inception Modules</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent5)">27×</div><div class="stat-lbl">Fewer Params than VGG</div></div>
+  </div>
+
+  <h2 class="sub">Auxiliary Classifiers — A Clever Gradient Hack</h2>
+  <p>With 22 layers, GoogLeNet encountered a mild version of the vanishing gradient problem — gradients from the final loss became too weak by the time they reached the early Inception modules. The authors' solution was to attach two <strong>auxiliary classifiers</strong> to intermediate layers during training, each producing its own loss, which is added (with weight 0.3) to the main loss. This injects gradient signal directly into earlier layers. At test time, the auxiliary classifiers are removed and only the main output is used.</p>
+
+  <h2 class="sub">Where GoogLeNet Is Used Today</h2>
+  <p>The original GoogLeNet is largely superseded, but its ideas dominate modern architecture design. The Inception family (v2, v3, v4, Inception-ResNet) remains widely used in computer vision, especially on mobile and embedded devices where the parameter efficiency is critical. The core ideas — 1×1 bottleneck convolutions, multi-scale parallel branches, Global Average Pooling — appear in virtually every state-of-the-art architecture today.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Inception Module in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">InceptionModule</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, c1, c2_r, c2, c3_r, c3, c4):
+        <span class="fn">super</span>().__init__()
+        <span class="cm"># Branch 1: 1×1 conv</span>
+        self.b1 = nn.<span class="cls">Sequential</span>(nn.<span class="cls">Conv2d</span>(in_ch, c1, <span class="num">1</span>), nn.<span class="cls">ReLU</span>())
+
+        <span class="cm"># Branch 2: 1×1 bottleneck → 3×3 conv</span>
+        self.b2 = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Conv2d</span>(in_ch, c2_r, <span class="num">1</span>), nn.<span class="cls">ReLU</span>(),          <span class="cm"># reduce channels</span>
+            nn.<span class="cls">Conv2d</span>(c2_r, c2, <span class="num">3</span>, padding=<span class="num">1</span>), nn.<span class="cls">ReLU</span>()   <span class="cm"># 3×3 conv</span>
+        )
+
+        <span class="cm"># Branch 3: 1×1 bottleneck → 5×5 conv</span>
+        self.b3 = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">Conv2d</span>(in_ch, c3_r, <span class="num">1</span>), nn.<span class="cls">ReLU</span>(),          <span class="cm"># reduce channels</span>
+            nn.<span class="cls">Conv2d</span>(c3_r, c3, <span class="num">5</span>, padding=<span class="num">2</span>), nn.<span class="cls">ReLU</span>()   <span class="cm"># 5×5 conv</span>
+        )
+
+        <span class="cm"># Branch 4: 3×3 MaxPool → 1×1 conv</span>
+        self.b4 = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">MaxPool2d</span>(<span class="num">3</span>, stride=<span class="num">1</span>, padding=<span class="num">1</span>),
+            nn.<span class="cls">Conv2d</span>(in_ch, c4, <span class="num">1</span>), nn.<span class="cls">ReLU</span>()
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        b1 = self.<span class="fn">b1</span>(x)
+        b2 = self.<span class="fn">b2</span>(x)
+        b3 = self.<span class="fn">b3</span>(x)
+        b4 = self.<span class="fn">b4</span>(x)
+        <span class="kw">return</span> torch.<span class="fn">cat</span>([b1, b2, b3, b4], dim=<span class="num">1</span>)  <span class="cm"># concat along channels!</span>
+
+<span class="cm"># Inception(3a): in=192, 1×1:64, 3×3_r:96, 3×3:128, 5×5_r:16, 5×5:32, pool:32</span>
+<span class="cm"># out = 64+128+32+32 = 256 channels, same H×W</span>
+inc = <span class="cls">InceptionModule</span>(<span class="num">192</span>, <span class="num">64</span>, <span class="num">96</span>, <span class="num">128</span>, <span class="num">16</span>, <span class="num">32</span>, <span class="num">32</span>)
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">192</span>, <span class="num">28</span>, <span class="num">28</span>)
+<span class="fn">print</span>(<span class="fn">inc</span>(x).shape)   <span class="cm"># → [1, 256, 28, 28]</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ SECTION 5: ResNet ══════ -->
+<div class="section-block open" id="s5">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">05</div>
+      <div>
+        <div class="section-title">ResNet &nbsp;<span style="font-size:.72rem;background:rgba(52,211,153,.15);color:var(--accent3);padding:2px 9px;border-radius:99px;font-weight:700;border:1px solid rgba(52,211,153,.3);">2015</span></div>
+        <div class="section-sub">He et al., Microsoft Research · The residual connection that unlocked 100+ layer networks</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Why Was ResNet Needed? (The Problem with Deep Networks)</h2>
+  <p>By 2015, researchers knew from VGGNet and GoogLeNet that depth improves accuracy. So the obvious move was: go even deeper. But something strange happened. When you trained a 56-layer network alongside a 20-layer network, the <em>56-layer network performed worse</em> — not just on the test set (where you might blame overfitting), but on the <em>training set</em> itself. This was deeply puzzling: more capacity should never hurt training performance.</p>
+  <p>The culprit was the <strong>degradation problem</strong>: as networks got deeper, gradients had to travel through more layers, getting multiplied by small numbers (from weights and activations) at each step. By the time the gradient reached early layers, it was essentially zero — those layers weren't learning anything useful. The network was too deep to train effectively.</p>
+
+  <div class="callout problem">
+    <div class="callout-title">🔴 The Degradation Problem — A Thought Experiment</div>
+    <div class="callout-body">Imagine you have a well-trained 20-layer network. You want to build a 56-layer version. Theoretically, you could take your 20-layer network and add 36 identity layers on top — layers that just pass their input through unchanged. The 56-layer version would then be <em>at least as good</em> as the 20-layer version. But standard training with SGD could not discover this solution. The network couldn't learn to approximate identity functions in the extra layers — it kept perturbing them with small non-zero weights that accumulated into noise. Residual connections solve this by making identity the default behaviour: the network only needs to learn small corrections on top of "pass the input through."</div>
+  </div>
+
+  <div class="callout novelty">
+    <div class="callout-title">✨ Core Novelty — The Residual / Skip Connection</div>
+    <div class="callout-body">Instead of asking each layer to learn a direct mapping <strong>H(x)</strong>, reformulate it to learn a <strong>residual F(x) = H(x) − x</strong>. Then the layer's output is <strong>F(x) + x</strong> — the learned residual added to the identity shortcut. If the optimal mapping is close to identity, F(x) → 0 is much easier to learn than H(x) → x. And crucially: the gradient flows directly through the shortcut connection, skipping the convolutions entirely when needed — solving the vanishing gradient problem for very deep networks.</div>
+  </div>
+
+  <h2 class="sub">The Residual Block — Two Flavours</h2>
+  <div class="viz">
+    <div class="viz-title">Basic Block (ResNet-18/34) vs Bottleneck Block (ResNet-50/101/152)</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="a5" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="a5g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+      </defs>
+
+      <!-- === BASIC BLOCK (left) === -->
+      <text x="160" y="22" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#34d399">Basic Residual Block</text>
+      <text x="160" y="36" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Used in ResNet-18, ResNet-34</text>
+
+      <!-- x input -->
+      <rect x="110" y="48" width="100" height="30" rx="6" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.5"/>
+      <text x="160" y="68" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">x (input)</text>
+
+      <!-- skip connection line LEFT -->
+      <line x1="90" y1="63" x2="90" y2="248" stroke="#34d399" stroke-width="2.5" stroke-dasharray="5,3"/>
+      <line x1="110" y1="63" x2="90" y2="63" stroke="#34d399" stroke-width="2"/>
+      <line x1="90" y1="248" x2="160" y2="248" stroke="#34d399" stroke-width="2"/>
+      <text x="60" y="160" text-anchor="middle" font-family="Sora" font-size="10" fill="#34d399" font-weight="700">Identity</text>
+      <text x="60" y="172" text-anchor="middle" font-family="Sora" font-size="10" fill="#34d399" font-weight="700">Shortcut</text>
+      <text x="60" y="185" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">x passes</text>
+      <text x="60" y="197" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">unchanged</text>
+
+      <!-- Conv1: 3×3 -->
+      <line x1="160" y1="78" x2="160" y2="98" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+      <rect x="110" y="100" width="100" height="42" rx="6" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="160" y="119" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">Conv 3×3</text>
+      <text x="160" y="133" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">BatchNorm + ReLU</text>
+
+      <!-- Conv2: 3×3 -->
+      <line x1="160" y1="142" x2="160" y2="162" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+      <rect x="110" y="164" width="100" height="42" rx="6" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="160" y="183" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">Conv 3×3</text>
+      <text x="160" y="197" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">BatchNorm</text>
+
+      <!-- Add circle -->
+      <line x1="160" y1="206" x2="160" y2="238" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+      <circle cx="160" cy="250" r="14" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="2"/>
+      <text x="160" y="255" text-anchor="middle" font-family="Sora" font-size="14" font-weight="700" fill="#34d399">⊕</text>
+      <line x1="160" y1="264" x2="160" y2="278" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+
+      <!-- ReLU output -->
+      <rect x="110" y="278" width="100" height="16" rx="4" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="160" y="291" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fbbf24">ReLU → H(x) = F(x)+x</text>
+
+      <!-- === BOTTLENECK BLOCK (right) === -->
+      <text x="570" y="22" text-anchor="middle" font-family="Sora" font-size="12" font-weight="700" fill="#fb923c">Bottleneck Block</text>
+      <text x="570" y="36" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Used in ResNet-50/101/152</text>
+
+      <!-- x input -->
+      <rect x="520" y="48" width="100" height="30" rx="6" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="1.5"/>
+      <text x="570" y="68" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#94a3b8">x (256ch)</text>
+
+      <!-- skip (projection if needed) -->
+      <line x1="500" y1="63" x2="500" y2="248" stroke="#fb923c" stroke-width="2.5" stroke-dasharray="5,3"/>
+      <line x1="520" y1="63" x2="500" y2="63" stroke="#fb923c" stroke-width="2"/>
+      <line x1="500" y1="248" x2="570" y2="248" stroke="#fb923c" stroke-width="2"/>
+      <text x="474" y="155" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c" font-weight="700">1×1 conv</text>
+      <text x="474" y="167" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c">(projection</text>
+      <text x="474" y="179" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c">shortcut)</text>
+
+      <!-- 1×1 reduce -->
+      <line x1="570" y1="78" x2="570" y2="98" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+      <rect x="520" y="100" width="100" height="36" rx="6" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="570" y="115" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">1×1 Conv</text>
+      <text x="570" y="128" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">256→64ch BN+ReLU</text>
+
+      <!-- 3×3 -->
+      <line x1="570" y1="136" x2="570" y2="152" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+      <rect x="520" y="154" width="100" height="36" rx="6" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="570" y="169" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#fb923c">3×3 Conv</text>
+      <text x="570" y="182" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">64→64ch BN+ReLU</text>
+
+      <!-- 1×1 expand -->
+      <line x1="570" y1="190" x2="570" y2="206" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+      <rect x="520" y="208" width="100" height="36" rx="6" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="570" y="223" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">1×1 Conv</text>
+      <text x="570" y="236" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">64→256ch BN</text>
+
+      <!-- Add -->
+      <line x1="570" y1="244" x2="570" y2="238" stroke="#475569" stroke-width="1"/>
+      <circle cx="570" cy="250" r="14" fill="rgba(251,146,60,.15)" stroke="#fb923c" stroke-width="2"/>
+      <text x="570" y="255" text-anchor="middle" font-family="Sora" font-size="14" font-weight="700" fill="#fb923c">⊕</text>
+      <line x1="570" y1="264" x2="570" y2="278" stroke="#475569" stroke-width="1.3" marker-end="url(#a5)"/>
+      <rect x="520" y="278" width="100" height="16" rx="4" fill="rgba(251,191,36,.12)" stroke="#fbbf24" stroke-width="1"/>
+      <text x="570" y="291" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fbbf24">ReLU → output</text>
+
+      <!-- annotation: param count comparison -->
+      <rect x="310" y="110" width="150" height="80" rx="8" fill="rgba(56,189,248,.05)" stroke="rgba(56,189,248,.2)" stroke-width="1"/>
+      <text x="385" y="130" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Why Bottleneck?</text>
+      <text x="385" y="148" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">Basic 2×3×3×256²</text>
+      <text x="385" y="161" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#f87171">= 1.18M ops</text>
+      <text x="385" y="176" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">Bottleneck 1×1+3×3+1×1</text>
+      <text x="385" y="189" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#34d399">= 0.07M ops</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Why Residual Connections Work — The Gradient Highway</h2>
+  <p>The mathematical reason residual connections solve vanishing gradients is elegant. Consider the gradient of the loss with respect to an early layer's output <strong>x</strong>. Through a chain of residual blocks, the gradient contains a term that is the direct product of the shortcut connections — which carry a gradient of exactly 1 (since the shortcut is just addition, not multiplication by weights). This means that even in a 152-layer network, gradient can flow directly from the final layer back to the first layer in one step via the shortcut highway. The conv layers only need to contribute a small correction term, and even if those contributions vanish, the identity term keeps the network trainable.</p>
+  <p>There is also a complementary intuition: the residual formulation encourages each block to learn small, incremental refinements to the representation rather than complete transformations. This is much more aligned with how we think about feature refinement — later layers are tweaking an already-reasonable representation, not rebuilding from scratch.</p>
+
+  <h2 class="sub">ResNet Full Architecture</h2>
+  <div class="viz">
+    <div class="viz-title">ResNet-50 — four residual stages, each doubling channels and halving spatial dims</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 900 140" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:900px;display:block;margin:0 auto;">
+      <defs><marker id="a5c" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#475569"/></marker></defs>
+
+      <rect x="5" y="40" width="52" height="60" rx="5" fill="rgba(100,116,139,.15)" stroke="#475569" stroke-width="1.3"/>
+      <text x="31" y="65" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">Input</text>
+      <text x="31" y="77" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">224×224</text>
+      <text x="31" y="89" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">×3</text>
+      <line x1="57" y1="70" x2="68" y2="70" stroke="#475569" stroke-width="1" marker-end="url(#a5c)"/>
+
+      <!-- Conv1 + MaxPool stem -->
+      <rect x="70" y="44" width="60" height="52" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="100" y="63" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#38bdf8">Conv1</text>
+      <text x="100" y="75" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">7×7, 64, s=2</text>
+      <text x="100" y="87" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">MaxPool s=2</text>
+      <text x="100" y="99" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#64748b">56×56×64</text>
+      <line x1="130" y1="70" x2="142" y2="70" stroke="#475569" stroke-width="1" marker-end="url(#a5c)"/>
+
+      <!-- Stage 1: 3 bottleneck blocks, 56×56×256 -->
+      <rect x="144" y="30" width="130" height="80" rx="6" fill="rgba(52,211,153,.07)" stroke="rgba(52,211,153,.5)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="209" y="50" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">Stage 1 (conv2_x)</text>
+      <text x="209" y="63" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3 × Bottleneck blocks</text>
+      <text x="209" y="76" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#34d399">56×56 → 256ch</text>
+      <text x="209" y="89" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1×1:64 → 3×3:64 → 1×1:256</text>
+      <text x="209" y="102" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">stride=1, no downsample</text>
+      <line x1="274" y1="70" x2="286" y2="70" stroke="#475569" stroke-width="1" marker-end="url(#a5c)"/>
+
+      <!-- Stage 2: 4 blocks, 28×28×512 -->
+      <rect x="288" y="28" width="130" height="84" rx="6" fill="rgba(56,189,248,.07)" stroke="rgba(56,189,248,.5)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="353" y="48" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Stage 2 (conv3_x)</text>
+      <text x="353" y="61" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">4 × Bottleneck blocks</text>
+      <text x="353" y="74" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#38bdf8">28×28 → 512ch</text>
+      <text x="353" y="87" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1×1:128 → 3×3:128 → 1×1:512</text>
+      <text x="353" y="100" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">first block: stride=2 ↓</text>
+      <line x1="418" y1="70" x2="430" y2="70" stroke="#475569" stroke-width="1" marker-end="url(#a5c)"/>
+
+      <!-- Stage 3: 6 blocks, 14×14×1024 -->
+      <rect x="432" y="26" width="130" height="88" rx="6" fill="rgba(251,146,60,.07)" stroke="rgba(251,146,60,.5)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="497" y="46" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">Stage 3 (conv4_x)</text>
+      <text x="497" y="59" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">6 × Bottleneck blocks</text>
+      <text x="497" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#fb923c">14×14 → 1024ch</text>
+      <text x="497" y="85" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1×1:256 → 3×3:256 → 1×1:1024</text>
+      <text x="497" y="98" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">first block: stride=2 ↓</text>
+      <line x1="562" y1="70" x2="574" y2="70" stroke="#475569" stroke-width="1" marker-end="url(#a5c)"/>
+
+      <!-- Stage 4: 3 blocks, 7×7×2048 -->
+      <rect x="576" y="28" width="130" height="84" rx="6" fill="rgba(244,114,182,.07)" stroke="rgba(244,114,182,.5)" stroke-width="1.5" stroke-dasharray="6,3"/>
+      <text x="641" y="48" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">Stage 4 (conv5_x)</text>
+      <text x="641" y="61" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3 × Bottleneck blocks</text>
+      <text x="641" y="74" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#f472b6">7×7 → 2048ch</text>
+      <text x="641" y="87" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1×1:512 → 3×3:512 → 1×1:2048</text>
+      <text x="641" y="100" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">first block: stride=2 ↓</text>
+      <line x1="706" y1="70" x2="718" y2="70" stroke="#475569" stroke-width="1" marker-end="url(#a5c)"/>
+
+      <!-- GAP + FC -->
+      <rect x="720" y="42" width="56" height="56" rx="5" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.3"/>
+      <text x="748" y="62" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#f472b6">GAP</text>
+      <text x="748" y="75" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">7×7→1×1</text>
+      <text x="748" y="87" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">2048-dim</text>
+      <line x1="776" y1="70" x2="788" y2="70" stroke="#475569" stroke-width="1" marker-end="url(#a5c)"/>
+
+      <rect x="790" y="48" width="56" height="44" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.3"/>
+      <text x="818" y="67" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#818cf8">FC</text>
+      <text x="818" y="79" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1000</text>
+      <text x="818" y="91" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">softmax</text>
+
+      <!-- annotation -->
+      <text x="450" y="128" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">Stage 1: 3+4+6+3 = 16 bottleneck blocks × 3 layers each + stem + head = 50 total layers. Shortcuts everywhere → gradient flows freely.</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">50–152</div><div class="stat-lbl">Layers (variants)</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">25M</div><div class="stat-lbl">Parameters (50)</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent3)">3.57%</div><div class="stat-lbl">Top-5 Error</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent4)">1st</div><div class="stat-lbl">Superhuman Acc.</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent5)">BatchNorm</div><div class="stat-lbl">Regularisation</div></div>
+  </div>
+
+  <h2 class="sub">BatchNorm — The Unsung Hero of ResNet</h2>
+  <p>ResNet also standardised the use of <strong>Batch Normalisation</strong> (BN) after every convolutional layer. BN normalises each feature map to zero mean and unit variance within a mini-batch, then applies learned scale (γ) and shift (β) parameters. This serves two functions: it prevents activations from growing extremely large or small (stabilising training), and it acts as a regulariser (reducing the need for Dropout in the conv blocks). The canonical ResNet block pattern is: Conv → BN → ReLU → Conv → BN → Add shortcut → ReLU.</p>
+
+  <h2 class="sub">Where ResNet Is Used Today</h2>
+  <p>ResNet is arguably the single most-used architecture family in applied deep learning today. ResNet-50 is the de facto backbone for transfer learning in nearly every domain: medical image analysis (pathology slides, X-rays, MRIs), satellite imagery, industrial defect detection, face recognition, object detection (as the backbone in Faster R-CNN, RetinaNet, YOLO), and semantic segmentation (as the encoder in DeepLab, PSPNet). The residual connection idea propagated into transformers (where it is essential for training deep models), into GANs, and into every modern architecture — it is perhaps the single most consequential architectural idea since ReLU.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · ResNet Bottleneck Block in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">Bottleneck</span>(nn.<span class="cls">Module</span>):
+    expansion = <span class="num">4</span>  <span class="cm"># output channels = mid_ch × 4</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, mid_ch, stride=<span class="num">1</span>):
+        <span class="fn">super</span>().__init__()
+        out_ch = mid_ch * self.expansion
+
+        <span class="cm"># Main path: 1×1 reduce → 3×3 spatial → 1×1 expand</span>
+        self.conv1 = nn.<span class="cls">Conv2d</span>(in_ch, mid_ch, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn1   = nn.<span class="cls">BatchNorm2d</span>(mid_ch)
+        self.conv2 = nn.<span class="cls">Conv2d</span>(mid_ch, mid_ch, <span class="num">3</span>, stride=stride, padding=<span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn2   = nn.<span class="cls">BatchNorm2d</span>(mid_ch)
+        self.conv3 = nn.<span class="cls">Conv2d</span>(mid_ch, out_ch, <span class="num">1</span>, bias=<span class="kw">False</span>)
+        self.bn3   = nn.<span class="cls">BatchNorm2d</span>(out_ch)
+        self.relu  = nn.<span class="cls">ReLU</span>(inplace=<span class="kw">True</span>)
+
+        <span class="cm"># Shortcut: 1×1 conv to match channels/stride if needed</span>
+        self.shortcut = nn.<span class="cls">Identity</span>()
+        <span class="kw">if</span> stride != <span class="num">1</span> <span class="kw">or</span> in_ch != out_ch:
+            self.shortcut = nn.<span class="cls">Sequential</span>(
+                nn.<span class="cls">Conv2d</span>(in_ch, out_ch, <span class="num">1</span>, stride=stride, bias=<span class="kw">False</span>),
+                nn.<span class="cls">BatchNorm2d</span>(out_ch)
+            )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        identity = self.<span class="fn">shortcut</span>(x)  <span class="cm"># shortcut path (identity or 1×1 proj)</span>
+
+        out = self.<span class="fn">relu</span>(self.<span class="fn">bn1</span>(self.<span class="fn">conv1</span>(x)))  <span class="cm"># 1×1 reduce</span>
+        out = self.<span class="fn">relu</span>(self.<span class="fn">bn2</span>(self.<span class="fn">conv2</span>(out))) <span class="cm"># 3×3 spatial conv</span>
+        out = self.<span class="fn">bn3</span>(self.<span class="fn">conv3</span>(out))             <span class="cm"># 1×1 expand (no ReLU yet)</span>
+
+        out = out + identity   <span class="cm"># ← THE KEY: add shortcut before final ReLU</span>
+        <span class="kw">return</span> self.<span class="fn">relu</span>(out)  <span class="cm"># ReLU after addition — gradient splits here</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ SECTION 6: DenseNet ══════ -->
+<div class="section-block open" id="s6">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(244,114,182,.15);color:var(--accent5)">06</div>
+      <div>
+        <div class="section-title">DenseNet &nbsp;<span style="font-size:.72rem;background:rgba(244,114,182,.15);color:var(--accent5);padding:2px 9px;border-radius:99px;font-weight:700;border:1px solid rgba(244,114,182,.3);">2017</span></div>
+        <div class="section-sub">Huang et al. · If one shortcut is good, what if every layer connects to every other layer?</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Why Was DenseNet Needed? (The Problem with ResNet)</h2>
+  <p>ResNet was transformative, but researchers noticed it had a subtle inefficiency. Each residual block adds its output to the shortcut input — but this addition operation <em>overwrites</em> the previous representation. Once the addition happens, the original pre-block features are gone, merged into the new tensor. This means that if a useful low-level feature (say, an edge detected in layer 2) might be useful for the final classification, it has to be propagated forward through 50+ layers of additions without getting corrupted or forgotten. In practice, many useful features do get diluted over many layers.</p>
+  <p>DenseNet's authors asked a provocative question: <em>what if we never discard any features at all?</em> What if every layer could directly access the raw output of every previous layer in its block?</p>
+
+  <div class="callout novelty">
+    <div class="callout-title">✨ Core Novelty — Dense Connectivity</div>
+    <div class="callout-body">In a Dense Block with L layers, each layer receives as its input the <strong>concatenation</strong> (not addition!) of the outputs of all previous layers. Layer 4 receives [Layer 0 output, Layer 1 output, Layer 2 output, Layer 3 output] concatenated along the channel axis. This means the network never throws away any feature — early low-level features remain directly accessible to every subsequent layer. The result is a feature-reuse highway across the entire block.</div>
+  </div>
+
+  <h2 class="sub">Dense Block Diagram — Visualising Full Connectivity</h2>
+  <div class="viz">
+    <div class="viz-title">A 5-layer Dense Block — each layer receives ALL previous layers' outputs as input (arrows show connections)</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 270" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="a6" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#f472b6"/></marker>
+        <marker id="a6b" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#818cf8"/></marker>
+        <marker id="a6c" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#34d399"/></marker>
+        <marker id="a6d" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#fb923c"/></marker>
+        <marker id="a6e" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#fbbf24"/></marker>
+        <marker id="a6g" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#475569"/></marker>
+      </defs>
+
+      <!-- Layer circles: x=100,200,310,420,530,640 ; y=60 -->
+      <!-- Layer 0 (input) -->
+      <circle cx="80" cy="60" r="26" fill="rgba(100,116,139,.2)" stroke="#475569" stroke-width="2"/>
+      <text x="80" y="55" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#94a3b8">Input</text>
+      <text x="80" y="68" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">x₀</text>
+
+      <!-- Layer 1 -->
+      <circle cx="210" cy="60" r="26" fill="rgba(244,114,182,.2)" stroke="#f472b6" stroke-width="2"/>
+      <text x="210" y="55" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">Layer 1</text>
+      <text x="210" y="68" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">H₁</text>
+
+      <!-- Layer 2 -->
+      <circle cx="340" cy="60" r="26" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="2"/>
+      <text x="340" y="55" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">Layer 2</text>
+      <text x="340" y="68" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">H₂</text>
+
+      <!-- Layer 3 -->
+      <circle cx="470" cy="60" r="26" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"/>
+      <text x="470" y="55" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">Layer 3</text>
+      <text x="470" y="68" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">H₃</text>
+
+      <!-- Layer 4 -->
+      <circle cx="600" cy="60" r="26" fill="rgba(251,146,60,.2)" stroke="#fb923c" stroke-width="2"/>
+      <text x="600" y="55" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">Layer 4</text>
+      <text x="600" y="68" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">H₄</text>
+
+      <!-- Output concat -->
+      <rect x="698" y="38" width="54" height="44" rx="7" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="2"/>
+      <text x="725" y="57" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fbbf24">Concat</text>
+      <text x="725" y="70" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">all x₀..H₄</text>
+
+      <!-- Direct connections (straight): x₀→H1, H1→H2, H2→H3, H3→H4, H4→out -->
+      <line x1="106" y1="60" x2="181" y2="60" stroke="#f472b6" stroke-width="2" marker-end="url(#a6)"/>
+      <line x1="236" y1="60" x2="311" y2="60" stroke="#818cf8" stroke-width="2" marker-end="url(#a6b)"/>
+      <line x1="366" y1="60" x2="441" y2="60" stroke="#34d399" stroke-width="2" marker-end="url(#a6c)"/>
+      <line x1="496" y1="60" x2="571" y2="60" stroke="#fb923c" stroke-width="2" marker-end="url(#a6d)"/>
+      <line x1="626" y1="60" x2="696" y2="60" stroke="#fbbf24" stroke-width="2" marker-end="url(#a6e)"/>
+
+      <!-- Skip connections through curved arcs below -->
+      <!-- x₀ → H2 -->
+      <path d="M 80 86 Q 210 140 340 86" fill="none" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#a6)"/>
+      <!-- x₀ → H3 -->
+      <path d="M 80 86 Q 270 175 470 86" fill="none" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#a6)" opacity="0.7"/>
+      <!-- x₀ → H4 -->
+      <path d="M 80 86 Q 340 210 600 86" fill="none" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="3,5" marker-end="url(#a6)" opacity="0.5"/>
+      <!-- x₀ → concat -->
+      <path d="M 80 86 Q 400 240 725 82" fill="none" stroke="#f472b6" stroke-width="1.2" stroke-dasharray="3,5" marker-end="url(#a6)" opacity="0.35"/>
+
+      <!-- H1 → H3 -->
+      <path d="M 210 86 Q 340 158 470 86" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#a6b)"/>
+      <!-- H1 → H4 -->
+      <path d="M 210 86 Q 400 188 600 86" fill="none" stroke="#818cf8" stroke-width="1.3" stroke-dasharray="4,4" marker-end="url(#a6b)" opacity="0.7"/>
+      <!-- H1 → concat -->
+      <path d="M 210 86 Q 470 220 725 82" fill="none" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="3,5" marker-end="url(#a6b)" opacity="0.4"/>
+
+      <!-- H2 → H4 -->
+      <path d="M 340 86 Q 470 158 600 86" fill="none" stroke="#34d399" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#a6c)"/>
+      <!-- H2 → concat -->
+      <path d="M 340 86 Q 530 200 725 82" fill="none" stroke="#34d399" stroke-width="1.2" stroke-dasharray="4,4" marker-end="url(#a6c)" opacity="0.5"/>
+
+      <!-- H3 → concat -->
+      <path d="M 470 86 Q 600 178 725 82" fill="none" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="5,3" marker-end="url(#a6d)" opacity="0.6"/>
+
+      <!-- Annotation: connection count -->
+      <rect x="10" y="225" width="740" height="38" rx="7" fill="rgba(244,114,182,.06)" stroke="rgba(244,114,182,.25)" stroke-width="1"/>
+      <text x="380" y="240" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f472b6">Dense connectivity: L(L+1)/2 connections for L layers</text>
+      <text x="380" y="256" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">5-layer block → 15 connections. ResNet has only 5 (one per layer). Input to each layer = concat of ALL preceding outputs.</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Concatenation vs Addition — Why It Matters</h2>
+  <p>This is the most important conceptual distinction between DenseNet and ResNet. ResNet uses <strong>addition</strong>: shortcut + F(x). The original features and the learned residual are blended into a single tensor of the same shape. Once blended, you can't separately access the original features — they are permanently mixed into the representation. DenseNet uses <strong>concatenation</strong>: [x₀, H₁(x₀), H₂(x₀,x₁), …] stacked along the channel dimension. The original features x₀ remain intact and independently accessible to every subsequent layer forever. This is more powerful but also more expensive — the channel count grows with every layer.</p>
+
+  <p>To keep this growth manageable, DenseNet introduces a <strong>growth rate k</strong>: each layer only adds k new channels to the concatenation. With k=32 and a 5-layer block starting from 64 channels, the input to layer 5 is 64 + 4×32 = 192 channels. Transition layers between blocks use 1×1 convolutions to compress the channel count back down (by 50%) before the next block.</p>
+
+  <div class="viz">
+    <div class="viz-title">DenseNet-121 Full Architecture — four dense blocks with transition layers between them</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 880 130" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:880px;display:block;margin:0 auto;">
+      <defs><marker id="a6h" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#475569"/></marker></defs>
+
+      <rect x="5" y="40" width="52" height="50" rx="5" fill="rgba(100,116,139,.15)" stroke="#475569" stroke-width="1.3"/>
+      <text x="31" y="62" text-anchor="middle" font-family="Sora" font-size="8" fill="#94a3b8">Input</text>
+      <text x="31" y="74" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">224×224</text>
+      <text x="31" y="86" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">×3</text>
+      <line x1="57" y1="65" x2="68" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <rect x="70" y="44" width="56" height="42" rx="5" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="98" y="61" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#38bdf8">Stem</text>
+      <text x="98" y="73" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">Conv7×7,s=2</text>
+      <text x="98" y="83" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">MaxPool</text>
+      <line x1="126" y1="65" x2="138" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <!-- Dense Block 1: 6 layers -->
+      <rect x="140" y="30" width="110" height="70" rx="6" fill="rgba(244,114,182,.09)" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="195" y="50" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">Dense Block 1</text>
+      <text x="195" y="63" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">6 layers, k=32</text>
+      <text x="195" y="76" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#f472b6">56×56×256ch</text>
+      <text x="195" y="88" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">BN→ReLU→Conv pattern</text>
+      <line x1="250" y1="65" x2="262" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <!-- Transition 1 -->
+      <rect x="264" y="40" width="60" height="50" rx="5" fill="rgba(56,189,248,.08)" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="294" y="59" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#38bdf8">Trans 1</text>
+      <text x="294" y="71" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1×1 Conv</text>
+      <text x="294" y="82" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">AvgPool÷2</text>
+      <line x1="324" y1="65" x2="336" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <!-- Dense Block 2: 12 layers -->
+      <rect x="338" y="28" width="110" height="74" rx="6" fill="rgba(129,140,248,.09)" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="393" y="48" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">Dense Block 2</text>
+      <text x="393" y="61" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">12 layers, k=32</text>
+      <text x="393" y="74" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#818cf8">28×28×512ch</text>
+      <text x="393" y="87" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">dense concat grows here</text>
+      <line x1="448" y1="65" x2="460" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <!-- Transition 2 -->
+      <rect x="462" y="40" width="60" height="50" rx="5" fill="rgba(56,189,248,.08)" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="492" y="59" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#38bdf8">Trans 2</text>
+      <text x="492" y="71" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1×1 Conv</text>
+      <text x="492" y="82" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">AvgPool÷2</text>
+      <line x1="522" y1="65" x2="534" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <!-- Dense Block 3: 24 layers -->
+      <rect x="536" y="26" width="110" height="78" rx="6" fill="rgba(52,211,153,.09)" stroke="#34d399" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="591" y="46" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">Dense Block 3</text>
+      <text x="591" y="59" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">24 layers, k=32</text>
+      <text x="591" y="72" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#34d399">14×14×1024ch</text>
+      <text x="591" y="85" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">deepest block</text>
+      <line x1="646" y1="65" x2="658" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <!-- Transition 3 -->
+      <rect x="660" y="40" width="56" height="50" rx="5" fill="rgba(56,189,248,.08)" stroke="#38bdf8" stroke-width="1" stroke-dasharray="4,2"/>
+      <text x="688" y="62" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#38bdf8">Trans 3</text>
+      <text x="688" y="80" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">÷2</text>
+      <line x1="716" y1="65" x2="728" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <!-- Dense Block 4: 16 layers -->
+      <rect x="730" y="32" width="78" height="66" rx="6" fill="rgba(251,146,60,.09)" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="769" y="51" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">Block 4</text>
+      <text x="769" y="63" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">16 layers</text>
+      <text x="769" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#fb923c">7×7×1024</text>
+      <line x1="808" y1="65" x2="820" y2="65" stroke="#475569" stroke-width="1" marker-end="url(#a6h)"/>
+
+      <rect x="822" y="42" width="50" height="46" rx="5" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.3"/>
+      <text x="847" y="59" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#f472b6">GAP</text>
+      <text x="847" y="71" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">→FC</text>
+      <text x="847" y="82" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">1000</text>
+
+      <text x="440" y="118" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">DenseNet-121: 6+12+24+16 = 58 dense layers + stem + 3 transitions + classifier = 121 total. ~8M parameters.</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent)">121–201</div><div class="stat-lbl">Layers (variants)</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent2)">8M</div><div class="stat-lbl">Parameters (121)</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent3)">~3.5%</div><div class="stat-lbl">Top-5 Error</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent4)">k=32</div><div class="stat-lbl">Growth Rate</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--accent5)">Concat</div><div class="stat-lbl">vs ResNet's Add</div></div>
+  </div>
+
+  <h2 class="sub">Three Key Benefits of Dense Connectivity</h2>
+  <p>The most obvious benefit is <strong>feature reuse</strong>: because every earlier layer's output is directly accessible, later layers don't need to re-learn features that earlier layers already captured. This makes the network parameter-efficient — DenseNet-121 achieves ResNet-50-level accuracy with about 8 million parameters vs 25 million.</p>
+  <p>A less obvious benefit is <strong>implicit deep supervision</strong>: because every layer is connected to all subsequent layers (and ultimately to the final loss through the concatenation), each layer receives a gradient path that is short and direct. This is similar to the auxiliary classifiers in GoogLeNet but happens automatically throughout the architecture.</p>
+  <p>The third benefit is <strong>reduced feature map redundancy</strong>: in ResNet, different layers may learn slightly different versions of the same feature because they can't see each other's exact representations. DenseNet's concatenation makes all features explicitly available, so the network learns to produce complementary features rather than redundant ones.</p>
+
+  <h2 class="sub">The Trade-off: Memory Cost</h2>
+  <p>Dense connectivity is expensive in memory. Because you concatenate all previous feature maps, the intermediate tensors during forward (and especially backward) passes are much larger than in ResNet. In practice, DenseNet requires efficient memory management — the original paper's implementation used a special memory-sharing trick to avoid storing all intermediate tensors separately. For this reason, DenseNet is less commonly used as a backbone for detection and segmentation (where input resolution is high and memory is tight), but is popular for classification tasks with smaller inputs.</p>
+
+  <h2 class="sub">Where DenseNet Is Used Today</h2>
+  <p>DenseNet is widely used in <strong>medical image analysis</strong> — particularly chest X-ray classification (the CheXNet paper from Stanford used DenseNet-121 to surpass radiologist performance on pneumonia detection), skin lesion classification, and histopathology, where the parameter efficiency and feature reuse make it well-suited to small medical datasets. It is also used in <strong>image segmentation</strong> (as the encoder in FC-DenseNet, applied to road scene segmentation) and in any domain where you have limited labelled data and want maximum expressivity from minimal parameters.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Dense Block in PyTorch</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">DenseLayer</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""One DenseNet layer: BN → ReLU → 1×1 bottleneck → BN → ReLU → 3×3 conv."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, in_ch, growth_rate=<span class="num">32</span>):
+        <span class="fn">super</span>().__init__()
+        bottle = <span class="num">4</span> * growth_rate       <span class="cm"># bottleneck width = 4k</span>
+        self.block = nn.<span class="cls">Sequential</span>(
+            nn.<span class="cls">BatchNorm2d</span>(in_ch), nn.<span class="cls">ReLU</span>(),
+            nn.<span class="cls">Conv2d</span>(in_ch, bottle, <span class="num">1</span>, bias=<span class="kw">False</span>),   <span class="cm"># 1×1 bottleneck</span>
+            nn.<span class="cls">BatchNorm2d</span>(bottle), nn.<span class="cls">ReLU</span>(),
+            nn.<span class="cls">Conv2d</span>(bottle, growth_rate, <span class="num">3</span>, padding=<span class="num">1</span>, bias=<span class="kw">False</span>),  <span class="cm"># 3×3</span>
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        new_features = self.<span class="fn">block</span>(x)
+        <span class="kw">return</span> torch.<span class="fn">cat</span>([x, new_features], dim=<span class="num">1</span>)  <span class="cm"># ← THE KEY: concat, not add!</span>
+
+<span class="kw">class</span> <span class="cls">DenseBlock</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Stack of DenseLayers; input channels grow by k after every layer."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, num_layers, in_ch, growth_rate=<span class="num">32</span>):
+        <span class="fn">super</span>().__init__()
+        self.layers = nn.<span class="cls">ModuleList</span>()
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(num_layers):
+            self.layers.<span class="fn">append</span>(<span class="cls">DenseLayer</span>(in_ch + i * growth_rate, growth_rate))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">for</span> layer <span class="kw">in</span> self.layers:
+            x = <span class="fn">layer</span>(x)  <span class="cm"># x grows by k channels every step</span>
+        <span class="kw">return</span> x
+
+<span class="cm"># Example: 6-layer block starting from 64 channels, growth rate 32</span>
+block = <span class="cls">DenseBlock</span>(num_layers=<span class="num">6</span>, in_ch=<span class="num">64</span>, growth_rate=<span class="num">32</span>)
+x = torch.<span class="fn">randn</span>(<span class="num">1</span>, <span class="num">64</span>, <span class="num">56</span>, <span class="num">56</span>)
+<span class="fn">print</span>(<span class="fn">block</span>(x).shape)   <span class="cm"># → [1, 256, 56, 56]  (64 + 6×32 = 256 channels)</span></code></pre></div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ SECTION 7: Grand Comparison ══════ -->
+<div class="section-block open" id="s7">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">07</div>
+      <div><div class="section-title">Grand Comparison — All Six Architectures Side by Side</div>
+        <div class="section-sub">Parameters, accuracy, speed, novelty, and when to use which</div></div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">The Numbers at a Glance</h2>
+  <div class="viz">
+    <div class="viz-title">Parameters vs Top-5 Error — you want to be in the bottom-left corner (few params, low error)</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px;display:block;margin:0 auto;">
+      <defs><marker id="ac" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker></defs>
+      <!-- axes -->
+      <line x1="70" y1="20" x2="70" y2="250" stroke="#2d3748" stroke-width="1.5"/>
+      <line x1="70" y1="250" x2="700" y2="250" stroke="#2d3748" stroke-width="1.5" marker-end="url(#ac)"/>
+      <!-- x labels (parameters) -->
+      <text x="100" y="268" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">60K</text>
+      <text x="200" y="268" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">5M</text>
+      <text x="310" y="268" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">8M</text>
+      <text x="420" y="268" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">25M</text>
+      <text x="530" y="268" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">60M</text>
+      <text x="640" y="268" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#64748b">138M</text>
+      <text x="385" y="285" text-anchor="middle" font-family="Sora" font-size="10" fill="#64748b">→ Parameter Count</text>
+      <!-- y labels (Top-5 error) -->
+      <text x="62" y="250" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#64748b">3.5%</text>
+      <text x="62" y="200" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#64748b">7%</text>
+      <text x="62" y="150" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#64748b">10%</text>
+      <text x="62" y="100" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#64748b">16%</text>
+      <text x="62" y="50" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="#64748b">26%</text>
+      <!-- grid -->
+      <line x1="71" y1="250" x2="695" y2="250" stroke="#1f2937" stroke-width="0.5"/>
+      <line x1="71" y1="200" x2="695" y2="200" stroke="#1f2937" stroke-width="0.5"/>
+      <line x1="71" y1="150" x2="695" y2="150" stroke="#1f2937" stroke-width="0.5"/>
+      <line x1="71" y1="100" x2="695" y2="100" stroke="#1f2937" stroke-width="0.5"/>
+      <line x1="71" y1="50" x2="695" y2="50" stroke="#1f2937" stroke-width="0.5"/>
+
+      <!-- "ideal" direction annotation -->
+      <text x="680" y="238" font-family="Sora" font-size="9" fill="#34d399">← ideal</text>
+      <text x="678" y="250" font-family="Sora" font-size="9" fill="#34d399">↑ ideal</text>
+
+      <!-- LeNet: ~60K params, no ImageNet error (MNIST only) — show as grey -->
+      <circle cx="100" cy="248" r="14" fill="rgba(100,116,139,.3)" stroke="#94a3b8" stroke-width="2"/>
+      <text x="100" y="244" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#94a3b8">Le</text>
+      <text x="100" y="258" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">MNIST</text>
+
+      <!-- AlexNet: 60M params, 16.4% error → x=530, y=100 (16% row) -->
+      <circle cx="530" cy="100" r="16" fill="rgba(56,189,248,.3)" stroke="#38bdf8" stroke-width="2"/>
+      <text x="530" y="97" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Alex</text>
+      <text x="530" y="110" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">16.4%</text>
+
+      <!-- VGG: 138M params, 7.3% → x=640, y ~196 -->
+      <circle cx="648" cy="196" r="18" fill="rgba(129,140,248,.3)" stroke="#818cf8" stroke-width="2"/>
+      <text x="648" y="193" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">VGG</text>
+      <text x="648" y="206" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">7.3%</text>
+
+      <!-- GoogLeNet: 5M params, 6.7% → x=200, y~200 -->
+      <circle cx="200" cy="202" r="16" fill="rgba(251,146,60,.3)" stroke="#fb923c" stroke-width="2"/>
+      <text x="200" y="199" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#fb923c">Goog</text>
+      <text x="200" y="212" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">6.7%</text>
+
+      <!-- ResNet: 25M params, 3.57% → x=420, y~248 -->
+      <circle cx="420" cy="248" r="17" fill="rgba(52,211,153,.3)" stroke="#34d399" stroke-width="2.5"/>
+      <text x="420" y="245" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">Res</text>
+      <text x="420" y="257" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">3.6%</text>
+
+      <!-- DenseNet: 8M params, ~3.5% → x=310, y~249 -->
+      <circle cx="310" cy="249" r="16" fill="rgba(244,114,182,.3)" stroke="#f472b6" stroke-width="2.5"/>
+      <text x="310" y="246" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">Dense</text>
+      <text x="310" y="258" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">~3.5%</text>
+
+      <!-- Y axis label -->
+      <text x="15" y="140" font-family="Sora" font-size="10" fill="#64748b" transform="rotate(-90,15,140)">↑ Better  Top-5 Error  Worse ↓</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Complete Comparison Table</h2>
+  <div style="overflow-x:auto;">
+  <table class="tbl">
+    <tr>
+      <th>Architecture</th><th>Year</th><th>Depth</th><th>Parameters</th><th>Top-5 Error</th><th>Key Novelty</th><th>Main Limitation</th>
+    </tr>
+    <tr>
+      <td><strong style="color:#94a3b8">LeNet-5</strong></td>
+      <td>1998</td><td>7</td><td>60K</td><td>~0.9% (MNIST)</td>
+      <td>Conv + Pool pipeline; parameter sharing</td>
+      <td>Only works on tiny, centred, grey inputs</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#38bdf8">AlexNet</strong></td>
+      <td>2012</td><td>8</td><td>60M</td><td>16.4%</td>
+      <td>ReLU, GPU training, Dropout, Data aug</td>
+      <td>Huge FC head (58M/60M params wasted)</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#818cf8">VGGNet-16</strong></td>
+      <td>2014</td><td>16</td><td>138M</td><td>7.3%</td>
+      <td>Depth + uniform 3×3 kernels</td>
+      <td>138M params, 500MB model, slow inference</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#fb923c">GoogLeNet</strong></td>
+      <td>2014</td><td>22</td><td>5M</td><td>6.7%</td>
+      <td>Inception module, 1×1 bottleneck, GAP</td>
+      <td>Complex topology, hard to modify/extend</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#34d399">ResNet-50</strong></td>
+      <td>2015</td><td>50–152</td><td>25M</td><td>3.57%</td>
+      <td>Residual skip connections, BatchNorm</td>
+      <td>Addition loses fine-grained earlier features</td>
+    </tr>
+    <tr>
+      <td><strong style="color:#f472b6">DenseNet-121</strong></td>
+      <td>2017</td><td>121–201</td><td>8M</td><td>~3.5%</td>
+      <td>Dense concat connectivity, feature reuse</td>
+      <td>High memory cost during training</td>
+    </tr>
+  </table>
+  </div>
+
+  <h2 class="sub">Activation Function Progression</h2>
+  <table class="tbl">
+    <tr><th>Architecture</th><th>Activation</th><th>Why Changed?</th></tr>
+    <tr><td>LeNet-5</td><td>tanh, sigmoid</td><td>State of art in 1998; vanishing grad not yet understood</td></tr>
+    <tr><td>AlexNet onwards</td><td><strong style="color:#38bdf8">ReLU</strong></td><td>6× faster training, no saturation on positive side, sparse activations</td></tr>
+    <tr><td>Modern (ResNet+)</td><td>ReLU (applied <em>after</em> BN)</td><td>BN pre-normalises so ReLU dead neuron problem is greatly reduced</td></tr>
+  </table>
+
+  <h2 class="sub">Classifier Head Progression</h2>
+  <table class="tbl">
+    <tr><th>Architecture</th><th>Head Design</th><th>Params in Head</th><th>Why Changed?</th></tr>
+    <tr><td>LeNet</td><td>FC 120 → FC 84 → FC 10</td><td>~11K</td><td>—</td></tr>
+    <tr><td>AlexNet</td><td>FC 4096 → FC 4096 → FC 1000</td><td><strong style="color:#f87171">58M (97%!)</strong></td><td>Naïve scaling from LeNet's FC head</td></tr>
+    <tr><td>VGGNet</td><td>Same as AlexNet (3 FC)</td><td><strong style="color:#f87171">102M (74%)</strong></td><td>Didn't fix it — biggest criticism</td></tr>
+    <tr><td>GoogLeNet</td><td><strong style="color:#34d399">GAP → FC 1000</strong></td><td>~5M total model</td><td>GAP eliminates FC entirely — huge saving</td></tr>
+    <tr><td>ResNet onwards</td><td><strong style="color:#34d399">GAP → FC 1000</strong></td><td>~2M in head</td><td>Standard; GAP works with any spatial input size</td></tr>
+  </table>
+
+  <h2 class="sub">Gradient Flow Comparison</h2>
+  <table class="tbl">
+    <tr><th>Architecture</th><th>Gradient Path Length</th><th>Vanishing Grad. Risk</th><th>Solution</th></tr>
+    <tr><td>LeNet / AlexNet</td><td>Full depth (sequential)</td><td>Low (shallow, 7–8 layers)</td><td>ReLU (AlexNet)</td></tr>
+    <tr><td>VGGNet</td><td>Full depth (sequential, 16 layers)</td><td>Moderate</td><td>ReLU + careful init</td></tr>
+    <tr><td>GoogLeNet</td><td>Full depth + aux classifiers</td><td>Moderate; aux loss helps</td><td>Auxiliary classifiers inject gradient</td></tr>
+    <tr><td>ResNet</td><td><strong style="color:#34d399">O(1) via shortcut</strong></td><td>Very low (any depth)</td><td>Skip connections create gradient highway</td></tr>
+    <tr><td>DenseNet</td><td><strong style="color:#34d399">O(1) via dense concat</strong></td><td>Very low (any depth)</td><td>Direct connections to all previous layers</td></tr>
+  </table>
+
+  <h2 class="sub">When to Use Which Architecture Today</h2>
+  <table class="tbl">
+    <tr><th>Use Case</th><th>Recommended</th><th>Reason</th></tr>
+    <tr><td>Learning / teaching CNNs</td><td>LeNet → AlexNet → ResNet</td><td>Builds conceptual understanding progressively</td></tr>
+    <tr><td>General classification backbone</td><td><strong style="color:#34d399">ResNet-50</strong></td><td>Best balance of accuracy, speed, memory, transferability</td></tr>
+    <tr><td>Feature extraction for style transfer / perceptual loss</td><td><strong style="color:#818cf8">VGG-16</strong></td><td>Rich, disentangled spatial features at each block</td></tr>
+    <tr><td>Small dataset / medical imaging</td><td><strong style="color:#f472b6">DenseNet-121</strong></td><td>Parameter-efficient; feature reuse helps with few training examples</td></tr>
+    <tr><td>Mobile / edge deployment</td><td>MobileNetV3 / EfficientNet</td><td>Designed explicitly for latency-constrained inference (post-DenseNet era)</td></tr>
+    <tr><td>Object detection backbone</td><td>ResNet-50/101 + FPN</td><td>Multi-scale feature pyramid works naturally with ResNet's staged design</td></tr>
+    <tr><td>Segmentation encoder</td><td>ResNet or DenseNet</td><td>Both provide good spatial feature maps; skip connections pair well with U-Net decoders</td></tr>
+    <tr><td>Transfer learning (fine-tune)</td><td><strong style="color:#34d399">ResNet-50 pretrained</strong></td><td>Best supported, most benchmarked, fastest to fine-tune</td></tr>
+  </table>
+
+  <h2 class="sub">The Chain of Innovation — Why Each Transition Was Inevitable</h2>
+  <div class="callout important">
+    <div class="callout-title">🔗 Reading the Story End to End</div>
+    <div class="callout-body">
+      <strong>LeNet → AlexNet:</strong> The bottleneck was compute and data, not the architecture. GPUs + ImageNet unlocked what LeNet already knew how to do — but at 140× the scale. ReLU and Dropout made that scale trainable.<br><br>
+      <strong>AlexNet → VGGNet:</strong> AlexNet was engineered by intuition (11×11 first kernel, 96 filters, two GPU split). VGGNet was a scientific proof: <em>if we standardise everything to 3×3, does depth help?</em> The answer was definitively yes.<br><br>
+      <strong>VGGNet → GoogLeNet:</strong> VGGNet proved accuracy but was unusable for products. GoogLeNet proved you could have both — deep and accurate AND parameter-efficient — through architectural ingenuity (Inception, bottleneck, GAP) rather than brute force.<br><br>
+      <strong>GoogLeNet → ResNet:</strong> GoogLeNet was complex to modify and still couldn't go beyond ~22 layers before training collapsed. ResNet found that the problem was not the architecture itself but the <em>optimisation landscape</em>: identity functions are hard to learn without shortcuts. One small change (add x to F(x)) made 150-layer networks trainable overnight.<br><br>
+      <strong>ResNet → DenseNet:</strong> ResNet's addition operation was lossy — earlier features got diluted. DenseNet asked "what if we preserve everything?" By concatenating rather than adding, all features stay accessible forever, enabling maximum feature reuse with even fewer parameters.
+    </div>
+  </div>
+
+  </div></div>
+</div>
+
+<div class="footer">
+  <p>Deep Neural Networks Course &nbsp;·&nbsp; <strong>Module 4 — CNN Architectures: LeNet → AlexNet → VGGNet → GoogLeNet → ResNet → DenseNet</strong></p>
+</div>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  h.dataset.theme = h.dataset.theme==='dark'?'light':'dark';
+  document.getElementById('themeBtn').textContent = h.dataset.theme==='dark'?'☀️':'🌙';
+}
+function tog(header){header.parentElement.classList.toggle('open');}
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+  document.getElementById('prog').style.width=pct+'%';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seq2Seq &amp; Attention — Module IV: Sequential Models</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#142030 50%,#0d1117 100%);--hero-glow:rgba(56,189,248,0.09);--code-bg:#0a0f1a;--code-header:#1a2035;--hover-overlay:rgba(255,255,255,0.03);--card-hover-shadow:0 8px 24px rgba(0,0,0,.4);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 50%,#f0f9ff 100%);--hero-glow:rgba(56,189,248,0.12);--code-bg:#1e293b;--code-header:#0f172a;--hover-overlay:rgba(0,0,0,0.02);--card-hover-shadow:0 8px 24px rgba(0,0,0,.12);--p-color:#334155;}
+:root{--accent:#38bdf8;--accent2:#818cf8;--accent3:#34d399;--accent4:#fb923c;--accent5:#f472b6;--red:#f87171;--yellow:#fbbf24;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;}
+.progress-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent5));position:fixed;top:0;left:0;z-index:1000;transition:width .15s;}
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:60px 24px 48px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);}
+.hero-badge{display:inline-block;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;}
+.hero p{color:var(--text-muted);font-size:1rem;max-width:760px;margin:0 auto 20px;line-height:1.8;}
+.hero-nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.hero-nav a{font-size:.78rem;padding:5px 14px;border-radius:99px;text-decoration:none;border:1px solid var(--border);color:var(--text-muted);transition:all .2s;}
+.hero-nav a:hover{border-color:var(--accent);color:var(--accent);}
+.hero-nav .current{background:rgba(56,189,248,.15);border-color:rgba(56,189,248,.5);color:var(--accent);font-weight:700;}
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.toc-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100;}
+.toc-label{color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-right:4px;font-weight:700;flex-shrink:0;}
+.toc-link{color:var(--text-muted);font-size:.78rem;text-decoration:none;padding:3px 10px;border-radius:5px;transition:all .2s;border:1px solid transparent;white-space:nowrap;}
+.toc-link:hover{color:var(--accent);border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.07);}
+.page{max-width:1080px;margin:0 auto;padding:36px 16px 80px;}
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;transition:box-shadow .25s;}
+.section-block:hover{box-shadow:0 0 0 1px rgba(56,189,248,.22);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;gap:14px;transition:background .2s;}
+.section-header:hover{background:var(--hover-overlay);}
+.section-title-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.section-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;}
+.section-title{font-size:1.08rem;font-weight:700;color:var(--text);line-height:1.3;}
+.section-sub{font-size:.76rem;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.chevron{color:var(--text-dim);font-size:1rem;transition:transform .3s;flex-shrink:0;}
+.section-block.open .chevron{transform:rotate(180deg);}
+.section-body{display:none;padding:0 22px 28px;border-top:1px solid var(--border);}
+.section-block.open .section-body{display:block;}
+.inner{padding-top:24px;}
+h2.sub{font-size:1.02rem;font-weight:700;color:var(--accent);margin:28px 0 12px;padding-bottom:7px;border-bottom:1px solid rgba(56,189,248,.18);}
+p{margin-bottom:12px;color:var(--p-color);line-height:1.85;}
+strong{color:var(--text);}
+.callout{border-radius:9px;padding:15px 18px;margin:16px 0;border-left:4px solid;}
+.callout-title{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.callout-body{font-size:.92rem;color:var(--p-color);line-height:1.8;}
+.callout.analogy{background:rgba(251,146,60,.08);border-color:var(--accent4);}.callout.analogy .callout-title{color:var(--accent4);}
+.callout.insight{background:rgba(56,189,248,.08);border-color:var(--accent);}.callout.insight .callout-title{color:var(--accent);}
+.callout.warning{background:rgba(251,191,36,.08);border-color:var(--yellow);}.callout.warning .callout-title{color:var(--yellow);}
+.callout.important{background:rgba(129,140,248,.08);border-color:var(--accent2);}.callout.important .callout-title{color:var(--accent2);}
+.callout.problem{background:rgba(248,113,113,.08);border-color:var(--red);}.callout.problem .callout-title{color:var(--red);}
+.callout.definition{background:rgba(52,211,153,.08);border-color:var(--accent3);}.callout.definition .callout-title{color:var(--accent3);}
+.callout.novelty{background:rgba(244,114,182,.08);border-color:var(--accent5);}.callout.novelty .callout-title{color:var(--accent5);}
+.math-block{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px 20px;margin:14px 0;overflow-x:auto;text-align:center;}
+.math-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:700;text-align:left;}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:16px 0;}
+.code-header{background:var(--code-header);padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.code-lang{font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.code-body{padding:16px 18px;overflow-x:auto;}.code-body pre{margin:0;}
+.code-body code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.9;white-space:pre;}
+.kw{color:#c792ea;}.fn{color:#82aaff;}.st{color:#c3e88d;}.cm{color:#607080;font-style:italic;}.num{color:#f78c6c;}.cls{color:#ffcb6b;}.dec{color:#89ddff;}
+.tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:.84rem;}
+.tbl th{background:var(--surface2);color:var(--accent);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid rgba(56,189,248,.25);}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;line-height:1.6;}
+.tbl tr:hover td{background:var(--hover-overlay);}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:16px 0;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;transition:all .2s;}
+.card:hover{border-color:rgba(56,189,248,.4);transform:translateY(-2px);box-shadow:var(--card-hover-shadow);}
+.card-icon{font-size:1.4rem;margin-bottom:8px;}.card-title{font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:5px;}.card-text{font-size:.81rem;color:var(--text-muted);line-height:1.6;}
+ic{font-family:'JetBrains Mono',monospace;font-size:.8em;background:rgba(56,189,248,.1);color:var(--accent);padding:1px 6px;border-radius:4px;}
+.viz{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:20px 16px;margin:16px 0;}
+.viz-title{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;font-weight:700;text-align:center;}
+.svg-wrap{overflow-x:auto;}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+.compare-panel{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;}
+.compare-panel h3{font-size:.9rem;font-weight:700;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.compare-panel p,.compare-panel li{font-size:.85rem;color:var(--text-muted);line-height:1.7;}
+.next-page{background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.25);border-radius:12px;padding:20px 24px;margin:24px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.next-page-text{font-size:.92rem;color:var(--text-muted);line-height:1.6;}
+.next-page-title{font-weight:700;color:var(--accent);font-size:1rem;}
+.footer{text-align:center;padding:36px 16px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.8rem;margin-top:32px;}
+/* attention heatmap colours */
+.attn-cell{display:inline-block;width:36px;height:36px;line-height:36px;text-align:center;border-radius:4px;font-size:.72rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+@media(max-width:700px){.compare-grid{grid-template-columns:1fr;}.toc-bar{overflow-x:auto;flex-wrap:nowrap;}.page{padding:20px 10px 60px;}.code-body code{font-size:.75rem;}}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="prog"></div>
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+
+<div class="hero">
+  <div class="hero-badge">Module IV · Page 3 of 4 · Sequential Models &amp; RNNs</div>
+  <h1>Seq2Seq &amp; Attention — Solving the Bottleneck</h1>
+  <p>LSTM solved vanishing gradients, but it introduced a new problem: in encoder-decoder translation, the entire source sentence must be compressed into a single fixed-size vector before decoding begins. For long sentences this bottleneck destroys information. Attention eliminates it entirely — instead of a single summary vector, the decoder learns to dynamically query all encoder states at each step, reading exactly the parts of the source that are relevant right now.</p>
+  <!-- <div class="hero-nav">
+    <a href="#">Page 1 · Vanilla RNNs</a>
+    <a href="#">Page 2 · LSTM &amp; GRU</a>
+    <a href="#" class="current">Page 3 · Seq2Seq &amp; Attention</a>
+    <a href="#">Page 4 · Transformers</a>
+  </div> -->
+</div>
+
+<div class="toc-bar">
+  <span class="toc-label">Sections</span>
+  <a class="toc-link" href="#s1">Encoder-Decoder</a>
+  <a class="toc-link" href="#s2">The Bottleneck</a>
+  <a class="toc-link" href="#s3">Attention Idea</a>
+  <a class="toc-link" href="#s4">Bahdanau Attn</a>
+  <a class="toc-link" href="#s5">Score Functions</a>
+  <a class="toc-link" href="#s6">Luong Attn</a>
+  <a class="toc-link" href="#s7">Attn Weights Viz</a>
+  <a class="toc-link" href="#s8">PyTorch</a>
+  <a class="toc-link" href="#s9">Applications</a>
+  <a class="toc-link" href="#s10">Limits → Transformers</a>
+</div>
+
+<div class="page">
+<!-- ══════ S1: ENCODER-DECODER ══════ -->
+<div class="section-block open" id="s1">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">01</div>
+      <div>
+        <div class="section-title">The Encoder-Decoder Architecture</div>
+        <div class="section-sub">How two LSTMs are chained into a sequence-to-sequence system for translation and generation</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Many of the most important tasks in sequence modelling involve producing an output sequence whose length is different from the input sequence — and whose structure bears no token-to-token alignment with it. Machine translation ("The cat sat on the mat" → "La gata estaba sentada en la alfombra") is the canonical example, but the same architecture applies to text summarisation (long article → short summary), question answering (question + context → answer), image captioning (image pixels → sentence), and speech recognition (audio frames → text). All of these tasks share one property: the model needs to first <em>read and understand</em> the entire input before it can produce the output.</p>
+
+  <p>The encoder-decoder architecture, introduced by Sutskever, Vinyals and Le (2014) and Cho et al. (2014) simultaneously, captures this intuition directly. The <strong>encoder</strong> is an LSTM (or GRU) that reads the input sequence token by token and accumulates it into its hidden state. No output is produced yet — the encoder's entire job is to build a rich, compressed representation of the input. When the encoder reaches the end of the input, its final hidden state h_T becomes the <strong>context vector</strong> c — a dense numerical summary of everything the encoder read. The <strong>decoder</strong> is a second LSTM that then generates the output sequence step by step, initialised with this context vector.</p>
+
+  <div class="math-block">
+    <div class="math-label">Encoder — reads source tokens x₁…x_T, produces context vector c</div>
+    $$\mathbf{h}_t^{enc} = \text{LSTM}(\mathbf{x}_t,\, \mathbf{h}_{t-1}^{enc}) \quad t = 1, \ldots, T$$
+    $$\mathbf{c} = \mathbf{h}_T^{enc} \qquad \text{(context vector = final encoder hidden state)}$$
+  </div>
+
+  <div class="math-block">
+    <div class="math-label">Decoder — generates target tokens y₁…y_T' conditioned on c</div>
+    $$\mathbf{s}_0^{dec} = \mathbf{c} \qquad \text{(initialise decoder with context vector)}$$
+    $$\mathbf{s}_t^{dec} = \text{LSTM}([\mathbf{y}_{t-1},\, \mathbf{c}],\; \mathbf{s}_{t-1}^{dec})$$
+    $$P(y_t \mid y_{<t}, \mathbf{x}) = \text{softmax}(\mathbf{W}\,\mathbf{s}_t^{dec})$$
+  </div>
+
+  <p>At each decoding step, the decoder receives two inputs: the previously generated token y_{t−1} (as an embedding), and the context vector c. It produces a new hidden state s_t, which is passed through a linear layer and softmax to produce a probability distribution over the vocabulary. The predicted token is sampled or argmax-selected, then fed back in at the next step. This feedback is called <strong>autoregressive generation</strong> — the model consumes its own outputs.</p>
+
+  <p>During training, a technique called <strong>teacher forcing</strong> is used: instead of feeding the model's own predicted tokens back in, we feed the ground-truth target tokens. This stabilises training dramatically — early in training, predicted tokens are garbage, and feeding garbage back in causes the decoder to spiral. At inference time, no ground truth is available, so the model uses its own predictions, creating a gap called the <strong>exposure bias</strong> that is an active area of research.</p>
+
+  <div class="viz">
+    <div class="viz-title">Encoder-decoder data flow — encoder reads source, decoder generates target token by token</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 860 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ea" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="eb" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#38bdf8"/></marker>
+        <marker id="eg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+        <marker id="eo" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#fb923c"/></marker>
+      </defs>
+
+      <!-- ENCODER label -->
+      <rect x="10" y="8" width="340" height="170" rx="10" fill="rgba(52,211,153,.04)" stroke="rgba(52,211,153,.2)" stroke-width="1.5" stroke-dasharray="6,4"/>
+      <text x="175" y="26" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">ENCODER</text>
+
+      <!-- Encoder LSTM cells -->
+      <!-- Cell 1 -->
+      <rect x="28" y="55" width="64" height="40" rx="7" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.8"/>
+      <text x="60" y="79" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">LSTM</text>
+      <text x="60" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">x₁="The"</text>
+      <line x1="60" y1="113" x2="60" y2="96" stroke="#475569" stroke-width="1.2" marker-end="url(#ea)"/>
+
+      <!-- Cell 2 -->
+      <rect x="118" y="55" width="64" height="40" rx="7" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.8"/>
+      <text x="150" y="79" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">LSTM</text>
+      <text x="150" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">x₂="cat"</text>
+      <line x1="150" y1="113" x2="150" y2="96" stroke="#475569" stroke-width="1.2" marker-end="url(#ea)"/>
+      <line x1="92"  y1="75" x2="118" y2="75" stroke="#34d399" stroke-width="1.8" marker-end="url(#eg)"/>
+
+      <!-- Cell 3 -->
+      <rect x="208" y="55" width="64" height="40" rx="7" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.8"/>
+      <text x="240" y="79" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">LSTM</text>
+      <text x="240" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">x₃="sat"</text>
+      <line x1="240" y1="113" x2="240" y2="96" stroke="#475569" stroke-width="1.2" marker-end="url(#ea)"/>
+      <line x1="182"  y1="75" x2="208" y2="75" stroke="#34d399" stroke-width="1.8" marker-end="url(#eg)"/>
+
+      <!-- Cell 4 -->
+      <rect x="296" y="55" width="64" height="40" rx="7" fill="rgba(52,211,153,.25)" stroke="#34d399" stroke-width="2.5"/>
+      <text x="328" y="79" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">LSTM</text>
+      <text x="328" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">x₄="."</text>
+      <line x1="328" y1="113" x2="328" y2="96" stroke="#475569" stroke-width="1.2" marker-end="url(#ea)"/>
+      <line x1="272"  y1="75" x2="296" y2="75" stroke="#34d399" stroke-width="1.8" marker-end="url(#eg)"/>
+
+      <!-- Context vector -->
+      <rect x="380" y="55" width="80" height="40" rx="7" fill="rgba(251,146,60,.2)" stroke="#fb923c" stroke-width="2.5"/>
+      <text x="420" y="74" text-anchor="middle" font-family="Sora" font-size="10" font-weight="800" fill="#fb923c">c</text>
+      <text x="420" y="87" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">context</text>
+      <line x1="360" y1="75" x2="380" y2="75" stroke="#fb923c" stroke-width="2.5" marker-end="url(#eo)"/>
+      <text x="420" y="115" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">= h_T^enc</text>
+      <text x="420" y="127" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">BOTTLENECK</text>
+
+      <!-- DECODER label -->
+      <rect x="490" y="8" width="360" height="170" rx="10" fill="rgba(56,189,248,.04)" stroke="rgba(56,189,248,.2)" stroke-width="1.5" stroke-dasharray="6,4"/>
+      <text x="670" y="26" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#38bdf8">DECODER</text>
+
+      <!-- Context → decoder init -->
+      <line x1="460" y1="75" x2="500" y2="75" stroke="#fb923c" stroke-width="2.5" marker-end="url(#eo)"/>
+
+      <!-- Decoder cells -->
+      <rect x="502" y="55" width="64" height="40" rx="7" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.8"/>
+      <text x="534" y="79" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">LSTM</text>
+      <text x="534" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">&lt;SOS&gt;</text>
+      <line x1="534" y1="113" x2="534" y2="96" stroke="#475569" stroke-width="1.2" marker-end="url(#ea)"/>
+      <text x="534" y="140" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">→ "La"</text>
+
+      <rect x="592" y="55" width="64" height="40" rx="7" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.8"/>
+      <text x="624" y="79" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">LSTM</text>
+      <text x="624" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">y₁="La"</text>
+      <line x1="624" y1="113" x2="624" y2="96" stroke="#475569" stroke-width="1.2" marker-end="url(#ea)"/>
+      <text x="624" y="140" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">→ "gata"</text>
+      <line x1="566" y1="75" x2="592" y2="75" stroke="#38bdf8" stroke-width="1.8" marker-end="url(#eb)"/>
+
+      <rect x="682" y="55" width="64" height="40" rx="7" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.8"/>
+      <text x="714" y="79" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">LSTM</text>
+      <text x="714" y="115" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">y₂="gata"</text>
+      <line x1="714" y1="113" x2="714" y2="96" stroke="#475569" stroke-width="1.2" marker-end="url(#ea)"/>
+      <text x="714" y="140" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">→ "estaba"</text>
+      <line x1="656" y1="75" x2="682" y2="75" stroke="#38bdf8" stroke-width="1.8" marker-end="url(#eb)"/>
+
+      <!-- c is also fed to every decoder step -->
+      <line x1="420" y1="95" x2="420" y2="180" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="4,3"/>
+      <line x1="420" y1="180" x2="700" y2="180" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="4,3"/>
+      <path d="M 534 165 L 534 180" fill="none" stroke="#fb923c" stroke-width="1" stroke-dasharray="3,2"/>
+      <path d="M 624 165 L 624 180" fill="none" stroke="#fb923c" stroke-width="1" stroke-dasharray="3,2"/>
+      <path d="M 714 165 L 714 180" fill="none" stroke="#fb923c" stroke-width="1" stroke-dasharray="3,2"/>
+      <text x="600" y="198" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">same c fed to every decoder step</text>
+
+      <!-- "…" continuation -->
+      <text x="770" y="80" text-anchor="middle" font-family="Sora" font-size="16" fill="#475569">…</text>
+      <text x="820" y="80" font-family="Sora" font-size="9" fill="#38bdf8">&lt;EOS&gt;</text>
+
+    </svg>
+    </div>
+  </div>
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Special Tokens — &lt;SOS&gt;, &lt;EOS&gt;, &lt;PAD&gt;</div>
+    <div class="callout-body">Three special tokens are essential for sequence-to-sequence training. <strong>&lt;SOS&gt;</strong> (Start of Sequence) is fed as the first decoder input — it signals "start generating now". <strong>&lt;EOS&gt;</strong> (End of Sequence) is the token the model learns to generate when it has finished; at inference time, generation stops when EOS is sampled. <strong>&lt;PAD&gt;</strong> (Padding) fills shorter sequences in a batch to the length of the longest, and positions with PAD are masked out during loss computation with <ic>ignore_index</ic>. The embedding for PAD is often frozen at zero to prevent it from interfering with the learned token representations.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S2: THE BOTTLENECK ══════ -->
+<div class="section-block open" id="s2">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(248,113,113,.15);color:var(--red)">02</div>
+      <div>
+        <div class="section-title">The Fixed-Context Bottleneck — Where Seq2Seq Fails</div>
+        <div class="section-sub">Why a single vector cannot hold a long sentence — visualised with translation quality vs sentence length</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The encoder-decoder architecture is elegant, but it has a fundamental information-theoretic problem. The encoder compresses an input sequence of <em>arbitrary length</em> into a context vector <strong>c</strong> of <em>fixed size</em>. If the hidden size is 512, then c is a 512-dimensional real-valued vector. This is the only channel through which the entire input is communicated to the decoder — every word, every clause, every grammatical relationship, every long-range dependency must somehow fit inside those 512 numbers.</p>
+
+  <p>For short sentences — five to ten words — this is manageable. The LSTM encoder can pack the essential information into c without too much loss. But as sentence length grows, the bottleneck tightens. The encoder must overwrite its hidden state with new information at every step; words seen early in a long sentence are progressively diluted as more words follow. By the time the encoder reaches the end of a 40-word sentence, information about the first few words has been through 35+ rounds of LSTM gating — not completely erased (LSTM is much better than vanilla RNN here), but substantially compressed and mixed with everything else.</p>
+
+  <div class="viz">
+    <div class="viz-title">The compression problem — a fixed-size vector must hold all information from an arbitrarily long sequence</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ba" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="br" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#f87171"/></marker>
+      </defs>
+
+      <!-- SHORT sentence (top) -->
+      <text x="10" y="22" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">Short sentence (5 tokens) — fits reasonably well</text>
+      <rect x="10"  y="32" width="52" height="26" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="36"  y="49" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">The</text>
+      <rect x="72"  y="32" width="52" height="26" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="98"  y="49" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">cat</text>
+      <rect x="134" y="32" width="52" height="26" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="160" y="49" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">sat</text>
+      <rect x="196" y="32" width="52" height="26" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="222" y="49" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">down</text>
+      <rect x="258" y="32" width="52" height="26" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.3"/>
+      <text x="284" y="49" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">.</text>
+
+      <line x1="310" y1="45" x2="350" y2="45" stroke="#34d399" stroke-width="2" marker-end="url(#ba)"/>
+      <rect x="352" y="32" width="70" height="26" rx="5" fill="rgba(52,211,153,.3)" stroke="#34d399" stroke-width="2"/>
+      <text x="387" y="49" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">c = 512d</text>
+      <text x="460" y="49" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">✓ information mostly preserved</text>
+
+      <!-- LONG sentence (bottom) -->
+      <text x="10" y="110" font-family="Sora" font-size="10" font-weight="700" fill="#f87171">Long sentence (18 tokens) — early tokens get buried</text>
+      <rect x="10"  y="120" width="36" height="26" rx="4" fill="rgba(248,113,113,.4)" stroke="#f87171" stroke-width="1.5"/>
+      <text x="28"  y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#f87171">Despite</text>
+      <rect x="52"  y="120" width="28" height="26" rx="4" fill="rgba(248,113,113,.35)" stroke="#f87171" stroke-width="1.3"/>
+      <text x="66"  y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#f87171">the</text>
+      <rect x="86"  y="120" width="36" height="26" rx="4" fill="rgba(248,113,113,.3)" stroke="#f87171" stroke-width="1.3"/>
+      <text x="104" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#f87171">terrible</text>
+      <rect x="128" y="120" width="36" height="26" rx="4" fill="rgba(248,113,113,.25)" stroke="#f87171" stroke-width="1.3"/>
+      <text x="146" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#f87171">service</text>
+      <rect x="170" y="120" width="20" height="26" rx="4" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1"/>
+      <text x="180" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">,</text>
+      <rect x="196" y="120" width="20" height="26" rx="4" fill="rgba(248,113,113,.18)" stroke="#f87171" stroke-width="1"/>
+      <text x="206" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">the</text>
+      <rect x="222" y="120" width="28" height="26" rx="4" fill="rgba(248,113,113,.15)" stroke="#475569" stroke-width="1"/>
+      <text x="236" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">food</text>
+      <rect x="256" y="120" width="20" height="26" rx="4" fill="rgba(248,113,113,.12)" stroke="#475569" stroke-width="1"/>
+      <text x="266" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">was</text>
+      <rect x="282" y="120" width="50" height="26" rx="4" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="307" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#34d399">outstanding</text>
+      <!-- more tokens -->
+      <text x="348" y="136" font-family="Sora" font-size="10" fill="#475569">…</text>
+      <rect x="362" y="120" width="26" height="26" rx="4" fill="rgba(52,211,153,.18)" stroke="#475569" stroke-width="1"/>
+      <text x="375" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">and</text>
+      <rect x="394" y="120" width="20" height="26" rx="4" fill="rgba(52,211,153,.15)" stroke="#475569" stroke-width="1"/>
+      <text x="404" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">we</text>
+      <rect x="420" y="120" width="26" height="26" rx="4" fill="rgba(52,211,153,.12)" stroke="#475569" stroke-width="1"/>
+      <text x="433" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">will</text>
+      <rect x="452" y="120" width="36" height="26" rx="4" fill="rgba(52,211,153,.1)" stroke="#475569" stroke-width="1"/>
+      <text x="470" y="136" text-anchor="middle" font-family="Sora" font-size="7" fill="#64748b">return</text>
+      <text x="498" y="136" font-family="Sora" font-size="10" fill="#475569">…</text>
+
+      <line x1="520" y1="133" x2="554" y2="133" stroke="#f87171" stroke-width="2" marker-end="url(#br)"/>
+      <rect x="556" y="120" width="70" height="26" rx="5" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="2"/>
+      <text x="591" y="137" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f87171">c = 512d</text>
+      <text x="648" y="127" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">✗ "Despite the terrible"</text>
+      <text x="648" y="141" text-anchor="middle" font-family="Sora" font-size="9" fill="#f87171">context mostly lost!</text>
+
+      <!-- Colour scale legend -->
+      <text x="10" y="185" font-family="Sora" font-size="8" fill="#64748b">Token colour = retention in c: </text>
+      <rect x="160" y="176" width="16" height="10" rx="2" fill="rgba(248,113,113,.5)"/>
+      <text x="180" y="185" font-family="Sora" font-size="8" fill="#f87171">early (fading)</text>
+      <rect x="265" y="176" width="16" height="10" rx="2" fill="rgba(52,211,153,.4)"/>
+      <text x="285" y="185" font-family="Sora" font-size="8" fill="#34d399">late (preserved)</text>
+    </svg>
+    </div>
+  </div>
+
+  <p>This degradation was empirically confirmed by Bahdanau et al. (2015), who showed that the BLEU score (a translation quality metric) of a vanilla encoder-decoder model drops sharply as sentence length increases beyond about 20 tokens, while their attention-augmented model maintains quality on long sentences. The fix they proposed — allowing the decoder to look back at all encoder hidden states, not just the last one — is the subject of the next section.</p>
+
+  <div class="callout problem">
+    <div class="callout-title">🔴 The Core Problem, Precisely Stated</div>
+    <div class="callout-body">When generating target token y_t, the decoder needs access to whichever <em>source</em> tokens are most relevant to that particular output. For example, when generating the French word for "cat", the decoder needs to look at the English word "cat" in the source — which might have been processed by the encoder 15 steps ago and has since been substantially overwritten. The fixed context vector c = h_T cannot provide this targeted lookup: it is an undifferentiated mixture of everything the encoder ever read. What we need is a mechanism that lets the decoder say: "for this particular decoding step, I want to focus on <em>these</em> source positions". That is precisely what attention provides.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S3: THE ATTENTION IDEA ══════ -->
+<div class="section-block open" id="s3">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">03</div>
+      <div>
+        <div class="section-title">The Attention Idea — Dynamic Context from All Encoder States</div>
+        <div class="section-sub">Deriving attention from first principles: instead of one fixed c, compute a fresh, weighted context at every decoding step</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The bottleneck problem has a straightforward diagnosis: the decoder gets only c = h_T. It cannot look back at intermediate encoder states h_1, h_2, …, h_{T−1} — the rich per-token representations computed as the encoder processed each source word. The fix is almost equally straightforward: <em>don't throw those intermediate states away</em>. Keep all T encoder hidden states, and at each decoding step, let the decoder look at all of them and decide for itself which ones are most useful right now.</p>
+
+  <p>More concretely, the attention mechanism replaces the single fixed context vector c with a <strong>step-specific context vector</strong> c_t that is recomputed fresh at every decoding step t. It is a <em>weighted sum</em> of all encoder hidden states:</p>
+
+  <div class="math-block">
+    <div class="math-label">Attention context vector — a different weighted sum of encoder states at every decoding step</div>
+    $$\mathbf{c}_t = \sum_{j=1}^{T} \alpha_{t,j}\, \mathbf{h}_j^{enc}$$
+  </div>
+
+  <p>Here α_{t,j} is the <strong>attention weight</strong> — a scalar between 0 and 1 representing how much the decoder, at step t, should focus on encoder state h_j. The weights satisfy Σ_j α_{t,j} = 1 (they are a probability distribution over source positions), so c_t is literally a probability-weighted average over all encoder hidden states. If α_{t,j} is high for a particular j, the context vector c_t will be dominated by h_j^enc — the decoder is effectively "reading" source position j.</p>
+
+  <p>The natural next question is: how are the attention weights α_{t,j} computed? They need to depend on the current decoder state (what the decoder is trying to generate right now) and each encoder state (what the encoder remembers about each source position). The basic recipe is: compute a <strong>score</strong> e_{t,j} measuring the relevance of encoder state h_j to decoder state s_{t−1}, then normalise all scores with softmax to produce the weights.</p>
+
+  <div class="math-block">
+    <div class="math-label">From scores to attention weights — three steps</div>
+    $$e_{t,j} = \text{score}(\mathbf{s}_{t-1},\, \mathbf{h}_j^{enc}) \qquad \text{(1) compute raw relevance scores}$$
+    $$\alpha_{t,j} = \frac{\exp(e_{t,j})}{\sum_{k=1}^{T} \exp(e_{t,k})} \qquad \text{(2) softmax → probability distribution}$$
+    $$\mathbf{c}_t = \sum_{j=1}^{T} \alpha_{t,j}\, \mathbf{h}_j^{enc} \qquad \text{(3) weighted sum → context vector}$$
+  </div>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Analogy — The Translator's Wandering Eye</div>
+    <div class="callout-body">Imagine a human translator working from English to French. They do not memorise the entire English sentence and then translate from memory (that is the vanilla encoder-decoder). Instead, they keep the English text in front of them and glance at different parts of it as they write each French word. When writing the French word for "cat", they look at the English word "cat". When writing the French past tense verb, they glance at "sat". When constructing the prepositional phrase, they look at "on the mat". Their gaze is <em>content-driven</em> — they look at whichever English words are relevant to the current output word. Attention does exactly this: the "gaze" at each decoding step is the attention distribution α_{t,·}, and it is computed dynamically based on what is being generated.</div>
+  </div>
+
+  <h2 class="sub">Why Softmax? Why a Weighted Sum?</h2>
+  <p>The softmax normalisation serves two purposes. First, it converts arbitrary real-valued scores (which can be negative, large, or small in any direction) into a proper probability distribution that sums to 1 and is interpretable as "how much attention to pay". Second, softmax is differentiable everywhere — the attention weights are computed as a smooth function of the scores, and gradients can flow through the entire attention computation during backpropagation. This means the score function's parameters are trained end-to-end alongside the rest of the encoder-decoder: the model learns what to pay attention to purely from the training signal.</p>
+
+  <p>The weighted sum rather than, say, argmax selection (just pick the most relevant encoder state) preserves differentiability and allows soft, partial attention. Instead of forcing the model to make a hard binary choice ("I attend to position 3 only"), the weighted sum lets it blend information from multiple source positions — useful when a single target word corresponds to multiple source words (as in idioms, or multiword expressions).</p>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ The Aha Moment — Attention is a Differentiable Lookup</div>
+    <div class="callout-body">Think of the encoder hidden states h_1, …, h_T as entries in a database. The attention mechanism is a <em>soft, differentiable query</em> against this database: the current decoder state s_{t−1} is the query, the encoder states are both the keys (used to compute match scores) and the values (used to form the output). The model learns what a "good match" means entirely from data. This framing — query, key, value — will become central in Transformers, where attention is generalised further. The Seq2Seq attention mechanism here is the conceptual seed of the multi-head self-attention that powers GPT and BERT.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S4: BAHDANAU ATTENTION ══════ -->
+<div class="section-block open" id="s4">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent2)">04</div>
+      <div>
+        <div class="section-title">Bahdanau Attention — The Original Additive Mechanism</div>
+        <div class="section-sub">Bahdanau et al. (2015): a learned alignment network that scores decoder state against each encoder state</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The first paper to propose neural attention for machine translation was Bahdanau, Cho and Bengio (2015), "Neural Machine Translation by Jointly Learning to Align and Translate". Their key contribution was both the <em>idea</em> of using all encoder states (not just the last one) and a specific, learnable <em>score function</em> for measuring how well a decoder state and an encoder state align. Their score function is called <strong>additive attention</strong> or the Bahdanau score:</p>
+
+  <div class="math-block">
+    <div class="math-label">Bahdanau (additive) score function — a small feedforward network</div>
+    $$e_{t,j} = \mathbf{v}_a^\top \tanh\!\left(\mathbf{W}_a\,\mathbf{s}_{t-1} + \mathbf{U}_a\,\mathbf{h}_j^{enc}\right)$$
+  </div>
+
+  <p>There are three learned parameter matrices here: W_a projects the decoder state s_{t−1}, U_a projects the encoder state h_j, the two projections are added together and passed through tanh, and then a learned vector v_a takes the dot product to produce a scalar score. This is essentially a two-layer network (linear → tanh → linear) that takes two vectors as input and produces a scalar measuring their compatibility. The tanh nonlinearity allows the network to model interactions between the decoder and encoder representations — if both have a high value in some dimension, or if they have complementary values, the network can detect this.</p>
+
+  <p>Notice that U_a h_j^enc does not depend on the decoder step t. This means we can <strong>pre-compute</strong> all the encoder projections U_a h_j^enc before decoding starts, and only compute W_a s_{t−1} freshly at each decoding step. This is an important efficiency optimisation: computing T encoder projections once rather than T × T' times (once per decoding step per source position).</p>
+
+  <p>Bahdanau et al. also used a <strong>bidirectional LSTM encoder</strong> — running one LSTM forward over the source sequence and another backward, then concatenating their hidden states at each position. This gives h_j a representation that incorporates context from both directions: what came before position j and what comes after. A word's meaning often depends on its surrounding context, and bidirectionality lets the encoder capture this before the attention mechanism tries to retrieve it.</p>
+
+  <div class="viz">
+    <div class="viz-title">Bahdanau attention — full computation graph for one decoding step t</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 860 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ha" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="hb" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#38bdf8"/></marker>
+        <marker id="hg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+        <marker id="hy" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#fbbf24"/></marker>
+      </defs>
+
+      <!-- Encoder hidden states row -->
+      <text x="10" y="18" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">Encoder hidden states (all T kept)</text>
+      <rect x="10"  y="24" width="60" height="30" rx="6" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="40"  y="43" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">h₁</text>
+      <rect x="90"  y="24" width="60" height="30" rx="6" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="120" y="43" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">h₂</text>
+      <rect x="170" y="24" width="60" height="30" rx="6" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="200" y="43" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">h₃</text>
+      <rect x="250" y="24" width="60" height="30" rx="6" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="280" y="43" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">h₄</text>
+      <text x="330" y="43" font-family="Sora" font-size="13" fill="#475569">…</text>
+
+      <!-- Decoder state -->
+      <text x="490" y="18" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">Current decoder state</text>
+      <rect x="490" y="24" width="80" height="30" rx="6" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="530" y="43" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">s_{t-1}</text>
+
+      <!-- Score network: for each h_j -->
+      <text x="10" y="88" font-family="Sora" font-size="9" font-weight="700" fill="#fbbf24">Score network e_{t,j} = v_a · tanh(W_a s_{t-1} + U_a h_j)</text>
+
+      <!-- Score boxes -->
+      <rect x="10"  y="96" width="60" height="34" rx="6" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="40"  y="113" text-anchor="middle" font-family="Sora" font-size="8" fill="#fbbf24">e_{t,1}</text>
+      <text x="40"  y="126" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">0.12</text>
+      <rect x="90"  y="96" width="60" height="34" rx="6" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="120" y="113" text-anchor="middle" font-family="Sora" font-size="8" fill="#fbbf24">e_{t,2}</text>
+      <text x="120" y="126" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">1.84</text>
+      <rect x="170" y="96" width="60" height="34" rx="6" fill="rgba(251,191,36,.4)" stroke="#fbbf24" stroke-width="2"/>
+      <text x="200" y="113" text-anchor="middle" font-family="Sora" font-size="8" fill="#fbbf24">e_{t,3}</text>
+      <text x="200" y="126" text-anchor="middle" font-family="Sora" font-size="8" fill="#fbbf24">3.91 ← high!</text>
+      <rect x="250" y="96" width="60" height="34" rx="6" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.5"/>
+      <text x="280" y="113" text-anchor="middle" font-family="Sora" font-size="8" fill="#fbbf24">e_{t,4}</text>
+      <text x="280" y="126" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">0.33</text>
+      <text x="330" y="116" font-family="Sora" font-size="13" fill="#475569">…</text>
+
+      <!-- Lines from h_j to score boxes -->
+      <line x1="40"  y1="54" x2="40"  y2="96" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#ha)"/>
+      <line x1="120" y1="54" x2="120" y2="96" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#ha)"/>
+      <line x1="200" y1="54" x2="200" y2="96" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#ha)"/>
+      <line x1="280" y1="54" x2="280" y2="96" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,2" marker-end="url(#ha)"/>
+
+      <!-- Decoder state to score boxes -->
+      <line x1="530" y1="54" x2="200" y2="96" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#ha)"/>
+
+      <!-- Softmax row -->
+      <text x="10" y="160" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">Softmax → attention weights α_{t,j}</text>
+      <rect x="10"  y="168" width="60" height="30" rx="6" fill="rgba(56,189,248,.1)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="40"  y="185" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">0.04</text>
+      <rect x="90"  y="168" width="60" height="30" rx="6" fill="rgba(56,189,248,.22)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="120" y="185" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">0.21</text>
+      <rect x="170" y="168" width="60" height="30" rx="6" fill="rgba(56,189,248,.65)" stroke="#38bdf8" stroke-width="2.5"/>
+      <text x="200" y="185" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#38bdf8">0.66</text>
+      <rect x="250" y="168" width="60" height="30" rx="6" fill="rgba(56,189,248,.08)" stroke="#38bdf8" stroke-width="1.3"/>
+      <text x="280" y="185" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">0.07</text>
+      <text x="330" y="185" font-family="Sora" font-size="13" fill="#475569">…</text>
+
+      <text x="440" y="177" font-family="Sora" font-size="9" fill="#38bdf8">sum = 1.00</text>
+      <text x="440" y="192" font-family="Sora" font-size="8" fill="#64748b">(probability distribution)</text>
+
+      <line x1="40"  y1="130" x2="40"  y2="168" stroke="#fbbf24" stroke-width="1.2" marker-end="url(#ha)"/>
+      <line x1="120" y1="130" x2="120" y2="168" stroke="#fbbf24" stroke-width="1.2" marker-end="url(#ha)"/>
+      <line x1="200" y1="130" x2="200" y2="168" stroke="#fbbf24" stroke-width="1.8" marker-end="url(#ha)"/>
+      <line x1="280" y1="130" x2="280" y2="168" stroke="#fbbf24" stroke-width="1.2" marker-end="url(#ha)"/>
+
+      <!-- Weighted sum row -->
+      <text x="10" y="232" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">Context vector  c_t = Σ α_{t,j} · h_j</text>
+
+      <!-- α × h_j weighted vectors -->
+      <rect x="10"  y="240" width="60" height="28" rx="5" fill="rgba(129,140,248,.08)" stroke="#818cf8" stroke-width="1"/>
+      <text x="40"  y="256" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">0.04·h₁</text>
+      <rect x="90"  y="240" width="60" height="28" rx="5" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1"/>
+      <text x="120" y="256" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">0.21·h₂</text>
+      <rect x="170" y="240" width="60" height="28" rx="5" fill="rgba(129,140,248,.55)" stroke="#818cf8" stroke-width="2"/>
+      <text x="200" y="256" text-anchor="middle" font-family="Sora" font-size="8" font-weight="700" fill="#818cf8">0.66·h₃</text>
+      <rect x="250" y="240" width="60" height="28" rx="5" fill="rgba(129,140,248,.06)" stroke="#818cf8" stroke-width="1"/>
+      <text x="280" y="256" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">0.07·h₄</text>
+      <text x="330" y="256" font-family="Sora" font-size="13" fill="#475569">…</text>
+
+      <!-- Sum → c_t -->
+      <line x1="365" y1="254" x2="400" y2="254" stroke="#818cf8" stroke-width="1.8" marker-end="url(#hg)"/>
+      <rect x="402" y="240" width="80" height="28" rx="6" fill="rgba(129,140,248,.25)" stroke="#818cf8" stroke-width="2"/>
+      <text x="442" y="257" text-anchor="middle" font-family="Sora" font-size="10" font-weight="800" fill="#818cf8">c_t</text>
+      <text x="442" y="296" text-anchor="middle" font-family="Sora" font-size="9" fill="#38bdf8">fed to decoder LSTM at step t</text>
+      <text x="442" y="310" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">dominated by h₃ — source position 3</text>
+
+      <!-- + symbols between terms -->
+      <text x="75"  y="258" text-anchor="middle" font-family="Sora" font-size="12" fill="#475569">+</text>
+      <text x="160" y="258" text-anchor="middle" font-family="Sora" font-size="12" fill="#475569">+</text>
+      <text x="243" y="258" text-anchor="middle" font-family="Sora" font-size="12" fill="#475569">+</text>
+      <text x="348" y="258" text-anchor="middle" font-family="Sora" font-size="12" fill="#475569">+</text>
+
+      <line x1="40"  y1="198" x2="40"  y2="240" stroke="#38bdf8" stroke-width="1" marker-end="url(#ha)"/>
+      <line x1="120" y1="198" x2="120" y2="240" stroke="#38bdf8" stroke-width="1" marker-end="url(#ha)"/>
+      <line x1="200" y1="198" x2="200" y2="240" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#ha)"/>
+      <line x1="280" y1="198" x2="280" y2="240" stroke="#38bdf8" stroke-width="1" marker-end="url(#ha)"/>
+    </svg>
+    </div>
+  </div>
+
+  <p>The complete Bahdanau attention-augmented decoder receives c_t at every step, concatenated with the embedded previous token, to produce the new decoder hidden state:</p>
+
+  <div class="math-block">
+    <div class="math-label">Bahdanau decoder update — context vector recomputed at every step t</div>
+    $$\mathbf{s}_t = \text{LSTM}\!\left([\mathbf{y}_{t-1},\; \mathbf{c}_t],\; \mathbf{s}_{t-1}\right)$$
+    $$P(y_t) = \text{softmax}\!\left(\mathbf{W}\,[\mathbf{s}_t,\, \mathbf{c}_t,\, \mathbf{y}_{t-1}]\right)$$
+  </div>
+
+  <p>The output projection often concatenates s_t, c_t, and y_{t−1} all together — giving the prediction access to the current decoder state, the source context, and the previous output all simultaneously. This "deep output layer" structure consistently helps translation quality.</p>
+
+  </div></div>
+</div>
+<!-- ══════ S5: SCORE FUNCTIONS ══════ -->
+<div class="section-block open" id="s5">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent3)">05</div>
+      <div>
+        <div class="section-title">Attention Score Functions — How to Measure Relevance</div>
+        <div class="section-sub">Additive (Bahdanau), dot-product, scaled dot-product, and general — trade-offs in expressiveness vs speed</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The score function e_{t,j} = score(s_{t−1}, h_j) is the heart of the attention mechanism — it determines what "relevant" means. Different choices of score function correspond to different assumptions about what kind of similarity between decoder and encoder states should drive attention. After Bahdanau's additive attention, Luong et al. (2015) proposed several alternatives that are simpler and faster. Understanding why each works illuminates the deeper structure of attention itself.</p>
+
+  <table class="tbl">
+    <tr>
+      <th style="width:22%">Name</th>
+      <th style="width:36%">Formula</th>
+      <th style="width:42%">Intuition &amp; Trade-off</th>
+    </tr>
+    <tr>
+      <td><strong>Additive</strong><br><span style="color:var(--accent2);font-size:.8rem">(Bahdanau)</span></td>
+      <td><ic>v_a · tanh(W_a s + U_a h)</ic></td>
+      <td>A small neural network measures compatibility. Expensive: two separate projections + nonlinearity. Most expressive — can capture complex, non-linear relationships between s and h. Requires 3 learned matrices.</td>
+    </tr>
+    <tr>
+      <td><strong>Dot-product</strong><br><span style="color:var(--accent3);font-size:.8rem">(Luong)</span></td>
+      <td><ic>s · h</ic></td>
+      <td>Pure inner product — measures cosine-like alignment if both vectors are normalised. Zero parameters! Fastest possible. Requires s and h to be the same size. Works surprisingly well when encoder and decoder use the same hidden dimension.</td>
+    </tr>
+    <tr>
+      <td><strong>Scaled dot-product</strong><br><span style="color:var(--accent);font-size:.8rem">(Transformer)</span></td>
+      <td><ic>s · h / √d</ic></td>
+      <td>Dot product divided by √d (where d = hidden dimension). Prevents scores from growing large in magnitude as d increases — otherwise softmax becomes extremely peaked, gradients saturate and learning stalls. <em>This is the attention used in Transformers</em>. Zero parameters, same speed as dot-product.</td>
+    </tr>
+    <tr>
+      <td><strong>General</strong><br><span style="color:var(--accent4);font-size:.8rem">(Luong)</span></td>
+      <td><ic>s · W_a · h</ic></td>
+      <td>A bilinear form: one learned matrix W_a mediates the interaction. More expressive than dot-product (allows different encoder and decoder dimensions), less expensive than additive (no nonlinearity). A good middle ground — 1 learned matrix, no nonlinearity.</td>
+    </tr>
+    <tr>
+      <td><strong>Concat</strong><br><span style="color:var(--accent5);font-size:.8rem">(Luong)</span></td>
+      <td><ic>v · tanh(W_a [s;h])</ic></td>
+      <td>Very similar to Bahdanau's additive — concatenate instead of adding projected vectors. The key difference: Bahdanau adds W_a s + U_a h (two matrices, can handle different dimensions); concat uses a single W_a [s;h] (one matrix on a 2d-dimensional input). Practically equivalent performance.</td>
+    </tr>
+  </table>
+
+  <h2 class="sub">Why Scaling by √d Matters</h2>
+  <p>The motivation for the scaling factor in scaled dot-product attention is worth understanding precisely. Consider two d-dimensional vectors s and h whose components are independently drawn from N(0,1). Their dot product s · h = Σ s_i h_i is a sum of d independent random variables, each with mean 0 and variance 1. By the central limit theorem, this sum has variance d and standard deviation √d. As d increases — say from 64 to 512 — the dot product's magnitude grows proportionally with √d, pushing softmax inputs into regions where the function saturates near 0 or 1. In those regions, gradients vanish. Dividing by √d normalises the variance back to 1 regardless of d, keeping the softmax in a healthy, gradient-rich operating regime. This small detail — dividing by √d — makes the difference between stable training and collapsing gradients in large models.</p>
+
+  <div class="math-block">
+    <div class="math-label">Scaled dot-product — the correct attention in most modern architectures</div>
+    $$e_{t,j} = \frac{\mathbf{s}_{t-1} \cdot \mathbf{h}_j}{\sqrt{d}} \qquad \text{where } d = \text{dimension of hidden states}$$
+    $$\alpha_{t,j} = \text{softmax}_j\!\left(\frac{\mathbf{s}_{t-1} \cdot \mathbf{h}_j}{\sqrt{d}}\right)$$
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ Which Score Function to Use in Practice</div>
+    <div class="callout-body">For standard sequence-to-sequence with an LSTM encoder-decoder, <strong>additive (Bahdanau) attention</strong> is the most common choice — it is robust, allows different encoder/decoder hidden sizes, and the extra computation is negligible for typical sequence lengths. If you are building something Transformer-adjacent or care about speed, use <strong>scaled dot-product</strong>. The general (bilinear) attention is a clean middle ground if you want one learned parameter with no nonlinearity. In practice, the choice rarely changes results dramatically — getting the architecture right and training stably matters far more than which score function you pick.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S6: LUONG ATTENTION ══════ -->
+<div class="section-block open" id="s6">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">06</div>
+      <div>
+        <div class="section-title">Luong Attention — Global vs Local, and a Cleaner Decoder Design</div>
+        <div class="section-sub">Luong et al. (2015): simplifying the architecture by computing attention after the LSTM step, not before</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Luong, Pham and Manning (2015) introduced a set of attention variants that are architecturally cleaner in one important respect: whereas Bahdanau attention computes the context vector c_t <em>before</em> the decoder LSTM step (using s_{t−1} to query encoder states, then feeding c_t into the LSTM), Luong attention computes attention <em>after</em> the LSTM step. The decoder first runs its LSTM to produce a new hidden state h̃_t using only the previous hidden state and the current input, and then uses h̃_t to query the encoder states and compute c_t. Finally, c_t and h̃_t are combined to produce the final hidden state used for the output projection.</p>
+
+  <div class="math-block">
+    <div class="math-label">Luong attention — attention computed after the LSTM step (not before)</div>
+    $$\tilde{\mathbf{h}}_t = \text{LSTM}(\mathbf{y}_{t-1},\, \mathbf{s}_{t-1}) \qquad \text{(1) run decoder LSTM first}$$
+    $$e_{t,j} = \text{score}(\tilde{\mathbf{h}}_t,\, \mathbf{h}_j^{enc}) \qquad \text{(2) compute scores using new state}$$
+    $$\mathbf{c}_t = \sum_j \alpha_{t,j}\, \mathbf{h}_j^{enc} \qquad \text{(3) weighted context}$$
+    $$\mathbf{\hat{h}}_t = \tanh(\mathbf{W}_c\,[\mathbf{c}_t;\, \tilde{\mathbf{h}}_t]) \qquad \text{(4) combine context and LSTM state}$$
+    $$P(y_t) = \text{softmax}(\mathbf{W}_o\, \mathbf{\hat{h}}_t) \qquad \text{(5) predict output}$$
+  </div>
+
+  <p>This ordering — LSTM first, then attention — makes the computation slightly cleaner because the LSTM can run independently, and the attention acts as a post-processing enrichment step rather than being woven into the LSTM's inputs. In practice the performance difference between Bahdanau and Luong is small; the choice often comes down to implementation preference.</p>
+
+  <h2 class="sub">Global vs Local Attention</h2>
+  <p>Luong et al. also introduced a useful distinction between <strong>global attention</strong> and <strong>local attention</strong>. Global attention is what we have been discussing: the decoder attends over all T source positions at every step, computing a weighted sum over all encoder states. This has O(T) cost per decoding step — for very long documents (T in the thousands), this becomes expensive. Local attention addresses this by attending over only a window of p source positions centred around a predicted alignment position p_t. This reduces computation to O(p) per step, which is crucial for document-level translation or speech recognition where source sequences can be very long.</p>
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Bahdanau vs Luong — Architectural Summary</div>
+    <div class="callout-body">Bahdanau: uses s_{t−1} (state before step t) to compute attention, then feeds c_t into the LSTM. The attention is "predictive" — it decides what context is needed before the recurrent step runs. Luong: runs the LSTM step first (using only the input and previous state), then uses the resulting h̃_t to compute attention, then combines h̃_t and c_t for the output. Attention is "retrospective" — it enriches the hidden state after it has been computed. Both work well in practice. For a new project, Luong's formulation is slightly simpler to implement cleanly.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S7: ATTENTION WEIGHTS VIZ ══════ -->
+<div class="section-block open" id="s7">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(244,114,182,.15);color:var(--accent5)">07</div>
+      <div>
+        <div class="section-title">Visualising Attention Weights — What the Model Learns to Look At</div>
+        <div class="section-sub">Interpreting the attention matrix, the near-diagonal pattern in translation, and what non-monotonic attention reveals</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>One of the most revealing properties of attention-based models is that the attention weights α_{t,j} can be visualised as a matrix — rows correspond to decoder steps (target positions), columns correspond to encoder steps (source positions), and cell intensity represents how much the decoder attended to each source position when generating each target token. These visualisations were first shown by Bahdanau et al. and have since been one of the most powerful tools for understanding and debugging sequence-to-sequence models.</p>
+
+  <div class="viz">
+    <div class="viz-title">Attention matrix — English→French translation (simplified). Rows=target, columns=source, darker=higher attention</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;display:block;margin:0 auto;">
+      <!-- Source tokens (top) -->
+      <text x="88" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">The</text>
+      <text x="138" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">black</text>
+      <text x="188" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">cat</text>
+      <text x="238" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">sat</text>
+      <text x="288" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">on</text>
+      <text x="338" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">the</text>
+      <text x="388" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">mat</text>
+      <text x="438" y="18" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">.</text>
+
+      <!-- Target tokens (left) -->
+      <text x="78" y="48" text-anchor="end" font-family="Sora" font-size="9" fill="#818cf8">Le</text>
+      <text x="78" y="98" text-anchor="end" font-family="Sora" font-size="9" fill="#818cf8">chat</text>
+      <text x="78" y="148" text-anchor="end" font-family="Sora" font-size="9" fill="#818cf8">noir</text>
+      <text x="78" y="198" text-anchor="end" font-family="Sora" font-size="9" fill="#818cf8">était</text>
+      <text x="78" y="248" text-anchor="end" font-family="Sora" font-size="9" fill="#818cf8">assis</text>
+      <text x="78" y="298" text-anchor="end" font-family="Sora" font-size="9" fill="#818cf8">sur…</text>
+
+      <!-- Helper function: attention cells. Each row manually specified. -->
+      <!-- Row 0: "Le" → attends mostly to "The" -->
+      <rect x="63"  y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.80)"/>  <!-- The: 0.80 -->
+      <rect x="113" y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.06)"/>  <!-- black: 0.06 -->
+      <rect x="163" y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.05)"/>  <!-- cat -->
+      <rect x="213" y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.04)"/>  <!-- sat -->
+      <rect x="263" y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.02)"/>  <!-- on -->
+      <rect x="313" y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>  <!-- the -->
+      <rect x="363" y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>  <!-- mat -->
+      <rect x="413" y="26" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>  <!-- . -->
+      <text x="88"  y="50" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="white">.80</text>
+
+      <!-- Row 1: "chat" → attends strongly to "cat" -->
+      <rect x="63"  y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.04)"/>
+      <rect x="113" y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.08)"/>
+      <rect x="163" y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.78)"/>  <!-- cat: 0.78 -->
+      <rect x="213" y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.06)"/>
+      <rect x="263" y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.02)"/>
+      <rect x="313" y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>
+      <rect x="363" y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>
+      <rect x="413" y="76" width="50" height="40" rx="2" fill="rgba(56,189,248,0.00)"/>
+      <text x="188" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="white">.78</text>
+
+      <!-- Row 2: "noir" (black) → attends to "black" — NOTE: French adjective AFTER noun, English BEFORE -->
+      <rect x="63"  y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.03)"/>
+      <rect x="113" y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.74)"/>  <!-- black: 0.74 -->
+      <rect x="163" y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.14)"/>
+      <rect x="213" y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.05)"/>
+      <rect x="263" y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.02)"/>
+      <rect x="313" y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>
+      <rect x="363" y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>
+      <rect x="413" y="126" width="50" height="40" rx="2" fill="rgba(56,189,248,0.00)"/>
+      <text x="138" y="150" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="white">.74</text>
+
+      <!-- Row 3: "était" (was) → attends to "sat" -->
+      <rect x="63"  y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.02)"/>
+      <rect x="113" y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.04)"/>
+      <rect x="163" y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.08)"/>
+      <rect x="213" y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.70)"/>  <!-- sat: 0.70 -->
+      <rect x="263" y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.10)"/>
+      <rect x="313" y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.04)"/>
+      <rect x="363" y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.02)"/>
+      <rect x="413" y="176" width="50" height="40" rx="2" fill="rgba(56,189,248,0.00)"/>
+      <text x="238" y="200" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="white">.70</text>
+
+      <!-- Row 4: "assis" (seated/sat) — split between "sat" and context -->
+      <rect x="63"  y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.02)"/>
+      <rect x="113" y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.03)"/>
+      <rect x="163" y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.05)"/>
+      <rect x="213" y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.52)"/>
+      <rect x="263" y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.28)"/>
+      <rect x="313" y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.06)"/>
+      <rect x="363" y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.04)"/>
+      <rect x="413" y="226" width="50" height="40" rx="2" fill="rgba(56,189,248,0.00)"/>
+
+      <!-- Row 5: "sur…" (on the mat) → attends to "on the mat" -->
+      <rect x="63"  y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>
+      <rect x="113" y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.01)"/>
+      <rect x="163" y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.02)"/>
+      <rect x="213" y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.04)"/>
+      <rect x="263" y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.42)"/>
+      <rect x="313" y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.30)"/>
+      <rect x="363" y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.18)"/>
+      <rect x="413" y="276" width="50" height="40" rx="2" fill="rgba(56,189,248,0.03)"/>
+
+      <!-- Annotations -->
+      <text x="530" y="148" font-family="Sora" font-size="9" font-weight="700" fill="#38bdf8">near-diagonal</text>
+      <text x="530" y="161" font-family="Sora" font-size="9" fill="#64748b">pattern shows</text>
+      <text x="530" y="174" font-family="Sora" font-size="9" fill="#64748b">monotonic</text>
+      <text x="530" y="187" font-family="Sora" font-size="9" fill="#64748b">alignment</text>
+
+      <line x1="480" y1="48" x2="520" y2="100" stroke="#f87171" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="525" y="96" font-family="Sora" font-size="8" fill="#f87171">adj word-order</text>
+      <text x="525" y="108" font-family="Sora" font-size="8" fill="#f87171">flip! (EN pre-,</text>
+      <text x="525" y="120" font-family="Sora" font-size="8" fill="#f87171">FR post-noun)</text>
+    </svg>
+    </div>
+  </div>
+
+  <p>Several patterns emerge from reading this attention matrix. The dominant pattern in translation is a <strong>near-diagonal band</strong> — most target tokens attend primarily to the source token at roughly the corresponding position. This makes linguistic sense: most words in a translation correspond to approximately the same position in the source. The model has learned this near-monotonic alignment without any explicit supervision about word alignments — it emerged purely from the translation objective.</p>
+
+  <p>The more interesting cells are the off-diagonal ones. In the example above, when generating the French word "noir" (black), the model attends strongly to the English word "black" — but "black" comes before "cat" in English, while "noir" comes after "chat" (cat) in French. The attention matrix has learned the English-French adjective-noun word order reordering automatically. Similarly, verbs, prepositions, and articles that have different positions in source and target languages create characteristic off-diagonal patterns that have been studied by linguists to verify that the model is learning genuine linguistic structure.</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Attention as a Soft Alignment</div>
+    <div class="callout-body">In statistical machine translation (the pre-neural approach), word alignment was a central concept: a learned function that mapped each source word to the target word(s) that translated it. Computing these alignments required complex, hand-designed models (IBM Model 1 through 5, HMM alignment models). Neural attention learns an equivalent representation — the α_{t,j} matrix is essentially a soft alignment — purely as a byproduct of training to maximise translation likelihood. No alignment data is ever provided. The model discovers what aligns with what through gradient descent alone. This was considered remarkable in 2015 and remains one of the cleanest demonstrations of representation learning working as hoped.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S8: PYTORCH ══════ -->
+<div class="section-block open" id="s8">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent)">08</div>
+      <div>
+        <div class="section-title">PyTorch Implementation — Bahdanau Attention Seq2Seq</div>
+        <div class="section-sub">Encoder, attention module, decoder, and training loop — built piece by piece with every design choice explained</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>We will build a complete attention-based encoder-decoder in PyTorch in four pieces. Reading each piece in order mirrors the data flow at inference time: tokens flow into the encoder, all encoder states are saved, the attention module computes context vectors for each decoder step, and the decoder generates outputs autoregressively. Every design choice below is annotated with the <em>why</em>, not just the <em>what</em>.</p>
+
+  <h2 class="sub">Part 1 — Bidirectional Encoder</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Encoder — BiLSTM, keeps ALL hidden states for attention</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+
+<span class="kw">class</span> <span class="cls">Encoder</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""BiLSTM encoder that returns ALL hidden states (not just the final one).
+    
+    Key difference from a vanilla encoder-decoder:
+    - old: return only h_T (the final hidden state → context vector)
+    - now: return ALL h_1, h_2, ..., h_T for the attention mechanism to query.
+    
+    We also return h_T to initialise the decoder hidden state.
+    BiLSTM gives each position both left-context and right-context.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim, hidden_size,
+                 num_layers=<span class="num">1</span>, dropout=<span class="num">0.3</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.hidden_size = hidden_size
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        self.lstm  = nn.<span class="cls">LSTM</span>(
+            embed_dim, hidden_size, num_layers,
+            batch_first=<span class="kw">True</span>, bidirectional=<span class="kw">True</span>,
+            dropout=dropout <span class="kw">if</span> num_layers > <span class="num">1</span> <span class="kw">else</span> <span class="num">0.0</span>
+        )
+        <span class="cm"># Project bidirectional hidden (hidden*2) back to hidden
+        # for the decoder's initial state (decoder expects hidden, not hidden*2)</span>
+        self.fc_h = nn.<span class="cls">Linear</span>(hidden_size * <span class="num">2</span>, hidden_size)
+        self.fc_c = nn.<span class="cls">Linear</span>(hidden_size * <span class="num">2</span>, hidden_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, src):
+        <span class="st">"""
+        src: (batch, src_len) — source token IDs
+        Returns:
+          enc_out:  (batch, src_len, hidden*2) — ALL hidden states
+          h_init:   (1, batch, hidden) — projected initial state for decoder
+          c_init:   (1, batch, hidden)
+        """</span>
+        x = self.<span class="fn">embed</span>(src)                   <span class="cm"># (batch, src_len, embed)</span>
+        enc_out, (h_n, c_n) = self.<span class="fn">lstm</span>(x)   <span class="cm"># enc_out: (batch, src_len, hidden*2)</span>
+
+        <span class="cm"># h_n shape: (num_layers*2, batch, hidden) for BiLSTM
+        # Take the last layer's forward (h_n[-2]) and backward (h_n[-1]),
+        # concatenate them, and project to decoder's hidden size.</span>
+        h_init = torch.<span class="fn">tanh</span>(self.<span class="fn">fc_h</span>(
+            torch.<span class="fn">cat</span>([h_n[-<span class="num">2</span>], h_n[-<span class="num">1</span>]], dim=<span class="num">1</span>)
+        )).<span class="fn">unsqueeze</span>(<span class="num">0</span>)                      <span class="cm"># (1, batch, hidden)</span>
+
+        c_init = torch.<span class="fn">tanh</span>(self.<span class="fn">fc_c</span>(
+            torch.<span class="fn">cat</span>([c_n[-<span class="num">2</span>], c_n[-<span class="num">1</span>]], dim=<span class="num">1</span>)
+        )).<span class="fn">unsqueeze</span>(<span class="num">0</span>)                      <span class="cm"># (1, batch, hidden)</span>
+
+        <span class="kw">return</span> enc_out, h_init, c_init</code></pre></div>
+  </div>
+
+  <h2 class="sub">Part 2 — Bahdanau Attention Module</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Bahdanau (additive) attention — score, softmax, weighted sum</span></div>
+    <div class="code-body"><pre><code><span class="kw">class</span> <span class="cls">BahdanauAttention</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Computes a step-specific context vector from all encoder states.
+    
+    At every decoder step t, this module:
+      1. Scores each encoder hidden state against the current decoder state
+      2. Normalises scores with softmax → attention weights α (sum to 1)
+      3. Returns weighted sum of encoder states → context vector c_t
+    
+    The score function: e_{t,j} = v_a · tanh(W_a * dec_hidden + U_a * enc_out)
+    W_a and U_a project to the same attention_dim so they can be summed.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, enc_hidden_size, dec_hidden_size, attn_dim=<span class="num">256</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        <span class="cm"># W_a: projects decoder state from dec_hidden → attn_dim</span>
+        self.W_a = nn.<span class="cls">Linear</span>(dec_hidden_size, attn_dim, bias=<span class="kw">False</span>)
+        <span class="cm"># U_a: projects encoder states from enc_hidden_size → attn_dim
+        # enc_hidden_size is hidden*2 (bidirectional)</span>
+        self.U_a = nn.<span class="cls">Linear</span>(enc_hidden_size, attn_dim, bias=<span class="kw">False</span>)
+        <span class="cm"># v_a: scalar projection from attn_dim → 1 score per position</span>
+        self.v_a = nn.<span class="cls">Linear</span>(attn_dim, <span class="num">1</span>, bias=<span class="kw">False</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, dec_hidden, enc_out):
+        <span class="st">"""
+        dec_hidden: (batch, dec_hidden_size) — current decoder state s_{t-1}
+        enc_out:    (batch, src_len, enc_hidden_size) — all encoder states
+        Returns:
+          context:  (batch, enc_hidden_size) — weighted sum c_t
+          attn_w:   (batch, src_len) — attention weights (for visualisation)
+        """</span>
+        <span class="cm"># Project decoder hidden state: (batch, attn_dim)
+        # Unsqueeze to broadcast over src_len dimension</span>
+        dec_proj = self.<span class="fn">W_a</span>(dec_hidden).<span class="fn">unsqueeze</span>(<span class="num">1</span>)  <span class="cm"># (batch, 1, attn_dim)</span>
+
+        <span class="cm"># Project all encoder states: (batch, src_len, attn_dim)
+        # This can be pre-computed once before the decoding loop!</span>
+        enc_proj = self.<span class="fn">U_a</span>(enc_out)               <span class="cm"># (batch, src_len, attn_dim)</span>
+
+        <span class="cm"># Add and apply tanh — broadcasting handles the dimensions
+        # Result: (batch, src_len, attn_dim)</span>
+        combined = torch.<span class="fn">tanh</span>(dec_proj + enc_proj)
+
+        <span class="cm"># Scalar score per encoder position: (batch, src_len, 1) → squeeze</span>
+        scores = self.<span class="fn">v_a</span>(combined).<span class="fn">squeeze</span>(-<span class="num">1</span>)     <span class="cm"># (batch, src_len)</span>
+
+        <span class="cm"># Normalise to probability distribution over source positions</span>
+        attn_w = F.<span class="fn">softmax</span>(scores, dim=-<span class="num">1</span>)          <span class="cm"># (batch, src_len)</span>
+
+        <span class="cm"># Weighted sum of encoder states → context vector
+        # bmm: batch matrix multiply
+        # attn_w: (batch, 1, src_len) × enc_out: (batch, src_len, enc_h)
+        # result: (batch, 1, enc_h) → squeeze to (batch, enc_h)</span>
+        context = torch.<span class="fn">bmm</span>(
+            attn_w.<span class="fn">unsqueeze</span>(<span class="num">1</span>), enc_out
+        ).<span class="fn">squeeze</span>(<span class="num">1</span>)                               <span class="cm"># (batch, enc_hidden_size)</span>
+
+        <span class="kw">return</span> context, attn_w</code></pre></div>
+  </div>
+
+  <h2 class="sub">Part 3 — Attention Decoder</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Decoder — LSTM + attention, step-by-step with teacher forcing</span></div>
+    <div class="code-body"><pre><code><span class="kw">class</span> <span class="cls">AttentionDecoder</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""One-step decoder: takes previous token + previous hidden state + encoder
+    outputs, attends to encoder, and predicts the next token.
+    
+    Note: this is a single-step module. The sequence loop (with teacher
+    forcing or autoregression) lives in the Seq2Seq wrapper below.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim, dec_hidden_size,
+                 enc_hidden_size, attn_dim=<span class="num">256</span>, dropout=<span class="num">0.3</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embed   = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        self.attn    = <span class="cls">BahdanauAttention</span>(enc_hidden_size, dec_hidden_size, attn_dim)
+        <span class="cm"># LSTM input: concatenated [embed(y_{t-1}), context_vector]</span>
+        self.lstm    = nn.<span class="cls">LSTM</span>(
+            embed_dim + enc_hidden_size, dec_hidden_size,
+            batch_first=<span class="kw">True</span>
+        )
+        self.drop    = nn.<span class="cls">Dropout</span>(dropout)
+        <span class="cm"># Output projection: [s_t, c_t, embed(y_{t-1})] → vocab (deep output)</span>
+        self.fc_out  = nn.<span class="cls">Linear</span>(
+            dec_hidden_size + enc_hidden_size + embed_dim, vocab_size
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, prev_token, h_prev, c_prev, enc_out):
+        <span class="st">"""
+        prev_token: (batch,) — previous output token (or SOS for first step)
+        h_prev, c_prev: (1, batch, dec_hidden) — decoder LSTM states
+        enc_out: (batch, src_len, enc_hidden*2) — all encoder hidden states
+        """</span>
+        emb = self.<span class="fn">embed</span>(prev_token.<span class="fn">unsqueeze</span>(<span class="num">1</span>))     <span class="cm"># (batch, 1, embed)</span>
+
+        <span class="cm"># Compute attention context using PREVIOUS decoder hidden state
+        # h_prev: (1, batch, hidden) → squeeze to (batch, hidden) for attention</span>
+        context, attn_w = self.<span class="fn">attn</span>(h_prev.<span class="fn">squeeze</span>(<span class="num">0</span>), enc_out)
+
+        <span class="cm"># Feed [embedding, context] into LSTM
+        # context unsqueezed to (batch, 1, enc_h) to concat with emb (batch, 1, embed)</span>
+        lstm_in = torch.<span class="fn">cat</span>([emb, context.<span class="fn">unsqueeze</span>(<span class="num">1</span>)], dim=-<span class="num">1</span>)
+        out, (h_new, c_new) = self.<span class="fn">lstm</span>(lstm_in, (h_prev, c_prev))
+
+        out = out.<span class="fn">squeeze</span>(<span class="num">1</span>)  <span class="cm"># (batch, dec_hidden)</span>
+
+        <span class="cm"># Deep output: concatenate [s_t, c_t, embed(y_{t-1})]
+        # This gives the prediction direct access to all three information sources</span>
+        logits = self.<span class="fn">fc_out</span>(self.<span class="fn">drop</span>(
+            torch.<span class="fn">cat</span>([out, context, emb.<span class="fn">squeeze</span>(<span class="num">1</span>)], dim=-<span class="num">1</span>)
+        ))                                              <span class="cm"># (batch, vocab_size)</span>
+
+        <span class="kw">return</span> logits, h_new, c_new, attn_w</code></pre></div>
+  </div>
+
+  <h2 class="sub">Part 4 — Seq2Seq Wrapper with Teacher Forcing</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Seq2Seq wrapper — encodes source, decodes with scheduled teacher forcing</span></div>
+    <div class="code-body"><pre><code><span class="kw">class</span> <span class="cls">Seq2SeqAttention</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, encoder, decoder, device):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.encoder = encoder
+        self.decoder = decoder
+        self.device  = device
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, src, trg, teacher_forcing_ratio=<span class="num">0.5</span>):
+        <span class="st">"""
+        src:  (batch, src_len)
+        trg:  (batch, trg_len) — includes SOS at trg[:,0]
+        teacher_forcing_ratio: probability of using ground-truth instead of
+                               predicted token at each step. Start high (0.9)
+                               and decay over training toward 0.3-0.5.
+        """</span>
+        batch_size = src.<span class="fn">shape</span>[<span class="num">0</span>]
+        trg_len    = trg.<span class="fn">shape</span>[<span class="num">1</span>]
+        vocab_size = self.decoder.fc_out.out_features
+
+        <span class="cm"># ── Encode the full source sentence ────────────────────────────</span>
+        enc_out, h, c = self.encoder.<span class="fn">forward</span>(src)
+        <span class="cm"># enc_out: (batch, src_len, hidden*2) — kept for attention at every step</span>
+
+        <span class="cm"># ── Decode token-by-token ──────────────────────────────────────</span>
+        all_logits  = torch.<span class="fn">zeros</span>(batch_size, trg_len - <span class="num">1</span>, vocab_size).<span class="fn">to</span>(self.device)
+        all_attn    = []
+        token       = trg[:, <span class="num">0</span>]  <span class="cm"># first input = SOS token</span>
+
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, trg_len):
+            logits, h, c, attn_w = self.decoder.<span class="fn">forward</span>(token, h, c, enc_out)
+            all_logits[:, t - <span class="num">1</span>] = logits
+            all_attn.<span class="fn">append</span>(attn_w.<span class="fn">detach</span>())
+
+            <span class="cm"># Teacher forcing: use ground-truth token with probability `ratio`
+            # At inference, always use model's own prediction (ratio = 0.0)</span>
+            use_teacher = torch.<span class="fn">rand</span>(<span class="num">1</span>).item() < teacher_forcing_ratio
+            token = trg[:, t] <span class="kw">if</span> use_teacher <span class="kw">else</span> logits.<span class="fn">argmax</span>(dim=-<span class="num">1</span>)
+
+        <span class="cm"># Stack attention matrices: (batch, trg_len-1, src_len)</span>
+        attn_matrix = torch.<span class="fn">stack</span>(all_attn, dim=<span class="num">1</span>)
+        <span class="kw">return</span> all_logits, attn_matrix
+
+
+<span class="cm"># ── Training loop ────────────────────────────────────────────────</span>
+SRC_VOCAB, TRG_VOCAB = <span class="num">10000</span>, <span class="num">10000</span>
+device  = torch.<span class="fn">device</span>(<span class="st">'cuda'</span> <span class="kw">if</span> torch.cuda.<span class="fn">is_available</span>() <span class="kw">else</span> <span class="st">'cpu'</span>)
+
+enc = <span class="cls">Encoder</span>(SRC_VOCAB, embed_dim=<span class="num">256</span>, hidden_size=<span class="num">512</span>).<span class="fn">to</span>(device)
+dec = <span class="cls">AttentionDecoder</span>(TRG_VOCAB, embed_dim=<span class="num">256</span>, dec_hidden_size=<span class="num">512</span>,
+                       enc_hidden_size=<span class="num">1024</span>).<span class="fn">to</span>(device)  <span class="cm"># enc_h*2 = 1024</span>
+model    = <span class="cls">Seq2SeqAttention</span>(enc, dec, device).<span class="fn">to</span>(device)
+optimizer= torch.optim.<span class="cls">Adam</span>(model.<span class="fn">parameters</span>(), lr=<span class="num">3e-4</span>)
+criterion= nn.<span class="cls">CrossEntropyLoss</span>(ignore_index=<span class="num">0</span>)  <span class="cm"># ignore PAD tokens</span>
+
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(<span class="num">30</span>):
+    <span class="kw">for</span> src, trg <span class="kw">in</span> train_loader:
+        src, trg = src.<span class="fn">to</span>(device), trg.<span class="fn">to</span>(device)
+        optimizer.<span class="fn">zero_grad</span>()
+
+        <span class="cm"># logits: (batch, trg_len-1, vocab)
+        # reshape for cross-entropy: (batch*(trg_len-1), vocab)</span>
+        logits, _ = model.<span class="fn">forward</span>(src, trg, teacher_forcing_ratio=<span class="num">0.5</span>)
+        loss = <span class="fn">criterion</span>(
+            logits.<span class="fn">view</span>(-<span class="num">1</span>, TRG_VOCAB),
+            trg[:, <span class="num">1</span>:].<span class="fn">contiguous</span>().<span class="fn">view</span>(-<span class="num">1</span>)  <span class="cm"># skip SOS in targets</span>
+        )
+        loss.<span class="fn">backward</span>()
+        nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), <span class="num">5.0</span>)
+        optimizer.<span class="fn">step</span>()</code></pre></div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ Greedy Decoding vs Beam Search</div>
+    <div class="callout-body">The inference loop above uses greedy decoding — always pick the highest-probability token at each step. This is fast but suboptimal: the globally best translation might require choosing a lower-probability word early that enables much better words later. Beam search maintains a set of k candidate sequences (the "beam"), expanding all of them at each step and keeping only the top k by cumulative log-probability. k=4 or k=8 is standard for translation. Implementing beam search is tedious but important for production quality. For a quick prototype, greedy decoding is fine; for a publication-quality result, beam search is expected.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S9: APPLICATIONS ══════ -->
+<div class="section-block open" id="s9">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">09</div>
+      <div>
+        <div class="section-title">Applications — Translation, Summarisation, Image Captioning</div>
+        <div class="section-sub">How the same attention architecture adapts to different input modalities and task structures</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The attention-augmented encoder-decoder was one of the most generalisable architectures in deep learning history. Once the core idea was established — keep all encoder states and let the decoder attend to them — it spread to virtually every sequence generation task. The encoder does not even need to produce a text sequence: it can encode an image (using a CNN), an audio signal (using a spectrogram), or any other structured input, and as long as you can represent the encoding as a sequence of vectors, the attention decoder works unchanged.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">🌐</div>
+      <div class="card-title">Machine Translation</div>
+      <div class="card-text">The original application. BiLSTM encoder over source tokens; LSTM decoder with Bahdanau attention generates target tokens. Attention handles word-reordering between languages naturally. Google Translate used this architecture in production before Transformers. BLEU scores on WMT benchmarks improved dramatically over vanilla seq2seq.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📰</div>
+      <div class="card-title">Text Summarisation</div>
+      <div class="card-text">Encoder reads a long document, decoder generates a shorter summary. Attention is critical: the decoder must selectively attend to the most important sentences in the source. A "coverage mechanism" was added — a running sum of past attention weights that penalises attending to the same positions repeatedly, encouraging broad coverage of the source.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🖼️</div>
+      <div class="card-title">Image Captioning</div>
+      <div class="card-text">CNN encoder extracts a grid of feature vectors (one per spatial region). LSTM decoder with attention generates a caption word by word. At each step, the decoder attends to different regions of the image — "a" and "the" attend broadly, while "cat" attends to the cat region and "mat" attends to the floor. Xu et al. (2015) showed convincing spatial attention maps.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🎤</div>
+      <div class="card-title">Speech Recognition</div>
+      <div class="card-text">Encoder processes audio features (log-mel spectrograms); decoder generates text tokens. Attention learns the monotonic alignment between audio frames and phonemes/characters. The model does not need forced alignment labels — it learns the correspondence from (audio, transcript) pairs alone. Listen, Attend and Spell (LAS) was the seminal architecture.</div>
+    </div>
+  </div>
+
+  <h2 class="sub">Image Captioning — Attention Over Spatial Regions</h2>
+  <p>Image captioning with attention is a particularly clean demonstration of what the mechanism learns, because you can visualise exactly where the model is "looking" when it generates each word. In the Show, Attend and Tell architecture (Xu et al., 2015), a CNN encodes an image into a grid of feature vectors — say 14×14=196 spatial positions, each a 512-dimensional vector. The LSTM decoder then attends over these 196 spatial vectors at each time step, producing a context vector that is dominated by the most visually relevant region for the current word.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Image captioning encoder — CNN spatial features as "encoder states"</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torchvision.models <span class="kw">as</span> models
+
+<span class="kw">class</span> <span class="cls">ImageEncoder</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Extract spatial feature grid from an image using a pretrained CNN.
+    
+    Instead of taking the final pooled vector (which would be the fixed
+    bottleneck again), we take the last convolutional layer's feature map:
+    shape (batch, C, H, W) → reshape to (batch, H*W, C)
+    This gives us H*W spatial positions, each with C features — exactly
+    the "sequence of vectors" that attention expects.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, embed_dim=<span class="num">512</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        resnet = models.<span class="fn">resnet50</span>(pretrained=<span class="kw">True</span>)
+        <span class="cm"># Remove the average pooling and fc layers — keep spatial resolution</span>
+        self.features = nn.<span class="cls">Sequential</span>(*<span class="fn">list</span>(resnet.<span class="fn">children</span>())[:-<span class="num">2</span>])
+        self.proj     = nn.<span class="cls">Linear</span>(<span class="num">2048</span>, embed_dim)
+
+        <span class="cm"># Freeze early layers (they detect edges/textures, universal across tasks)</span>
+        <span class="kw">for</span> param <span class="kw">in</span> <span class="fn">list</span>(self.features.<span class="fn">parameters</span>())[:-<span class="num">20</span>]:
+            param.requires_grad = <span class="kw">False</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, images):
+        <span class="st">"""
+        images: (batch, 3, 224, 224)
+        Returns: (batch, num_pixels, embed_dim) — the "encoder output"
+                  that the attention decoder will query at each caption step
+        """</span>
+        feats = self.<span class="fn">features</span>(images)          <span class="cm"># (batch, 2048, 7, 7)</span>
+        batch, C, H, W = feats.<span class="fn">shape</span>
+        feats = feats.<span class="fn">view</span>(batch, C, H * W)    <span class="cm"># (batch, 2048, 49)</span>
+        feats = feats.<span class="fn">permute</span>(<span class="num">0</span>, <span class="num">2</span>, <span class="num">1</span>)          <span class="cm"># (batch, 49, 2048)</span>
+        <span class="kw">return</span> self.<span class="fn">proj</span>(feats)                 <span class="cm"># (batch, 49, embed_dim)</span>
+        <span class="cm"># ↑ This is now shaped exactly like text encoder output (batch, seq, dim)
+        # The same BahdanauAttention module works unchanged!</span></code></pre></div>
+  </div>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ The Generality of the Attention Interface</div>
+    <div class="callout-body">The fact that the same <ic>BahdanauAttention</ic> module works unchanged for text translation and image captioning — simply because both produce a tensor of shape <ic>(batch, seq_len, hidden_dim)</ic> — reveals something deep about the architecture. Attention does not care about <em>what</em> the encoder states represent. It only cares about their shape. You could encode video frames, protein sequences, molecules, or music spectrograms with the appropriate encoder, and the same attention decoder would work out of the box. This modality-agnostic quality is a big part of why attention became the foundation for modern multimodal models.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S10: LIMITS → TRANSFORMERS ══════ -->
+<div class="section-block open" id="s10">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent2)">10</div>
+      <div>
+        <div class="section-title">What Attention Still Can't Solve — The Door to Transformers</div>
+        <div class="section-sub">Recurrence as the remaining bottleneck: O(T) sequential computation, path length between distant tokens, and what self-attention changes</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Attention with LSTM encoder-decoders was a transformative development, but it only half-solved the problem of sequence modelling. It solved the <em>information bottleneck</em> — the decoder can now read any encoder state, not just h_T. But it did not solve the <em>computational structure</em> of the encoder itself. The encoder is still an LSTM: it processes the source sequence one token at a time, and step t cannot begin until step t−1 is finished. This sequential dependency is not a practical annoyance — it is a fundamental architectural constraint that limits both speed and the quality of representations the encoder can build.</p>
+
+  <h2 class="sub">Problem 1 — Sequential Computation Cannot Be Parallelised</h2>
+  <p>Modern GPU hardware achieves peak performance through massive parallelism — thousands of cores executing the same operation on different data simultaneously. A matrix multiplication over a batch of sequences can be parallelised perfectly, using all available cores. But an LSTM step cannot: the computation of h_t requires h_{t−1}, which requires h_{t−2}, and so on. The LSTM must execute its T steps <em>in sequence</em>, using only one step's worth of parallelism at a time. For a sequence of length T=512, this means 512 sequential LSTM steps, each one waiting for the previous to finish. On a GPU with 10,000 cores, only a fraction of the hardware is ever utilised.</p>
+
+  <p>This is not merely a speed concern. Training time directly limits how much data and how many experiments researchers can run. If training a translation model takes 2 weeks instead of 2 days, the number of architectures you can explore, the amount of data you can use, and the number of hyperparameter configurations you can try all shrink by 7×. The Transformer's fully parallel computation — the key architectural change introduced in "Attention is All You Need" (Vaswani et al., 2017) — was critical to the explosion of model scale and capability that followed.</p>
+
+  <div class="viz">
+    <div class="viz-title">Sequential vs parallel — LSTM must process tokens one by one; Transformer processes all positions simultaneously</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="la" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="lg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+      </defs>
+
+      <!-- LSTM sequential -->
+      <text x="10" y="18" font-family="Sora" font-size="10" font-weight="700" fill="#f87171">LSTM encoder — strictly sequential (step t blocks step t+1)</text>
+      <rect x="10"  y="26" width="68" height="34" rx="6" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1.5"/>
+      <text x="44"  y="45" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f87171">step 1</text>
+      <line x1="78" y1="43" x2="96" y2="43" stroke="#f87171" stroke-width="2" marker-end="url(#la)"/>
+      <text x="82" y="37" font-family="Sora" font-size="7" fill="#f87171">wait</text>
+
+      <rect x="98"  y="26" width="68" height="34" rx="6" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1.5"/>
+      <text x="132" y="45" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f87171">step 2</text>
+      <line x1="166" y1="43" x2="184" y2="43" stroke="#f87171" stroke-width="2" marker-end="url(#la)"/>
+      <text x="170" y="37" font-family="Sora" font-size="7" fill="#f87171">wait</text>
+
+      <rect x="186" y="26" width="68" height="34" rx="6" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1.5"/>
+      <text x="220" y="45" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f87171">step 3</text>
+      <line x1="254" y1="43" x2="272" y2="43" stroke="#f87171" stroke-width="2" marker-end="url(#la)"/>
+      <text x="258" y="37" font-family="Sora" font-size="7" fill="#f87171">wait</text>
+
+      <text x="280" y="48" font-family="Sora" font-size="14" fill="#f87171">…</text>
+      <rect x="302" y="26" width="68" height="34" rx="6" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1.5"/>
+      <text x="336" y="45" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f87171">step T</text>
+
+      <text x="400" y="28" font-family="Sora" font-size="9" fill="#f87171">Total time: O(T) steps</text>
+      <text x="400" y="42" font-family="Sora" font-size="9" fill="#64748b">GPU mostly idle</text>
+      <text x="400" y="56" font-family="Sora" font-size="9" fill="#64748b">max path len T-1</text>
+
+      <!-- Transformer parallel -->
+      <text x="10" y="108" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">Transformer — all positions computed simultaneously</text>
+      <rect x="10"  y="118" width="68" height="34" rx="6" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="44"  y="137" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">pos 1</text>
+      <rect x="98"  y="118" width="68" height="34" rx="6" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="132" y="137" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">pos 2</text>
+      <rect x="186" y="118" width="68" height="34" rx="6" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="220" y="137" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">pos 3</text>
+      <text x="274" y="140" font-family="Sora" font-size="14" fill="#818cf8">…</text>
+      <rect x="292" y="118" width="68" height="34" rx="6" fill="rgba(129,140,248,.2)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="326" y="137" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">pos T</text>
+
+      <!-- "all at once" brace -->
+      <line x1="10"  y1="162" x2="360" y2="162" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="10"  y1="152" x2="10"  y2="162" stroke="#818cf8" stroke-width="1.5"/>
+      <line x1="360" y1="152" x2="360" y2="162" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="185" y="178" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8">all T positions processed in one matrix multiply → O(1) sequential steps</text>
+
+      <text x="400" y="125" font-family="Sora" font-size="9" fill="#818cf8">Total time: O(1) steps</text>
+      <text x="400" y="139" font-family="Sora" font-size="9" fill="#34d399">full GPU utilisation</text>
+      <text x="400" y="153" font-family="Sora" font-size="9" fill="#34d399">max path len 1</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Problem 2 — Long Path Length Between Distant Tokens</h2>
+  <p>Even with attention, there is a second structural problem. Consider two tokens at positions 1 and 500 in an LSTM-encoded sequence. To capture any interaction between them, information must flow through the LSTM's hidden state over 499 steps — each step applying the forget, input, and output gates and potentially overwriting or diluting the signal. Even though LSTM is much better than vanilla RNN at this, 499 recurrent steps is a long path for any signal to survive unchanged. In a Transformer, any two positions can directly attend to each other regardless of how far apart they are — the path length between any two positions is exactly 1. This fundamentally changes what kinds of long-range patterns the model can learn.</p>
+
+  <h2 class="sub">Problem 3 — The Encoder Cannot Look at Itself</h2>
+  <p>In the Seq2Seq attention model, attention goes from the decoder to the encoder — it is cross-attention. The encoder itself is purely sequential: when computing h_j, the LSTM has only access to x_1, …, x_j (in a unidirectional encoder) or x_1, …, x_T (in a bidirectional encoder, but even then only through the sequential recurrent path). The encoder cannot compute a direct, context-sensitive representation of word j that is enriched by querying all other positions j simultaneously. Self-attention — where each position queries all other positions in the same sequence — allows the encoder to build much richer contextualised representations. When encoding the word "bank", a self-attention encoder can immediately look at both "river bank" context words and weight them appropriately, without relying on the sequential hidden state to have accumulated and preserved that context.</p>
+
+  <div class="callout novelty">
+    <div class="callout-title">🚀 "Attention Is All You Need" — What Changes in a Transformer</div>
+    <div class="callout-body">The Transformer (Vaswani et al., 2017) makes one radical architectural decision: remove recurrence entirely. There are no LSTM steps, no hidden states, no sequential dependencies. Instead, the entire encoding is done by <em>self-attention layers</em> — each position queries all other positions simultaneously, and the output at each position is a weighted sum of all input representations (including its own). Because there is no recurrence, all T positions can be processed in parallel. Positional encodings are added to preserve word-order information (which recurrence encoded implicitly). The result is a model that trains much faster, learns longer-range dependencies more effectively, and scales to billions of parameters. Page 4 builds the Transformer from the self-attention mechanism up, showing how each piece connects to what you already know from Pages 1–3.</div>
+  </div>
+
+  <!-- <div class="next-page">
+    <div>
+      <div class="next-page-title">→ Page 4: Transformers — Attention is All You Need</div>
+      <div class="next-page-text">Page 4 builds the Transformer from first principles: scaled dot-product self-attention → multi-head attention → positional encodings → the full encoder-decoder stack. Each piece is motivated by the limitations of the LSTM-attention architecture you just learned. By the end, you will be able to implement a Transformer encoder in 50 lines of PyTorch and understand exactly why every design decision was made.</div>
+    </div>
+    <div style="font-size:2.5rem;flex-shrink:0">→</div>
+  </div> -->
+
+  </div></div>
+</div>
+
+<!-- ══════ FOOTER + JS ══════ -->
+<div class="footer">
+  Module IV · Sequential Models &amp; Recurrent Neural Networks &nbsp;·&nbsp; <strong>Page 3 of 4 — Seq2Seq &amp; Attention</strong><br>
+  <span style="font-size:.75rem;margin-top:4px;display:block">Covers: encoder-decoder architecture · fixed-context bottleneck · attention derivation · Bahdanau additive attention · score functions · Luong attention · attention weight visualisation · PyTorch seq2seq · image captioning · limits → Transformers</span>
+</div>
+
+<script>
+function toggleTheme(){
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = h.dataset.theme === 'dark' ? '☀️' : '🌙';
+}
+function tog(header){ header.parentElement.classList.toggle('open'); }
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('prog').style.width = pct + '%';
+});
+document.querySelectorAll('.section-header').forEach(h => {
+  h.addEventListener('click', () => {
+    setTimeout(() => { if(window.MathJax) MathJax.typesetPromise(); }, 50);
+  });
+});
+</script>
+</body>
+</html>

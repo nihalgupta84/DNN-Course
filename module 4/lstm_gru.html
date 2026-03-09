@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LSTM &amp; GRU — Module IV: Sequential Models</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1f35 50%,#0d1117 100%);--hero-glow:rgba(52,211,153,0.08);--code-bg:#0a0f1a;--code-header:#1a2035;--hover-overlay:rgba(255,255,255,0.03);--card-hover-shadow:0 8px 24px rgba(0,0,0,.4);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#f0fff4 0%,#ecfdf5 50%,#f0fff4 100%);--hero-glow:rgba(52,211,153,0.12);--code-bg:#1e293b;--code-header:#0f172a;--hover-overlay:rgba(0,0,0,0.02);--card-hover-shadow:0 8px 24px rgba(0,0,0,.12);--p-color:#334155;}
+:root{--accent:#34d399;--accent2:#818cf8;--accent3:#38bdf8;--accent4:#fb923c;--accent5:#f472b6;--red:#f87171;--yellow:#fbbf24;}
+*{margin:0;padding:0;box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;}
+.progress-bar{height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent5));position:fixed;top:0;left:0;z-index:1000;transition:width .15s;}
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:60px 24px 48px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);}
+.hero-badge{display:inline-block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:var(--accent);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 16px;border-radius:99px;margin-bottom:18px;font-weight:700;}
+.hero h1{font-size:clamp(1.9rem,5vw,3.2rem);font-weight:800;line-height:1.12;background:linear-gradient(135deg,var(--text) 30%,var(--accent) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px;}
+.hero p{color:var(--text-muted);font-size:1rem;max-width:740px;margin:0 auto 20px;line-height:1.75;}
+.hero-nav{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.hero-nav a{font-size:.78rem;padding:5px 14px;border-radius:99px;text-decoration:none;border:1px solid var(--border);color:var(--text-muted);transition:all .2s;}
+.hero-nav a:hover{border-color:var(--accent);color:var(--accent);}
+.hero-nav .current{background:rgba(52,211,153,.15);border-color:rgba(52,211,153,.5);color:var(--accent);font-weight:700;}
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.toc-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;gap:4px 8px;flex-wrap:wrap;align-items:center;position:sticky;top:0;z-index:100;}
+.toc-label{color:var(--text-dim);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-right:4px;font-weight:700;flex-shrink:0;}
+.toc-link{color:var(--text-muted);font-size:.78rem;text-decoration:none;padding:3px 10px;border-radius:5px;transition:all .2s;border:1px solid transparent;white-space:nowrap;}
+.toc-link:hover{color:var(--accent);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.07);}
+.page{max-width:1080px;margin:0 auto;padding:36px 16px 80px;}
+.section-block{background:var(--surface);border:1px solid var(--border);border-radius:14px;margin-bottom:20px;overflow:hidden;transition:box-shadow .25s;}
+.section-block:hover{box-shadow:0 0 0 1px rgba(52,211,153,.22);}
+.section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;gap:14px;transition:background .2s;}
+.section-header:hover{background:var(--hover-overlay);}
+.section-title-group{display:flex;align-items:center;gap:14px;min-width:0;}
+.section-num{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem;flex-shrink:0;}
+.section-title{font-size:1.08rem;font-weight:700;color:var(--text);line-height:1.3;}
+.section-sub{font-size:.76rem;color:var(--text-dim);margin-top:2px;line-height:1.4;}
+.chevron{color:var(--text-dim);font-size:1rem;transition:transform .3s;flex-shrink:0;}
+.section-block.open .chevron{transform:rotate(180deg);}
+.section-body{display:none;padding:0 22px 28px;border-top:1px solid var(--border);}
+.section-block.open .section-body{display:block;}
+.inner{padding-top:24px;}
+h2.sub{font-size:1.02rem;font-weight:700;color:var(--accent);margin:28px 0 12px;padding-bottom:7px;border-bottom:1px solid rgba(52,211,153,.18);}
+p{margin-bottom:12px;color:var(--p-color);line-height:1.85;}
+strong{color:var(--text);}
+.callout{border-radius:9px;padding:15px 18px;margin:16px 0;border-left:4px solid;}
+.callout-title{font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.callout-body{font-size:.92rem;color:var(--p-color);line-height:1.8;}
+.callout.analogy{background:rgba(251,146,60,.08);border-color:var(--accent4);}.callout.analogy .callout-title{color:var(--accent4);}
+.callout.insight{background:rgba(52,211,153,.08);border-color:var(--accent);}.callout.insight .callout-title{color:var(--accent);}
+.callout.warning{background:rgba(251,191,36,.08);border-color:var(--yellow);}.callout.warning .callout-title{color:var(--yellow);}
+.callout.important{background:rgba(129,140,248,.08);border-color:var(--accent2);}.callout.important .callout-title{color:var(--accent2);}
+.callout.problem{background:rgba(248,113,113,.08);border-color:var(--red);}.callout.problem .callout-title{color:var(--red);}
+.callout.definition{background:rgba(56,189,248,.08);border-color:var(--accent3);}.callout.definition .callout-title{color:var(--accent3);}
+.callout.novelty{background:rgba(244,114,182,.08);border-color:var(--accent5);}.callout.novelty .callout-title{color:var(--accent5);}
+.math-block{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:16px 20px;margin:14px 0;overflow-x:auto;text-align:center;}
+.math-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-weight:700;text-align:left;}
+.code-block{background:var(--code-bg);border:1px solid var(--border);border-radius:9px;overflow:hidden;margin:16px 0;}
+.code-header{background:var(--code-header);padding:7px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.code-lang{font-size:.72rem;color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;}
+.code-body{padding:16px 18px;overflow-x:auto;}.code-body pre{margin:0;}
+.code-body code{font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.9;white-space:pre;}
+.kw{color:#c792ea;}.fn{color:#82aaff;}.st{color:#c3e88d;}.cm{color:#607080;font-style:italic;}.num{color:#f78c6c;}.cls{color:#ffcb6b;}.dec{color:#89ddff;}
+.tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:.84rem;}
+.tbl th{background:var(--surface2);color:var(--accent);font-weight:700;padding:11px 14px;text-align:left;border-bottom:2px solid rgba(52,211,153,.25);}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text-muted);vertical-align:top;line-height:1.6;}
+.tbl tr:hover td{background:var(--hover-overlay);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0;}
+.stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:14px;text-align:center;}
+.stat-val{font-size:1.3rem;font-weight:800;line-height:1.2;}.stat-lbl{font-size:.7rem;color:var(--text-dim);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;transition:all .2s;}
+.card:hover{border-color:rgba(52,211,153,.4);transform:translateY(-2px);box-shadow:var(--card-hover-shadow);}
+.card-icon{font-size:1.4rem;margin-bottom:8px;}.card-title{font-weight:700;font-size:.88rem;color:var(--text);margin-bottom:5px;}.card-text{font-size:.81rem;color:var(--text-muted);line-height:1.6;}
+ic{font-family:'JetBrains Mono',monospace;font-size:.8em;background:rgba(52,211,153,.1);color:var(--accent);padding:1px 6px;border-radius:4px;}
+.viz{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:20px 16px;margin:16px 0;}
+.viz-title{font-size:.75rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;font-weight:700;text-align:center;}
+.svg-wrap{overflow-x:auto;}
+/* Gate colour legend chips */
+.gate-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;font-size:.8rem;font-weight:700;margin:3px;}
+.next-page{background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.25);border-radius:12px;padding:20px 24px;margin:24px 0;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.next-page-text{font-size:.92rem;color:var(--text-muted);line-height:1.6;}
+.next-page-title{font-weight:700;color:var(--accent);font-size:1rem;}
+.footer{text-align:center;padding:36px 16px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.8rem;margin-top:32px;}
+/* comparison panel */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;}
+.compare-panel{background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:16px;}
+.compare-panel h3{font-size:.9rem;font-weight:700;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.compare-panel p,.compare-panel li{font-size:.85rem;color:var(--text-muted);line-height:1.7;}
+@media(max-width:700px){.compare-grid{grid-template-columns:1fr;}.toc-bar{overflow-x:auto;flex-wrap:nowrap;}.page{padding:20px 10px 60px;}.code-body code{font-size:.75rem;}.stats-row{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="progress-bar" id="prog"></div>
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
+
+<div class="hero">
+  <div class="hero-badge">Module IV · Page 2 of 4 · Sequential Models &amp; RNNs</div>
+  <h1>LSTM &amp; GRU — Solving the Memory Problem</h1>
+  <p>Vanilla RNNs have a memory of roughly 5–10 steps because vanishing gradients erase the signal from the past. LSTM's answer is architectural — a separate cell state that flows through time with only additive updates, keeping the gradient highway open over hundreds of steps. This page builds both LSTM and GRU from first principles, gate by gate.</p>
+  <!-- <div class="hero-nav">
+    <a href="#">Page 1 · Vanilla RNNs</a>
+    <a href="#" class="current">Page 2 · LSTM &amp; GRU</a>
+    <a href="#">Page 3 · Seq2Seq &amp; Attention</a>
+    <a href="#">Page 4 · Transformers</a>
+  </div> -->
+</div>
+
+<div class="toc-bar">
+  <span class="toc-label">Sections</span>
+  <a class="toc-link" href="#s1">Motivation</a>
+  <a class="toc-link" href="#s2">Cell State</a>
+  <a class="toc-link" href="#s3">Forget Gate</a>
+  <a class="toc-link" href="#s4">Input Gate</a>
+  <a class="toc-link" href="#s5">Output Gate</a>
+  <a class="toc-link" href="#s6">Full LSTM</a>
+  <a class="toc-link" href="#s7">GRU</a>
+  <a class="toc-link" href="#s8">LSTM vs GRU</a>
+  <a class="toc-link" href="#s9">PyTorch</a>
+  <a class="toc-link" href="#s10">Applications</a>
+</div>
+
+<div class="page">
+<!-- ══════ S1: MOTIVATION ══════ -->
+<div class="section-block open" id="s1">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent)">01</div>
+      <div>
+        <div class="section-title">From Vanilla RNN to LSTM — The Design Problem</div>
+        <div class="section-sub">Why adding gates is the right architectural answer to vanishing gradients</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Page 1 ended with a precise diagnosis: vanilla RNNs cannot learn long-range dependencies because the gradient signal decays exponentially as it flows backward through time, multiplying by the recurrent weight matrix W_hh at every step. By the time the gradient reaches an event from 30 steps ago, it has been multiplied by W_hh thirty times — and if the spectral radius of W_hh is less than 1 (which it must be for the network to be stable), this product collapses toward zero.</p>
+
+  <p>The naive solution would be to initialise W_hh so that gradients neither vanish nor explode — but this is unstable. A matrix with eigenvalues exactly equal to 1 would preserve gradient magnitude, but during training the eigenvalues drift as weights change, and any small perturbation causes either explosion or vanishing. You cannot keep a learned matrix exactly at the identity.</p>
+
+  <p>Hochreiter and Schmidhuber's insight in 1997 was that the problem is not <em>how</em> the recurrent weights are initialised — it is the <em>structure</em> of the update itself. In a vanilla RNN, every step overwrites the hidden state completely:</p>
+
+  <div class="math-block">
+    <div class="math-label">Vanilla RNN — multiplicative overwrite at every step</div>
+    $$\mathbf{h}_t = \tanh(\mathbf{W}_{hh}\,\mathbf{h}_{t-1} + \mathbf{W}_{xh}\,\mathbf{x}_t + \mathbf{b})$$
+  </div>
+
+  <p>This means information must be <em>re-encoded</em> at every time step. Old information has no direct path to survive — it must somehow survive repeated matrix multiplications, each of which degrades it. The LSTM solution is to create a second, separate memory pathway — the <strong>cell state</strong> — that flows through the network with only <em>additive</em> updates. Addition preserves gradients; multiplication destroys them. This is the entire conceptual core of LSTM, and every gate exists to control what flows into and out of this additive pathway.</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Analogy — RAM vs a Telephone Game</div>
+    <div class="callout-body">A vanilla RNN is like the telephone game: each player whispers what they heard to the next player, and after 30 repetitions the original message is unrecognisable. Every transmission is noisy and lossy. An LSTM is like having a shared whiteboard in the room — important information can be written down once and read directly by anyone in the chain without passing through multiple noisy transformations. The cell state is that whiteboard. Gates are the hands that decide what gets written, erased, or read.</div>
+  </div>
+
+  <h2 class="sub">The Two-Track Architecture</h2>
+  <p>The key architectural difference between vanilla RNN and LSTM is that LSTM maintains <strong>two separate state vectors</strong> at every time step: the <strong>cell state</strong> c_t and the <strong>hidden state</strong> h_t. These two vectors play completely different roles and flow through the network in fundamentally different ways.</p>
+
+  <div class="viz">
+    <div class="viz-title">Two tracks: cell state (gradient highway) vs hidden state (working memory)</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 190" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="m1" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+        <marker id="m2" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+        <marker id="m3" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+      </defs>
+
+      <!-- VANILLA RNN row -->
+      <text x="10" y="32" font-family="Sora" font-size="10" font-weight="700" fill="#94a3b8">Vanilla RNN</text>
+      <text x="10" y="46" font-family="Sora" font-size="9" fill="#64748b">One state, multiplicative update</text>
+
+      <!-- h blocks for vanilla -->
+      <rect x="130" y="22" width="60" height="28" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="160" y="40" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₀</text>
+      <line x1="190" y1="36" x2="238" y2="36" stroke="#818cf8" stroke-width="2" marker-end="url(#m2)"/>
+      <text x="214" y="30" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">W×h</text>
+
+      <rect x="240" y="22" width="60" height="28" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="270" y="40" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₁</text>
+      <line x1="300" y1="36" x2="348" y2="36" stroke="#818cf8" stroke-width="2" marker-end="url(#m2)"/>
+      <text x="324" y="30" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">W×h</text>
+
+      <rect x="350" y="22" width="60" height="28" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="380" y="40" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₂</text>
+      <line x1="410" y1="36" x2="458" y2="36" stroke="#818cf8" stroke-width="2" marker-end="url(#m2)"/>
+      <text x="434" y="30" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">W×h</text>
+
+      <rect x="460" y="22" width="60" height="28" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="490" y="40" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h₃</text>
+
+      <text x="560" y="36" font-family="Sora" font-size="9" fill="#f87171">gradient decays</text>
+      <text x="560" y="49" font-family="Sora" font-size="9" fill="#f87171">as W×W×W×…</text>
+
+      <!-- LSTM rows -->
+      <text x="10" y="100" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">LSTM</text>
+      <text x="10" y="114" font-family="Sora" font-size="9" fill="#64748b">Cell state: additive</text>
+      <text x="10" y="126" font-family="Sora" font-size="9" fill="#64748b">Hidden state: gated</text>
+
+      <!-- Cell state track (green — additive) -->
+      <rect x="130" y="88" width="60" height="24" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"/>
+      <text x="160" y="104" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">c₀</text>
+      <line x1="190" y1="100" x2="238" y2="100" stroke="#34d399" stroke-width="2.5" marker-end="url(#m1)"/>
+      <text x="214" y="94" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">c+Δ</text>
+
+      <rect x="240" y="88" width="60" height="24" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"/>
+      <text x="270" y="104" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">c₁</text>
+      <line x1="300" y1="100" x2="348" y2="100" stroke="#34d399" stroke-width="2.5" marker-end="url(#m1)"/>
+      <text x="324" y="94" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">c+Δ</text>
+
+      <rect x="350" y="88" width="60" height="24" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"/>
+      <text x="380" y="104" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">c₂</text>
+      <line x1="410" y1="100" x2="458" y2="100" stroke="#34d399" stroke-width="2.5" marker-end="url(#m1)"/>
+      <text x="434" y="94" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">c+Δ</text>
+
+      <rect x="460" y="88" width="60" height="24" rx="5" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"/>
+      <text x="490" y="104" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">c₃</text>
+
+      <text x="560" y="96" font-family="Sora" font-size="9" fill="#34d399">gradient flows</text>
+      <text x="560" y="109" font-family="Sora" font-size="9" fill="#34d399">freely (additive!)</text>
+
+      <!-- Hidden state track (purple) -->
+      <rect x="130" y="120" width="60" height="24" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="160" y="136" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">h₀</text>
+      <line x1="190" y1="132" x2="238" y2="132" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#m2)"/>
+
+      <rect x="240" y="120" width="60" height="24" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="270" y="136" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">h₁</text>
+      <line x1="300" y1="132" x2="348" y2="132" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#m2)"/>
+
+      <rect x="350" y="120" width="60" height="24" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="380" y="136" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">h₂</text>
+      <line x1="410" y1="132" x2="458" y2="132" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#m2)"/>
+
+      <rect x="460" y="120" width="60" height="24" rx="5" fill="rgba(129,140,248,.12)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="490" y="136" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#818cf8">h₃</text>
+
+      <text x="560" y="130" font-family="Sora" font-size="9" fill="#818cf8">working memory</text>
+      <text x="560" y="143" font-family="Sora" font-size="9" fill="#64748b">(derived from c)</text>
+
+      <!-- Connection arrows between tracks -->
+      <line x1="160" y1="112" x2="160" y2="120" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+      <line x1="270" y1="112" x2="270" y2="120" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+      <line x1="380" y1="112" x2="380" y2="120" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+      <line x1="490" y1="112" x2="490" y2="120" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- Labels -->
+      <rect x="130" y="160" width="60" height="18" rx="3" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.3)" stroke-width="1"/>
+      <text x="160" y="173" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">long-term</text>
+      <rect x="240" y="160" width="60" height="18" rx="3" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.3)" stroke-width="1"/>
+      <text x="270" y="173" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">long-term</text>
+      <rect x="350" y="160" width="60" height="18" rx="3" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.3)" stroke-width="1"/>
+      <text x="380" y="173" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">long-term</text>
+      <rect x="460" y="160" width="60" height="18" rx="3" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.3)" stroke-width="1"/>
+      <text x="490" y="173" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">long-term</text>
+    </svg>
+    </div>
+  </div>
+
+  <p>Notice that the cell state update is fundamentally additive: <strong>c_t = f_t ⊙ c_{t−1} + i_t ⊙ g_t</strong>. The second term is an addition, not a matrix multiplication. This means the gradient of the loss with respect to c_{t−k} can flow back through the addition operation without being multiplied by any weight matrix — it arrives at c_{t−k} essentially intact. This is sometimes called the <strong>constant error carousel</strong>, Hochreiter's original term for the mechanism that prevents vanishing gradients.</p>
+
+  </div></div>
+</div>
+<!-- ══════ S2: CELL STATE ══════ -->
+<div class="section-block open" id="s2">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent)">02</div>
+      <div>
+        <div class="section-title">The Cell State — Long-Term Memory Highway</div>
+        <div class="section-sub">What the cell state is, why it solves the vanishing gradient problem, and how information flows along it</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The cell state <strong>c_t</strong> is a vector of the same dimensionality as the hidden state, but it plays an entirely different role. Think of h_t as the network's <em>working memory</em> — a compressed, processed summary that is used directly for making predictions. Think of c_t as the network's <em>long-term memory</em> — a carefully maintained record of important information that has been accumulated over many time steps, passed forward largely intact, and only selectively modified at each step.</p>
+
+  <p>The cell state update equation is the most important equation in the LSTM:</p>
+
+  <div class="math-block">
+    <div class="math-label">Cell state update — additive, not multiplicative</div>
+    $$\mathbf{c}_t = \underbrace{\mathbf{f}_t \odot \mathbf{c}_{t-1}}_{\text{what to keep from past}} + \underbrace{\mathbf{i}_t \odot \tilde{\mathbf{c}}_t}_{\text{what new info to add}}$$
+  </div>
+
+  <p>The symbol ⊙ denotes element-wise multiplication (the Hadamard product). The two terms correspond to two decisions the network makes at every step: how much of the old cell state to keep (controlled by the forget gate f_t), and how much new information to write in (controlled by the input gate i_t and candidate values c̃_t). The crucial insight is that the second term is an <em>addition</em> — and addition lets gradients pass through unchanged.</p>
+
+  <h2 class="sub">Why Addition Preserves Gradients</h2>
+  <p>Consider how backpropagation flows through the cell state update. When we compute ∂L/∂c_{t−1}, the chain rule gives:</p>
+
+  <div class="math-block">
+    <div class="math-label">Gradient flows backward through the cell state — only element-wise multiplication by f_t</div>
+    $$\frac{\partial \mathcal{L}}{\partial \mathbf{c}_{t-1}} = \frac{\partial \mathcal{L}}{\partial \mathbf{c}_t} \cdot \frac{\partial \mathbf{c}_t}{\partial \mathbf{c}_{t-1}} = \frac{\partial \mathcal{L}}{\partial \mathbf{c}_t} \odot \mathbf{f}_t$$
+  </div>
+
+  <p>Compare this to the vanilla RNN gradient, which multiplied by the full matrix W_hh at every step. Here, the gradient at c_t is multiplied only by the forget gate values f_t — a vector of numbers between 0 and 1, applied element-wise. Crucially, there is <strong>no weight matrix multiplication</strong> in this path. The gradient can flow hundreds of steps back through the cell state, decaying only by the forget gate values rather than by repeated matrix products. If the forget gate learns to output values close to 1 for an important memory dimension, that dimension's gradient flows back with almost no decay at all — this is the constant error carousel.</p>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ The Gradient Highway — Why LSTM Can Remember 1000 Steps</div>
+    <div class="callout-body">For a dimension where f_t ≈ 1.0 at every step, the gradient ∂L/∂c_{t−1000} ≈ ∂L/∂c_t × (1.0)^1000 = ∂L/∂c_t. The gradient arrives at c_{t−1000} essentially unchanged! This is fundamentally impossible in a vanilla RNN, where the gradient would be multiplied by W_hh^1000, collapsing to zero (or exploding to infinity). LSTM has been shown empirically to retain meaningful gradient signal over sequences of 1,000+ time steps — something that is simply out of reach for vanilla RNNs.</div>
+  </div>
+
+  <h2 class="sub">What Does Each Dimension of the Cell State Encode?</h2>
+  <p>Researchers have visualised individual cell state dimensions in trained LSTMs and found remarkably interpretable structure. In a language model trained on text, individual cell state dimensions have been found to track things like: "am I currently inside a quotation?", "how many clauses deep am I in the current sentence?", "has the subject of the current clause been mentioned?", "is the current discourse sentiment positive or negative?". These are not hand-coded — they emerge from learning to predict the next word. The cell state learns to maintain whatever long-range information is statistically useful for predicting the future of the sequence.</p>
+
+  <div class="callout definition">
+    <div class="callout-title">📖 Three Gates — Three Decisions</div>
+    <div class="callout-body">The cell state by itself is just a passive storage mechanism. Three learned gates control what happens to it at every time step. Each gate is a vector of values between 0 and 1, produced by a sigmoid-activated linear layer. A gate value of 0 means "block this completely"; a value of 1 means "let this through unchanged"; intermediate values allow fine-grained partial selection. The three gates are the <strong>forget gate</strong> (what to erase from c_{t−1}), the <strong>input gate</strong> (what new information to write into c_t), and the <strong>output gate</strong> (what to expose from c_t as the working memory h_t). We will build each one in its own section.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S3: FORGET GATE ══════ -->
+<div class="section-block open" id="s3">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(248,113,113,.15);color:var(--red)">03</div>
+      <div>
+        <div class="section-title">The Forget Gate — Deciding What to Erase</div>
+        <div class="section-sub">Gate 1 of 3: how the network learns to selectively clear irrelevant long-term memory</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The forget gate is the first decision the LSTM makes at each time step, and it is conceptually the simplest: given what I just saw (x_t) and what my recent working memory says (h_{t−1}), how much of my long-term memory should I discard? It produces a vector of values between 0 and 1 — one per cell state dimension — where 0 means "erase this completely" and 1 means "keep this unchanged".</p>
+
+  <div class="math-block">
+    <div class="math-label">Forget gate equation</div>
+    $$\mathbf{f}_t = \sigma\!\left(\mathbf{W}_f\,[\mathbf{h}_{t-1},\, \mathbf{x}_t] + \mathbf{b}_f\right)$$
+  </div>
+
+  <p>The notation [h_{t−1}, x_t] means concatenation: the previous hidden state and the current input are joined into a single vector and passed through a linear layer followed by sigmoid (σ). The sigmoid squashes every output to (0, 1), producing the per-dimension forgetting coefficients. This gate is then applied to the old cell state by element-wise multiplication: the old memories that are deemed irrelevant get multiplied toward zero, while important ones are multiplied by values close to 1 and survive.</p>
+
+  <div class="viz">
+    <div class="viz-title">Forget gate — sigmoid output applied to old cell state c_{t−1} element-wise</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:720px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="fa" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="fr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#f87171"/></marker>
+        <marker id="fg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+      </defs>
+
+      <!-- Inputs from left -->
+      <rect x="10" y="55" width="70" height="28" rx="6" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="45" y="73" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h_{t-1}</text>
+      <rect x="10" y="95" width="70" height="28" rx="6" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="45" y="113" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">xₜ</text>
+
+      <!-- Concatenation node -->
+      <rect x="100" y="60" width="52" height="58" rx="6" fill="rgba(100,116,139,.15)" stroke="#475569" stroke-width="1.3"/>
+      <text x="126" y="86" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">concat</text>
+      <text x="126" y="100" text-anchor="middle" font-family="Sora" font-size="14" fill="#94a3b8">[,]</text>
+      <line x1="80" y1="69" x2="100" y2="80" stroke="#818cf8" stroke-width="1.3" marker-end="url(#fa)"/>
+      <line x1="80" y1="109" x2="100" y2="100" stroke="#38bdf8" stroke-width="1.3" marker-end="url(#fa)"/>
+
+      <!-- W_f linear layer -->
+      <line x1="152" y1="89" x2="188" y2="89" stroke="#475569" stroke-width="1.3" marker-end="url(#fa)"/>
+      <rect x="190" y="65" width="80" height="48" rx="8" fill="rgba(248,113,113,.12)" stroke="#f87171" stroke-width="1.8"/>
+      <text x="230" y="86" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#f87171">W_f · [ ] + b_f</text>
+      <text x="230" y="103" text-anchor="middle" font-family="Sora" font-size="9" fill="#64748b">linear layer</text>
+
+      <!-- Sigmoid -->
+      <line x1="270" y1="89" x2="305" y2="89" stroke="#475569" stroke-width="1.3" marker-end="url(#fa)"/>
+      <rect x="307" y="68" width="70" height="42" rx="8" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="2"/>
+      <text x="342" y="91" text-anchor="middle" font-family="Sora" font-size="13" font-weight="800" fill="#f87171">σ</text>
+      <text x="342" y="105" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">sigmoid</text>
+
+      <!-- f_t output -->
+      <line x1="377" y1="89" x2="425" y2="89" stroke="#f87171" stroke-width="2.5" marker-end="url(#fr)"/>
+      <rect x="427" y="73" width="52" height="32" rx="6" fill="rgba(248,113,113,.25)" stroke="#f87171" stroke-width="2"/>
+      <text x="453" y="93" text-anchor="middle" font-family="Sora" font-size="12" font-weight="800" fill="#f87171">fₜ</text>
+      <text x="342" y="130" text-anchor="middle" font-family="Sora" font-size="8" fill="#f87171">values ∈ (0,1) per dimension</text>
+
+      <!-- c_{t-1} from top -->
+      <rect x="427" y="10" width="52" height="28" rx="6" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"/>
+      <text x="453" y="28" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">c_{t-1}</text>
+      <line x1="453" y1="38" x2="453" y2="72" stroke="#34d399" stroke-width="2" marker-end="url(#fa)"/>
+
+      <!-- Multiply node -->
+      <circle cx="550" cy="89" r="22" fill="rgba(248,113,113,.12)" stroke="#f87171" stroke-width="2"/>
+      <text x="550" y="95" text-anchor="middle" font-family="Sora" font-size="18" font-weight="700" fill="#f87171">⊙</text>
+      <line x1="479" y1="89" x2="527" y2="89" stroke="#f87171" stroke-width="1.5" marker-end="url(#fr)"/>
+      <line x1="453" y1="105" x2="453" y2="145" stroke="#34d399" stroke-width="1.5"/>
+      <line x1="453" y1="145" x2="528" y2="145" stroke="#34d399" stroke-width="1.5"/>
+      <line x1="528" y1="145" x2="528" y2="107" stroke="#34d399" stroke-width="1.5" marker-end="url(#fg)"/>
+
+      <!-- Result -->
+      <line x1="572" y1="89" x2="620" y2="89" stroke="#34d399" stroke-width="2.5" marker-end="url(#fg)"/>
+      <rect x="622" y="73" width="80" height="32" rx="6" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="662" y="91" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#34d399">fₜ ⊙ c_{t-1}</text>
+      <text x="662" y="118" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">partially-erased cell state</text>
+
+      <!-- Example values visualisation -->
+      <text x="10" y="165" font-family="Sora" font-size="9" font-weight="700" fill="#94a3b8">Example — processing the word "the" after a period in a sentence:</text>
+      <text x="10" y="180" font-family="Sora" font-size="9" fill="#34d399">c_{t-1}: [...1.8, -0.6, 2.3, 0.1, -1.4...]  ← includes subject-number agreement from old sentence</text>
+      <text x="10" y="195" font-family="Sora" font-size="9" fill="#f87171">f_t:    [...0.0,  0.9, 0.0, 0.8,  0.1...]  ← forget subject-number (now irrelevant)</text>
+      <text x="10" y="210" font-family="Sora" font-size="9" fill="#34d399">result: [...0.0, -0.5, 0.0, 0.1, -0.1...]  ← old sentence's grammar info erased</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Analogy — Reading a New Paragraph</div>
+    <div class="callout-body">When you finish reading a paragraph and begin a new one, you remember the main theme of the document (that context is useful) but you release the specific grammatical structure of the last sentence (you no longer need to remember what the subject was for subject-verb agreement). The forget gate does exactly this — it has learned to release domain-specific short-range information when it becomes irrelevant, while retaining broader long-range context. In a trained language model, the forget gate reliably fires (outputs ≈ 0) for grammatical-agreement dimensions when a sentence boundary is encountered.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S4: INPUT GATE ══════ -->
+<div class="section-block open" id="s4">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent)">04</div>
+      <div>
+        <div class="section-title">The Input Gate — Deciding What to Write</div>
+        <div class="section-sub">Gate 2 of 3: how the network generates new candidate memories and selectively stores them</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>After the forget gate has decided what to erase from the old cell state, the input gate decides what new information to write in. This is actually a two-step process: first, a candidate cell state c̃_t is computed — a vector of potential updates, using tanh so values are bounded between −1 and +1. Second, the input gate i_t decides, dimension by dimension, how much of that candidate to actually commit to long-term memory. The separation between "what could be useful" (c̃_t) and "what to actually write" (i_t) gives the network fine-grained control over its memory writes.</p>
+
+  <div class="math-block">
+    <div class="math-label">Input gate and candidate cell state — two equations, one write decision</div>
+    $$\mathbf{i}_t = \sigma\!\left(\mathbf{W}_i\,[\mathbf{h}_{t-1},\,\mathbf{x}_t] + \mathbf{b}_i\right) \qquad \text{(how much to write — values in (0,1))}$$
+    $$\tilde{\mathbf{c}}_t = \tanh\!\left(\mathbf{W}_c\,[\mathbf{h}_{t-1},\,\mathbf{x}_t] + \mathbf{b}_c\right) \qquad \text{(what to write — values in (-1,1))}$$
+  </div>
+
+  <p>Notice the structural parallel with the forget gate: both i_t and c̃_t take the same two inputs (h_{t−1} and x_t concatenated), but one uses sigmoid (to produce a 0–1 gate) and the other uses tanh (to produce bounded candidate values that can be positive or negative — representing "this information should be stored with positive sign" or "with negative sign").</p>
+
+  <div class="viz">
+    <div class="viz-title">Input gate — two parallel computations then element-wise multiply to produce the memory write</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 760 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ia" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="ig" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+        <marker id="ip" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+      </defs>
+
+      <!-- Shared inputs -->
+      <rect x="10" y="95" width="70" height="28" rx="6" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="45" y="113" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h_{t-1}</text>
+      <rect x="10" y="135" width="70" height="28" rx="6" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="45" y="153" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">xₜ</text>
+
+      <!-- Top path: input gate i_t -->
+      <line x1="80" y1="109" x2="108" y2="65" stroke="#818cf8" stroke-width="1.3" stroke-dasharray="3,2"/>
+      <line x1="80" y1="149" x2="108" y2="75" stroke="#38bdf8" stroke-width="1.3" stroke-dasharray="3,2"/>
+
+      <rect x="110" y="40" width="100" height="52" rx="7" fill="rgba(52,211,153,.1)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="160" y="62" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">W_i · [h,x] + b_i</text>
+      <text x="160" y="78" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">(linear layer)</text>
+      <line x1="210" y1="66" x2="248" y2="66" stroke="#475569" stroke-width="1.3" marker-end="url(#ia)"/>
+      <rect x="250" y="48" width="56" height="36" rx="8" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="2"/>
+      <text x="278" y="70" text-anchor="middle" font-family="Sora" font-size="13" font-weight="800" fill="#34d399">σ</text>
+      <line x1="306" y1="66" x2="360" y2="90" stroke="#34d399" stroke-width="2" marker-end="url(#ig)"/>
+      <rect x="340" y="50" width="30" height="22" rx="4" fill="rgba(52,211,153,.25)" stroke="#34d399" stroke-width="2"/>
+      <text x="355" y="65" text-anchor="middle" font-family="Sora" font-size="10" font-weight="800" fill="#34d399">iₜ</text>
+      <text x="278" y="38" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">values ∈ (0,1)</text>
+      <text x="278" y="27" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">how much to write</text>
+
+      <!-- Bottom path: candidate c̃_t -->
+      <line x1="80" y1="109" x2="108" y2="145" stroke="#818cf8" stroke-width="1.3" stroke-dasharray="3,2"/>
+      <line x1="80" y1="149" x2="108" y2="155" stroke="#38bdf8" stroke-width="1.3" stroke-dasharray="3,2"/>
+
+      <rect x="110" y="130" width="100" height="52" rx="7" fill="rgba(251,146,60,.1)" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="160" y="152" text-anchor="middle" font-family="Sora" font-size="9" fill="#fb923c">W_c · [h,x] + b_c</text>
+      <text x="160" y="168" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">(linear layer)</text>
+      <line x1="210" y1="156" x2="248" y2="156" stroke="#475569" stroke-width="1.3" marker-end="url(#ia)"/>
+      <rect x="250" y="138" width="56" height="36" rx="8" fill="rgba(251,146,60,.2)" stroke="#fb923c" stroke-width="2"/>
+      <text x="278" y="160" text-anchor="middle" font-family="Sora" font-size="13" font-weight="800" fill="#fb923c">tanh</text>
+      <line x1="306" y1="156" x2="360" y2="130" stroke="#fb923c" stroke-width="2" marker-end="url(#ia)"/>
+      <rect x="340" y="140" width="30" height="22" rx="4" fill="rgba(251,146,60,.25)" stroke="#fb923c" stroke-width="2"/>
+      <text x="355" y="155" text-anchor="middle" font-family="Sora" font-size="9" font-weight="800" fill="#fb923c">c̃ₜ</text>
+      <text x="278" y="200" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">values ∈ (−1, +1)</text>
+      <text x="278" y="213" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">what to write (direction)</text>
+
+      <!-- Hadamard product -->
+      <circle cx="440" cy="110" r="22" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="2"/>
+      <text x="440" y="116" text-anchor="middle" font-family="Sora" font-size="18" font-weight="700" fill="#34d399">⊙</text>
+
+      <!-- Output -->
+      <line x1="462" y1="110" x2="510" y2="110" stroke="#34d399" stroke-width="2.5" marker-end="url(#ig)"/>
+      <rect x="512" y="94" width="100" height="32" rx="6" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="562" y="114" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">iₜ ⊙ c̃ₜ</text>
+      <text x="562" y="142" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">new memory to add to cell state</text>
+
+      <!-- "add to cell state" note -->
+      <text x="562" y="165" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">This gets added to fₜ ⊙ c_{t−1}</text>
+      <text x="562" y="178" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">to produce cₜ</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Analogy — Taking Notes While Reading</div>
+    <div class="callout-body">The candidate c̃_t is like everything you <em>could</em> potentially write in your notes about the current sentence. The input gate i_t is your judgment about what is actually important enough to write down. Even if a sentence contains a lot of information, you might decide that only one or two key facts are worth committing to your notes. The LSTM makes exactly this judgment for every dimension of its memory independently — some dimensions it writes strongly, others it barely touches, others it completely ignores for this particular input.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S5: OUTPUT GATE ══════ -->
+<div class="section-block open" id="s5">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(129,140,248,.15);color:var(--accent2)">05</div>
+      <div>
+        <div class="section-title">The Output Gate — Deciding What to Expose</div>
+        <div class="section-sub">Gate 3 of 3: filtering the cell state into the working memory hidden state h_t</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>After the forget and input gates have updated the cell state c_t — the long-term memory now contains a revised summary of all important history — the output gate decides how much of that memory to expose as the hidden state h_t. The hidden state is what the network actually uses for making predictions and what gets passed to the next time step as working context. The cell state might contain a lot of stored information, but not all of it is relevant for the current prediction. The output gate selectively filters what to surface.</p>
+
+  <div class="math-block">
+    <div class="math-label">Output gate and final hidden state computation</div>
+    $$\mathbf{o}_t = \sigma\!\left(\mathbf{W}_o\,[\mathbf{h}_{t-1},\,\mathbf{x}_t] + \mathbf{b}_o\right)$$
+    $$\mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{c}_t)$$
+  </div>
+
+  <p>The tanh applied to c_t re-squashes the cell state values into (−1, 1) — this is important because the cell state can grow large in magnitude over many steps of accumulation. Then the output gate o_t filters this squashed cell state dimension by dimension. Dimensions where o_t ≈ 1 are fully exposed in h_t; dimensions where o_t ≈ 0 remain in the cell state but do not affect the current output or the next cell's input.</p>
+
+  <div class="callout analogy">
+    <div class="callout-title">🧠 Analogy — Long-Term Memory vs Working Memory</div>
+    <div class="callout-body">Your long-term memory contains everything you have ever learned — but your working memory only holds what is relevant right now. You know calculus, but when you are buying groceries you do not need it active in your working memory. The output gate is the selective retrieval mechanism: it reads from long-term storage (cell state) and loads only what is relevant into working memory (hidden state). When generating the verb of a sentence, the output gate might expose "what is the current subject number" from the cell state but suppress "what was the topic of the previous paragraph".</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S6: FULL LSTM ══════ -->
+<div class="section-block open" id="s6">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">06</div>
+      <div>
+        <div class="section-title">The Complete LSTM Cell — All Gates Together</div>
+        <div class="section-sub">All five equations, the full data-flow diagram, parameter count, and why the architecture works</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>Now that we have built each gate individually, we can see the complete LSTM as a unified system. Five equations define the entire computation — three gate equations, one candidate, and two state updates. Read them in order and notice how each one feeds into the next.</p>
+
+  <div class="math-block">
+    <div class="math-label">Complete LSTM equations — evaluated in this order at every time step t</div>
+    $$\mathbf{f}_t = \sigma(\mathbf{W}_f[\mathbf{h}_{t-1},\mathbf{x}_t] + \mathbf{b}_f) \quad \text{(1) Forget gate — what to erase}$$
+    $$\mathbf{i}_t = \sigma(\mathbf{W}_i[\mathbf{h}_{t-1},\mathbf{x}_t] + \mathbf{b}_i) \quad \text{(2) Input gate — how much to write}$$
+    $$\tilde{\mathbf{c}}_t = \tanh(\mathbf{W}_c[\mathbf{h}_{t-1},\mathbf{x}_t] + \mathbf{b}_c) \quad \text{(3) Candidate — what to write}$$
+    $$\mathbf{c}_t = \mathbf{f}_t \odot \mathbf{c}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{c}}_t \quad \text{(4) Cell state update — long-term memory}$$
+    $$\mathbf{o}_t = \sigma(\mathbf{W}_o[\mathbf{h}_{t-1},\mathbf{x}_t] + \mathbf{b}_o) \quad \text{(5) Output gate — what to expose}$$
+    $$\mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{c}_t) \quad \text{(6) Hidden state — working memory}$$
+  </div>
+
+  <h2 class="sub">The Complete Cell Diagram</h2>
+
+  <div class="viz">
+    <div class="viz-title">Full LSTM cell — cell state flows horizontally across the top, gates operate on it from below</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 860 330" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:860px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="a1" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="ag" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+        <marker id="ar" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#f87171"/></marker>
+        <marker id="ao" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#fb923c"/></marker>
+        <marker id="ap" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#818cf8"/></marker>
+        <marker id="at" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#38bdf8"/></marker>
+      </defs>
+
+      <!-- CELL STATE HIGHWAY (top) -->
+      <rect x="30"  y="30" width="72" height="32" rx="6" fill="rgba(52,211,153,.25)" stroke="#34d399" stroke-width="2.5"/>
+      <text x="66"  y="50" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#34d399">c_{t-1}</text>
+
+      <!-- ─── FORGET gate block ─── -->
+      <!-- Multiply node on cell state highway -->
+      <circle cx="185" cy="46" r="20" fill="rgba(248,113,113,.15)" stroke="#f87171" stroke-width="2"/>
+      <text x="185" y="52" text-anchor="middle" font-family="Sora" font-size="16" font-weight="700" fill="#f87171">⊙</text>
+      <line x1="102" y1="46" x2="164" y2="46" stroke="#34d399" stroke-width="2.5" marker-end="url(#a1)"/>
+
+      <!-- Forget gate sigmoid below -->
+      <rect x="148" y="130" width="74" height="36" rx="8" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="2"/>
+      <text x="185" y="148" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#f87171">σ</text>
+      <text x="185" y="162" text-anchor="middle" font-family="Sora" font-size="8" fill="#f87171">forget gate</text>
+      <line x1="185" y1="130" x2="185" y2="66" stroke="#f87171" stroke-width="1.8" marker-end="url(#ar)"/>
+
+      <!-- ─── ADD node on cell state highway ─── -->
+      <circle cx="445" cy="46" r="20" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="2"/>
+      <text x="445" y="52" text-anchor="middle" font-family="Sora" font-size="18" font-weight="700" fill="#34d399">+</text>
+      <line x1="205" y1="46" x2="424" y2="46" stroke="#34d399" stroke-width="2.5" marker-end="url(#a1)"/>
+
+      <!-- ─── INPUT gate block ─── -->
+      <!-- Input gate sigmoid -->
+      <rect x="318" y="120" width="74" height="36" rx="8" fill="rgba(52,211,153,.18)" stroke="#34d399" stroke-width="2"/>
+      <text x="355" y="138" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#34d399">σ</text>
+      <text x="355" y="152" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">input gate</text>
+
+      <!-- Candidate tanh -->
+      <rect x="318" y="190" width="74" height="36" rx="8" fill="rgba(251,146,60,.18)" stroke="#fb923c" stroke-width="2"/>
+      <text x="355" y="208" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#fb923c">tanh</text>
+      <text x="355" y="222" text-anchor="middle" font-family="Sora" font-size="8" fill="#fb923c">candidate c̃</text>
+
+      <!-- Input × Candidate multiply node -->
+      <circle cx="420" cy="170" r="18" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.8"/>
+      <text x="420" y="176" text-anchor="middle" font-family="Sora" font-size="15" font-weight="700" fill="#34d399">⊙</text>
+      <line x1="392" y1="138" x2="410" y2="158" stroke="#34d399" stroke-width="1.5" marker-end="url(#ag)"/>
+      <line x1="392" y1="208" x2="412" y2="184" stroke="#fb923c" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <!-- iₜ ⊙ c̃ₜ → ADD node -->
+      <line x1="438" y1="160" x2="445" y2="66" stroke="#34d399" stroke-width="1.8" marker-end="url(#ag)"/>
+
+      <!-- Cell state continues to right -->
+      <line x1="465" y1="46" x2="600" y2="46" stroke="#34d399" stroke-width="2.5" marker-end="url(#ag)"/>
+
+      <!-- ─── tanh of c_t ─── -->
+      <rect x="602" y="30" width="60" height="32" rx="7" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="632" y="50" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#34d399">tanh(cₜ)</text>
+
+      <!-- c_t output box -->
+      <rect x="755" y="30" width="72" height="32" rx="6" fill="rgba(52,211,153,.25)" stroke="#34d399" stroke-width="2.5"/>
+      <text x="791" y="50" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#34d399">cₜ</text>
+      <line x1="662" y1="46" x2="754" y2="46" stroke="#34d399" stroke-width="2.5" marker-end="url(#ag)"/>
+
+      <!-- ─── OUTPUT gate block ─── -->
+      <rect x="598" y="120" width="74" height="36" rx="8" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="2"/>
+      <text x="635" y="138" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#818cf8">σ</text>
+      <text x="635" y="152" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">output gate</text>
+
+      <!-- Output gate × tanh(c_t) multiply node -->
+      <circle cx="720" cy="130" r="20" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="2"/>
+      <text x="720" y="136" text-anchor="middle" font-family="Sora" font-size="16" font-weight="700" fill="#818cf8">⊙</text>
+      <line x1="672" y1="138" x2="699" y2="135" stroke="#818cf8" stroke-width="1.8" marker-end="url(#ap)"/>
+      <line x1="632" y1="62" x2="706" y2="118" stroke="#34d399" stroke-width="1.5" marker-end="url(#a1)"/>
+
+      <!-- h_t output -->
+      <line x1="740" y1="130" x2="791" y2="130" stroke="#818cf8" stroke-width="2.5" marker-end="url(#ap)"/>
+      <rect x="755" y="114" width="72" height="32" rx="6" fill="rgba(129,140,248,.25)" stroke="#818cf8" stroke-width="2.5"/>
+      <text x="791" y="134" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#818cf8">hₜ</text>
+
+      <!-- INPUTS: h_{t-1} and x_t from left/bottom -->
+      <rect x="30" y="114" width="72" height="32" rx="6" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="66" y="134" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h_{t-1}</text>
+
+      <rect x="30" y="250" width="72" height="32" rx="6" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="66" y="270" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">xₜ</text>
+
+      <!-- h_{t-1} & x_t fan out to all three gate blocks -->
+      <!-- To forget gate -->
+      <line x1="102" y1="130" x2="148" y2="148" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="4,2"/>
+      <line x1="66"  y1="282" x2="165" y2="166" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="4,2"/>
+      <!-- To input gate -->
+      <line x1="102" y1="130" x2="318" y2="138" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="4,2"/>
+      <line x1="66"  y1="282" x2="318" y2="208" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="4,2"/>
+      <!-- To output gate -->
+      <line x1="102" y1="130" x2="598" y2="138" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="4,2"/>
+      <line x1="66"  y1="282" x2="598" y2="155" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="4,2"/>
+
+      <!-- h_t → h_{t-1} feedback annotation -->
+      <path d="M 791 146 L 791 290 L 66 290 L 66 282" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#ap)"/>
+      <text x="430" y="308" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8">hₜ becomes h_{t-1} at the next step</text>
+
+      <!-- Gate labels at bottom -->
+      <rect x="148" y="178" width="74" height="18" rx="3" fill="rgba(248,113,113,.1)" stroke="rgba(248,113,113,.3)" stroke-width="1"/>
+      <text x="185" y="191" text-anchor="middle" font-family="Sora" font-size="8" fill="#f87171">FORGET GATE</text>
+
+      <rect x="318" y="238" width="74" height="18" rx="3" fill="rgba(52,211,153,.1)" stroke="rgba(52,211,153,.3)" stroke-width="1"/>
+      <text x="355" y="251" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">INPUT GATE</text>
+
+      <rect x="598" y="168" width="74" height="18" rx="3" fill="rgba(129,140,248,.1)" stroke="rgba(129,140,248,.3)" stroke-width="1"/>
+      <text x="635" y="181" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">OUTPUT GATE</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">Parameter Count — Four Times a Vanilla RNN</h2>
+  <p>An LSTM has four sets of weights — one for each of the three gates plus one for the candidate values — all sharing the same input structure [h_{t−1}, x_t]. If the input size is n and hidden size is h, each weight matrix is of shape (h, n+h), and there are 4 such matrices plus 4 bias vectors:</p>
+
+  <div class="math-block">
+    <div class="math-label">Total LSTM parameters</div>
+    $$\text{Params} = 4 \times \underbrace{h \times (n + h)}_{\text{weight matrix}} + 4 \times \underbrace{h}_{\text{bias}} = 4h(n + h) + 4h$$
+  </div>
+
+  <p>In practice this is often written as 4h(n + h + 1). An LSTM with input size 64 and hidden size 256 has 4 × 256 × (64 + 256 + 1) = 327,680 parameters — exactly 4× what a vanilla RNN of the same size would have. This is a meaningful but very reasonable cost for the enormous improvement in long-range memory capability.</p>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ Why the Architecture Actually Works — Intuition</div>
+    <div class="callout-body">The three gates together implement something remarkably like selective attention to your own memory. The forget gate says "these dimensions of my stored knowledge are no longer relevant — clear them." The input gate says "these dimensions of new information are important enough to store." The output gate says "to make this particular prediction, I need to look at these aspects of my stored memory." Each gate is fully learned — the network discovers what to forget, write, and read entirely from the training signal, without any human guidance. This learned selectivity is what allows LSTMs to remember specific facts for hundreds of time steps while continuously accepting new information without overwriting everything.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S7: GRU ══════ -->
+<div class="section-block open" id="s7">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(244,114,182,.15);color:var(--accent5)">07</div>
+      <div>
+        <div class="section-title">Gated Recurrent Unit (GRU) — A Streamlined Alternative</div>
+        <div class="section-sub">Cho et al. (2014): merging cell and hidden state, collapsing to two gates, matching LSTM performance with fewer parameters</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The GRU, introduced by Cho et al. in 2014, asks a natural question: does an LSTM really need all that complexity? Three separate gate matrices, two separate state vectors, six separate equations — is all of it necessary? Their answer was that a great deal of it can be unified without sacrificing much expressive power. The GRU merges the cell state and hidden state into a single vector, collapses the forget and input gates into a single complementary pair, and eliminates the output gate entirely. The result is a model with two-thirds the parameters of an LSTM that often matches it in practice.</p>
+
+  <h2 class="sub">The Two GRU Gates</h2>
+
+  <p>GRU has two gates: the <strong>reset gate</strong> r_t, which controls how much of the previous hidden state to use when computing candidate values (effectively deciding how much past context to "forget" when forming new memories), and the <strong>update gate</strong> z_t, which controls the blend between old hidden state and new candidate — a single gate doing the combined job of LSTM's forget and input gates.</p>
+
+  <div class="math-block">
+    <div class="math-label">Complete GRU equations — just three equations vs LSTM's six</div>
+    $$\mathbf{z}_t = \sigma(\mathbf{W}_z[\mathbf{h}_{t-1},\,\mathbf{x}_t] + \mathbf{b}_z) \qquad \text{(1) Update gate — how much to update}$$
+    $$\mathbf{r}_t = \sigma(\mathbf{W}_r[\mathbf{h}_{t-1},\,\mathbf{x}_t] + \mathbf{b}_r) \qquad \text{(2) Reset gate — how much past to use}$$
+    $$\tilde{\mathbf{h}}_t = \tanh(\mathbf{W}_h[\mathbf{r}_t \odot \mathbf{h}_{t-1},\,\mathbf{x}_t] + \mathbf{b}_h) \qquad \text{(3) Candidate hidden state}$$
+    $$\mathbf{h}_t = (1 - \mathbf{z}_t) \odot \mathbf{h}_{t-1} + \mathbf{z}_t \odot \tilde{\mathbf{h}}_t \qquad \text{(4) Final hidden state}$$
+  </div>
+
+  <p>Equation 4 is the most elegant part of the GRU and worth pausing on. It is a <em>linear interpolation</em> between the old hidden state h_{t−1} and the new candidate h̃_t, controlled by z_t. When z_t = 0 for a particular dimension, h_t = h_{t−1} — that dimension is completely preserved, unchanged, just like a forget gate of 1 combined with an input gate of 0 in LSTM. When z_t = 1, h_t = h̃_t — the old value is completely replaced by the new candidate. The complementary structure (1 − z_t) and z_t ensures the weights always sum to 1, giving a clean interpolation. This is the key insight: the GRU realises that "forget old" and "accept new" are not independent decisions — they are opposite ends of the same dial.</p>
+
+  <div class="viz">
+    <div class="viz-title">GRU cell — single hidden state, two gates, complementary update equation</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 820 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:820px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="ga" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#475569"/></marker>
+        <marker id="gp" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#f472b6"/></marker>
+        <marker id="gb" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#38bdf8"/></marker>
+        <marker id="gg" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7z" fill="#34d399"/></marker>
+      </defs>
+
+      <!-- Inputs -->
+      <rect x="14" y="60" width="72" height="30" rx="6" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="50" y="79" text-anchor="middle" font-family="Sora" font-size="10" font-weight="700" fill="#818cf8">h_{t-1}</text>
+      <rect x="14" y="230" width="72" height="30" rx="6" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="50" y="249" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#38bdf8">xₜ</text>
+
+      <!-- Update gate z_t -->
+      <rect x="130" y="44" width="80" height="36" rx="8" fill="rgba(244,114,182,.18)" stroke="#f472b6" stroke-width="2"/>
+      <text x="170" y="63" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#f472b6">σ</text>
+      <text x="170" y="76" text-anchor="middle" font-family="Sora" font-size="8" fill="#f472b6">update gate zₜ</text>
+      <line x1="86" y1="70" x2="130" y2="62" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="3,2"/>
+      <line x1="86" y1="245" x2="130" y2="70" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+      <!-- Reset gate r_t -->
+      <rect x="130" y="110" width="80" height="36" rx="8" fill="rgba(56,189,248,.18)" stroke="#38bdf8" stroke-width="2"/>
+      <text x="170" y="129" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#38bdf8">σ</text>
+      <text x="170" y="142" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">reset gate rₜ</text>
+      <line x1="86" y1="70" x2="130" y2="128" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="3,2"/>
+      <line x1="86" y1="245" x2="130" y2="136" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+      <!-- r_t × h_{t-1} -->
+      <circle cx="310" cy="128" r="18" fill="rgba(56,189,248,.12)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="310" y="134" text-anchor="middle" font-family="Sora" font-size="14" font-weight="700" fill="#38bdf8">⊙</text>
+      <line x1="210" y1="128" x2="291" y2="128" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#ga)"/>
+      <!-- h_{t-1} → r_t multiply -->
+      <line x1="86" y1="75" x2="291" y2="128" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+      <!-- Candidate tanh -->
+      <rect x="352" y="110" width="90" height="36" rx="8" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="2"/>
+      <text x="397" y="130" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#34d399">tanh</text>
+      <text x="397" y="143" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">candidate h̃ₜ</text>
+      <line x1="328" y1="128" x2="352" y2="128" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#ga)"/>
+      <!-- x_t also goes to candidate -->
+      <line x1="86" y1="245" x2="352" y2="140" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+      <!-- Linear interpolation node -->
+      <rect x="520" y="95" width="120" height="50" rx="9" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="2"/>
+      <text x="580" y="117" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">hₜ = (1−zₜ)⊙h_{t-1}</text>
+      <text x="580" y="133" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">+ zₜ ⊙ h̃ₜ</text>
+      <text x="580" y="156" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">lerp(old, new, z)</text>
+
+      <!-- z_t → lerp node -->
+      <line x1="210" y1="62" x2="520" y2="110" stroke="#f472b6" stroke-width="1.8" marker-end="url(#gp)"/>
+      <!-- h̃_t → lerp node -->
+      <line x1="442" y1="128" x2="520" y2="128" stroke="#34d399" stroke-width="1.8" marker-end="url(#gg)"/>
+      <!-- h_{t-1} → lerp node -->
+      <line x1="86" y1="72" x2="520" y2="112" stroke="#818cf8" stroke-width="1.2" stroke-dasharray="4,2"/>
+
+      <!-- h_t output -->
+      <line x1="640" y1="120" x2="710" y2="120" stroke="#f472b6" stroke-width="2.5" marker-end="url(#gp)"/>
+      <rect x="712" y="104" width="72" height="32" rx="6" fill="rgba(244,114,182,.25)" stroke="#f472b6" stroke-width="2.5"/>
+      <text x="748" y="124" text-anchor="middle" font-family="Sora" font-size="11" font-weight="800" fill="#f472b6">hₜ</text>
+
+      <!-- feedback arrow -->
+      <path d="M 748 136 L 748 265 L 50 265 L 50 260" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="6,3" marker-end="url(#ga)"/>
+      <text x="400" y="280" text-anchor="middle" font-family="Sora" font-size="9" fill="#818cf8">hₜ becomes h_{t-1} at next step — only ONE state vector (no separate cell state)</text>
+
+      <!-- "No separate cell state" annotation -->
+      <rect x="520" y="180" width="220" height="40" rx="7" fill="rgba(244,114,182,.07)" stroke="rgba(244,114,182,.3)" stroke-width="1"/>
+      <text x="630" y="197" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">Key GRU simplification:</text>
+      <text x="630" y="211" text-anchor="middle" font-family="Sora" font-size="9" fill="#94a3b8">h_t IS both the output AND the memory</text>
+    </svg>
+    </div>
+  </div>
+
+  <h2 class="sub">The Reset Gate — What It Actually Does</h2>
+
+  <p>The reset gate r_t warrants a closer look because its role is subtler than the update gate. When r_t = 1 (no reset), the candidate h̃_t is computed using the full previous hidden state — the standard recurrent behaviour. When r_t = 0 for certain dimensions, those dimensions of h_{t−1} are zeroed out before being fed into the candidate computation. This means the candidate is computed as if the network had no memory of those specific past states — effectively giving the candidate a "fresh start" for those dimensions. This is what allows GRU to model short-term patterns without the long-term memory interfering: when a new, locally-consistent sub-sequence begins, the reset gate suppresses the long-range history and lets the network respond to just the local context.</p>
+
+  <div class="callout insight">
+    <div class="callout-title">✅ GRU's Elegant Complementarity</div>
+    <div class="callout-body">The update gate equation h_t = (1−z_t)⊙h_{t-1} + z_t⊙h̃_t is beautiful in its simplicity. It is a weighted average of old and new, where the weights are constrained to sum to 1. This means the GRU cannot both strongly preserve old information AND strongly write new information to the same dimension simultaneously — it must choose. This constraint actually helps regularise the model: it cannot keep growing its hidden state magnitude without bound the way an unconstrained LSTM theoretically could. In practice this makes GRU slightly easier to train stably than LSTM.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S8: LSTM vs GRU ══════ -->
+<div class="section-block open" id="s8">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(56,189,248,.15);color:var(--accent3)">08</div>
+      <div>
+        <div class="section-title">LSTM vs GRU — When to Use Which</div>
+        <div class="section-sub">Architecture differences, empirical trade-offs, and practical decision rules</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>The honest answer from over a decade of empirical research is: <strong>there is no universal winner</strong>. LSTM and GRU perform comparably on most tasks, and the difference is rarely large enough to be the deciding factor in a real project. But understanding their structural differences gives you principled intuitions for when to prefer one over the other.</p>
+
+  <table class="tbl">
+    <tr>
+      <th style="width:22%">Property</th>
+      <th style="width:39%">LSTM</th>
+      <th style="width:39%">GRU</th>
+    </tr>
+    <tr>
+      <td><strong>State vectors</strong></td>
+      <td>Two: cell state <ic>cₜ</ic> (long-term) + hidden state <ic>hₜ</ic> (working)</td>
+      <td>One: hidden state <ic>hₜ</ic> serves both roles</td>
+    </tr>
+    <tr>
+      <td><strong>Number of gates</strong></td>
+      <td>3 (forget, input, output)</td>
+      <td>2 (reset, update)</td>
+    </tr>
+    <tr>
+      <td><strong>Parameter count</strong></td>
+      <td>4h(n+h+1)</td>
+      <td>3h(n+h+1) — 25% fewer</td>
+    </tr>
+    <tr>
+      <td><strong>Memory mechanism</strong></td>
+      <td>Explicit separate cell state — dedicated long-term storage that can be maintained independently of working memory</td>
+      <td>Implicit — the single hidden state must serve as both long-term storage and working output</td>
+    </tr>
+    <tr>
+      <td><strong>Training speed</strong></td>
+      <td>Slower per step (more parameters, more operations)</td>
+      <td>Faster per step — often 20–30% faster wall-clock time on same hardware</td>
+    </tr>
+    <tr>
+      <td><strong>Very long sequences</strong></td>
+      <td>Marginally better — the explicit cell state is a more direct gradient highway</td>
+      <td>Slightly weaker — single state means memory and working signal compete for the same dimensions</td>
+    </tr>
+    <tr>
+      <td><strong>Small datasets</strong></td>
+      <td>Prone to overfitting due to more parameters</td>
+      <td>Often better — fewer parameters regularise the model naturally</td>
+    </tr>
+    <tr>
+      <td><strong>Empirical winner</strong></td>
+      <td>Tends to win on large-scale NLP (machine translation, language modelling) with enough data</td>
+      <td>Tends to match LSTM on smaller tasks; preferred in embedded/resource-constrained settings</td>
+    </tr>
+  </table>
+
+  <div class="compare-grid">
+    <div class="compare-panel">
+      <h3 style="color:var(--accent3)">When to prefer LSTM</h3>
+      <p>Choose LSTM when your sequences are very long (hundreds of steps or more) and long-range dependencies are critical — for instance, resolving pronoun coreference across a paragraph, or modelling long musical structures. Also prefer LSTM when you have a large dataset and can afford the extra parameters, and when you are building on top of a large pretrained model where the LSTM weight structure is already established. The explicit separation of cell state and hidden state gives LSTM a slightly cleaner gradient path for truly long-range signals.</p>
+    </div>
+    <div class="compare-panel">
+      <h3 style="color:var(--accent5)">When to prefer GRU</h3>
+      <p>Choose GRU when training speed matters (the 25% parameter reduction adds up on large datasets), when your dataset is small or moderately sized (fewer parameters reduce overfitting risk), when you are deploying on resource-constrained hardware like mobile or embedded systems, or when your sequences are moderate length and you have no strong reason to believe LSTM's extra machinery will help. GRU is also slightly easier to tune because there are fewer hyperparameter interactions.</p>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <div class="callout-title">⚠️ Practical Advice — Just Try Both</div>
+    <div class="callout-body">On any new task, the empirical answer almost always wins over the theoretical one. Run both LSTM and GRU with the same hidden size, same learning rate schedule, same dropout, and compare validation performance after the same number of training steps. In most cases the difference will be small enough that the faster-training GRU is the practical winner. If LSTM clearly wins, the task likely has very long-range dependencies worth the cost. The one case where you should default to LSTM without a comparison is when implementing from scratch to understand the architecture — the explicit cell state makes the gradient flow argument far cleaner to see.</div>
+  </div>
+
+  <h2 class="sub">A Third Perspective — Structural Comparison</h2>
+  <p>It helps to see the two architectures side by side as pure data-flow patterns. The critical structural difference is that LSTM maintains an information pathway (the cell state) that flows through the network with only additive modifications — meaning it can pass gradient signal backward through hundreds of steps with minimal decay. GRU merges this into the hidden state, which is cleaner but means the gradient does pass through the update-gate multiplication at every step, albeit only element-wise rather than through a full weight matrix.</p>
+
+  <div class="viz">
+    <div class="viz-title">Side-by-side data-flow through one cell step — LSTM (left) vs GRU (right)</div>
+    <div class="svg-wrap">
+    <svg viewBox="0 0 780 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:780px;display:block;margin:0 auto;">
+      <defs>
+        <marker id="cv" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#475569"/></marker>
+        <marker id="cg" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#34d399"/></marker>
+        <marker id="cp" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#818cf8"/></marker>
+        <marker id="ck" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6z" fill="#f472b6"/></marker>
+      </defs>
+
+      <!-- LSTM side -->
+      <text x="190" y="16" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#34d399">LSTM</text>
+
+      <!-- Cell state highway (green) -->
+      <line x1="20" y1="50" x2="360" y2="50" stroke="#34d399" stroke-width="3"/>
+      <circle cx="130" cy="50" r="14" fill="rgba(248,113,113,.2)" stroke="#f87171" stroke-width="1.5"/>
+      <text x="130" y="55" text-anchor="middle" font-family="Sora" font-size="12" fill="#f87171">⊙</text>
+      <circle cx="270" cy="50" r="14" fill="rgba(52,211,153,.2)" stroke="#34d399" stroke-width="1.5"/>
+      <text x="270" y="55" text-anchor="middle" font-family="Sora" font-size="14" fill="#34d399">+</text>
+      <text x="190" y="38" text-anchor="middle" font-family="Sora" font-size="9" fill="#34d399">cell state — additive highway →</text>
+
+      <!-- Hidden state (purple) -->
+      <line x1="20" y1="140" x2="130" y2="140" stroke="#818cf8" stroke-width="2" stroke-dasharray="4,2"/>
+      <rect x="40" y="90" width="55" height="28" rx="5" fill="rgba(248,113,113,.15)" stroke="#f87171" stroke-width="1.2"/>
+      <text x="67" y="108" text-anchor="middle" font-family="Sora" font-size="8" fill="#f87171">f σ</text>
+      <line x1="67" y1="90" x2="110" y2="64" stroke="#f87171" stroke-width="1.2" marker-end="url(#cv)"/>
+
+      <rect x="155" y="90" width="55" height="28" rx="5" fill="rgba(52,211,153,.15)" stroke="#34d399" stroke-width="1.2"/>
+      <text x="182" y="108" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">i σ + tanh</text>
+      <line x1="182" y1="90" x2="256" y2="64" stroke="#34d399" stroke-width="1.2" marker-end="url(#cv)"/>
+
+      <rect x="270" y="90" width="55" height="28" rx="5" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.2"/>
+      <text x="297" y="108" text-anchor="middle" font-family="Sora" font-size="8" fill="#818cf8">o σ</text>
+
+      <line x1="270" y1="50" x2="297" y2="90" stroke="#34d399" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+      <circle cx="330" cy="140" r="14" fill="rgba(129,140,248,.15)" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="330" y="145" text-anchor="middle" font-family="Sora" font-size="12" fill="#818cf8">⊙</text>
+      <line x1="325" y1="118" x2="325" y2="126" stroke="#818cf8" stroke-width="1.2" marker-end="url(#cv)"/>
+      <line x1="130" y1="140" x2="316" y2="140" stroke="#818cf8" stroke-width="1.8" marker-end="url(#cv)"/>
+      <line x1="344" y1="140" x2="360" y2="140" stroke="#818cf8" stroke-width="2" marker-end="url(#cp)"/>
+
+      <text x="20" y="160" font-family="Sora" font-size="8" fill="#818cf8">h_{t-1}</text>
+      <text x="350" y="160" font-family="Sora" font-size="8" fill="#818cf8">hₜ</text>
+      <text x="20" y="44" font-family="Sora" font-size="8" fill="#34d399">c_{t-1}</text>
+      <text x="348" y="44" font-family="Sora" font-size="8" fill="#34d399">cₜ</text>
+
+      <text x="190" y="185" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">2 states · 3 gates · 4 weight matrices</text>
+
+      <!-- Divider -->
+      <line x1="390" y1="20" x2="390" y2="180" stroke="#2d3748" stroke-width="1" stroke-dasharray="5,3"/>
+
+      <!-- GRU side -->
+      <text x="590" y="16" text-anchor="middle" font-family="Sora" font-size="11" font-weight="700" fill="#f472b6">GRU</text>
+
+      <!-- Single hidden state highway -->
+      <line x1="410" y1="95" x2="760" y2="95" stroke="#f472b6" stroke-width="2.5"/>
+      <text x="590" y="83" text-anchor="middle" font-family="Sora" font-size="9" fill="#f472b6">single hidden state — lerp update →</text>
+
+      <!-- Reset + update gate boxes -->
+      <rect x="430" y="115" width="70" height="28" rx="5" fill="rgba(56,189,248,.15)" stroke="#38bdf8" stroke-width="1.2"/>
+      <text x="465" y="133" text-anchor="middle" font-family="Sora" font-size="8" fill="#38bdf8">r reset σ</text>
+
+      <rect x="540" y="115" width="70" height="28" rx="5" fill="rgba(244,114,182,.15)" stroke="#f472b6" stroke-width="1.2"/>
+      <text x="575" y="133" text-anchor="middle" font-family="Sora" font-size="8" fill="#f472b6">z update σ</text>
+
+      <!-- Candidate tanh -->
+      <rect x="430" y="155" width="70" height="28" rx="5" fill="rgba(52,211,153,.12)" stroke="#34d399" stroke-width="1.2"/>
+      <text x="465" y="173" text-anchor="middle" font-family="Sora" font-size="8" fill="#34d399">tanh (r⊙h)</text>
+
+      <!-- Lerp node -->
+      <rect x="660" y="78" width="80" height="34" rx="7" fill="rgba(244,114,182,.12)" stroke="#f472b6" stroke-width="1.5"/>
+      <text x="700" y="96" text-anchor="middle" font-family="Sora" font-size="9" font-weight="700" fill="#f472b6">lerp(h,h̃,z)</text>
+
+      <line x1="575" y1="115" x2="665" y2="95" stroke="#f472b6" stroke-width="1.3" marker-end="url(#cv)"/>
+      <line x1="465" y1="155" x2="665" y2="100" stroke="#34d399" stroke-width="1.3" marker-end="url(#cv)"/>
+
+      <text x="410" y="88" font-family="Sora" font-size="8" fill="#f472b6">h_{t-1}</text>
+      <text x="747" y="88" font-family="Sora" font-size="8" fill="#f472b6">hₜ</text>
+      <text x="590" y="185" text-anchor="middle" font-family="Sora" font-size="8" fill="#64748b">1 state · 2 gates · 3 weight matrices</text>
+    </svg>
+    </div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S9: PYTORCH ══════ -->
+<div class="section-block open" id="s9">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(52,211,153,.15);color:var(--accent)">09</div>
+      <div>
+        <div class="section-title">PyTorch Implementation — LSTM and GRU, From Scratch and with nn.LSTM</div>
+        <div class="section-sub">Building an LSTM cell manually to see every gate, then using the production API correctly</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <p>As with vanilla RNNs, the best way to solidify the LSTM equations is to implement them from scratch in PyTorch before switching to <ic>nn.LSTM</ic>. When you write out each gate by hand you cannot gloss over any detail — every weight matrix, every sigmoid, every element-wise multiply becomes concrete. After that, the <ic>nn.LSTM</ic> API will feel like a transparent abstraction rather than a black box.</p>
+
+  <h2 class="sub">Part 1 — LSTM Cell From Scratch</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · LSTM cell built from scratch — all 5 equations explicit</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">LSTMCellScratch</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""A single LSTM cell implementing all 6 equations explicitly.
+    
+    Inputs:  x_t  (batch, input_size)   — current input
+             h_prev (batch, hidden_size) — previous hidden state
+             c_prev (batch, hidden_size) — previous cell state
+    Outputs: h_t  (batch, hidden_size)  — new hidden state (working memory)
+             c_t  (batch, hidden_size)  — new cell state   (long-term memory)
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_size: <span class="fn">int</span>, hidden_size: <span class="fn">int</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.hidden_size = hidden_size
+
+        <span class="cm"># All four weight matrices take the same concatenated input [h_{t-1}, x_t]
+        # PyTorch convention: combined W has shape (4*hidden, input+hidden)
+        # We keep them separate here for clarity.</span>
+        n = input_size + hidden_size   <span class="cm"># concatenated input size</span>
+        self.W_f = nn.<span class="cls">Linear</span>(n, hidden_size)  <span class="cm"># forget gate</span>
+        self.W_i = nn.<span class="cls">Linear</span>(n, hidden_size)  <span class="cm"># input gate</span>
+        self.W_c = nn.<span class="cls">Linear</span>(n, hidden_size)  <span class="cm"># candidate cell state</span>
+        self.W_o = nn.<span class="cls">Linear</span>(n, hidden_size)  <span class="cm"># output gate</span>
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x_t, h_prev, c_prev):
+        <span class="cm"># Concatenate [h_{t-1}, x_t] → (batch, input+hidden)
+        # All four gates share this same combined input</span>
+        combined = torch.<span class="fn">cat</span>([h_prev, x_t], dim=<span class="num">-1</span>)
+
+        <span class="cm"># ── Gate computations ──────────────────────────────────────────</span>
+        f_t = torch.<span class="fn">sigmoid</span>(self.<span class="fn">W_f</span>(combined))  <span class="cm"># forget: what % to keep from c_{t-1}</span>
+        i_t = torch.<span class="fn">sigmoid</span>(self.<span class="fn">W_i</span>(combined))  <span class="cm"># input:  what % of candidate to write</span>
+        g_t = torch.<span class="fn">tanh</span>   (self.<span class="fn">W_c</span>(combined))  <span class="cm"># candidate: new info (−1 to +1)</span>
+        o_t = torch.<span class="fn">sigmoid</span>(self.<span class="fn">W_o</span>(combined))  <span class="cm"># output: what % to expose as h_t</span>
+
+        <span class="cm"># ── State updates ──────────────────────────────────────────────</span>
+        <span class="cm"># Cell state: keep some of old + add some of new candidate
+        # This addition is the gradient highway — no weight matrix here!</span>
+        c_t = f_t * c_prev + i_t * g_t
+
+        <span class="cm"># Hidden state: filtered view of the cell state
+        # tanh re-squashes c_t to (-1,1); output gate selects what to expose</span>
+        h_t = o_t * torch.<span class="fn">tanh</span>(c_t)
+
+        <span class="kw">return</span> h_t, c_t
+
+
+<span class="kw">class</span> <span class="cls">LSTMScratch</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Full sequence LSTM using LSTMCellScratch with explicit time loop."""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_size, hidden_size, output_size):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.hidden_size = hidden_size
+        self.cell = <span class="cls">LSTMCellScratch</span>(input_size, hidden_size)
+        self.head = nn.<span class="cls">Linear</span>(hidden_size, output_size)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="st">"""x: (batch, seq_len, input_size)"""</span>
+        batch, seq_len, _ = x.<span class="fn">shape</span>
+        h = torch.<span class="fn">zeros</span>(batch, self.hidden_size, device=x.device)
+        c = torch.<span class="fn">zeros</span>(batch, self.hidden_size, device=x.device)
+
+        outputs = []
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(seq_len):
+            h, c = self.cell.<span class="fn">forward</span>(x[:, t, :], h, c)
+            outputs.<span class="fn">append</span>(self.<span class="fn">head</span>(h))
+
+        <span class="kw">return</span> torch.<span class="fn">stack</span>(outputs, dim=<span class="num">1</span>)  <span class="cm"># (batch, seq_len, output_size)</span>
+
+
+<span class="cm"># ── Verify: parameter count should be 4 × h(n+h+1) ─────────────</span>
+cell = <span class="cls">LSTMCellScratch</span>(input_size=<span class="num">64</span>, hidden_size=<span class="num">128</span>)
+params = <span class="fn">sum</span>(p.<span class="fn">numel</span>() <span class="kw">for</span> p <span class="kw">in</span> cell.<span class="fn">parameters</span>())
+<span class="fn">print</span>(<span class="st">f"Params: {params}"</span>)
+<span class="cm"># Expected: 4 × 128 × (64 + 128 + 1) = 98,816</span></code></pre></div>
+  </div>
+
+  <h2 class="sub">Part 2 — Production LSTM with nn.LSTM</h2>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · nn.LSTM API — critical shape details and common pitfalls</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cm"># ── nn.LSTM vs nn.RNN: one important difference in outputs ────────
+# nn.RNN returns: (output, h_n)
+# nn.LSTM returns: (output, (h_n, c_n))  ← note the TUPLE for hidden state!</span>
+
+lstm = nn.<span class="cls">LSTM</span>(
+    input_size   = <span class="num">64</span>,
+    hidden_size  = <span class="num">128</span>,
+    num_layers   = <span class="num">2</span>,
+    batch_first  = <span class="kw">True</span>,   <span class="cm"># always use this!</span>
+    dropout      = <span class="num">0.3</span>,
+    bidirectional= <span class="kw">False</span>,
+)
+
+x   = torch.<span class="fn">randn</span>(<span class="num">32</span>, <span class="num">50</span>, <span class="num">64</span>)          <span class="cm"># (batch=32, seq_len=50, input=64)</span>
+h0  = torch.<span class="fn">zeros</span>(<span class="num">2</span>, <span class="num">32</span>, <span class="num">128</span>)           <span class="cm"># (num_layers, batch, hidden)</span>
+c0  = torch.<span class="fn">zeros</span>(<span class="num">2</span>, <span class="num">32</span>, <span class="num">128</span>)           <span class="cm"># (num_layers, batch, hidden)</span>
+
+out, (h_n, c_n) = lstm.<span class="fn">forward</span>(x, (h0, c0))
+<span class="cm"># out:  (batch, seq_len, hidden)     — ALL hidden states at every step
+# h_n:  (num_layers, batch, hidden)  — FINAL hidden state per layer
+# c_n:  (num_layers, batch, hidden)  — FINAL cell state per layer</span>
+
+<span class="fn">print</span>(out.shape)   <span class="cm"># → (32, 50, 128)</span>
+<span class="fn">print</span>(h_n.shape)   <span class="cm"># → (2, 32, 128)</span>
+<span class="fn">print</span>(c_n.shape)   <span class="cm"># → (2, 32, 128)</span>
+
+
+<span class="cm"># ── Sequence Classifier with LSTM ────────────────────────────────</span>
+<span class="kw">class</span> <span class="cls">LSTMClassifier</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Many-to-One: takes a variable-length sequence, outputs one class label.
+    
+    Design choices explained:
+    - Embedding: learned dense representation of discrete tokens
+    - LSTM: captures temporal dependencies
+    - Take h_n[-1]: the last layer's final hidden state = summary of whole sequence
+    - Dropout: regularisation before the linear classification head
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim, hidden_size,
+                 num_layers, num_classes, dropout=<span class="num">0.3</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        self.lstm  = nn.<span class="cls">LSTM</span>(embed_dim, hidden_size,
+                              num_layers=num_layers, batch_first=<span class="kw">True</span>,
+                              dropout=dropout <span class="kw">if</span> num_layers > <span class="num">1</span> <span class="kw">else</span> <span class="num">0.0</span>)
+        self.drop  = nn.<span class="cls">Dropout</span>(dropout)
+        self.fc    = nn.<span class="cls">Linear</span>(hidden_size, num_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids):
+        <span class="st">"""token_ids: (batch, seq_len) → logits: (batch, num_classes)"""</span>
+        x = self.<span class="fn">embed</span>(token_ids)              <span class="cm"># (batch, seq, embed_dim)</span>
+        _, (h_n, _) = self.<span class="fn">lstm</span>(x)             <span class="cm"># h_n: (layers, batch, hidden)</span>
+        h_last = self.<span class="fn">drop</span>(h_n[-<span class="num">1</span>])            <span class="cm"># last layer's final state</span>
+        <span class="kw">return</span> self.<span class="fn">fc</span>(h_last)                  <span class="cm"># (batch, num_classes)</span>
+
+
+<span class="cm"># ── Sequence Tagger with Bidirectional LSTM ───────────────────────</span>
+<span class="kw">class</span> <span class="cls">BiLSTMTagger</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""Many-to-Many: label every token (e.g. NER, POS tagging).
+    
+    Bidirectional: each position gets context from BOTH directions.
+    hidden_size * 2 because forward and backward states are concatenated.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim, hidden_size,
+                 num_layers, num_tags, dropout=<span class="num">0.3</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        self.lstm  = nn.<span class="cls">LSTM</span>(embed_dim, hidden_size,
+                              num_layers=num_layers, batch_first=<span class="kw">True</span>,
+                              bidirectional=<span class="kw">True</span>,
+                              dropout=dropout <span class="kw">if</span> num_layers > <span class="num">1</span> <span class="kw">else</span> <span class="num">0.0</span>)
+        self.drop  = nn.<span class="cls">Dropout</span>(dropout)
+        <span class="cm"># hidden_size * 2 because bidirectional concatenates fwd + bwd</span>
+        self.fc    = nn.<span class="cls">Linear</span>(hidden_size * <span class="num">2</span>, num_tags)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids):
+        <span class="st">"""token_ids: (batch, seq_len) → tag_logits: (batch, seq_len, num_tags)"""</span>
+        x   = self.<span class="fn">embed</span>(token_ids)         <span class="cm"># (batch, seq, embed)</span>
+        out, _ = self.<span class="fn">lstm</span>(x)               <span class="cm"># out: (batch, seq, hidden*2)</span>
+        out = self.<span class="fn">drop</span>(out)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(out)                  <span class="cm"># (batch, seq, num_tags)</span>
+
+
+<span class="cm"># ── GRU: identical API, just swap the class name ──────────────────</span>
+<span class="cm"># nn.GRU has the same signature as nn.LSTM except:
+#   - returns (output, h_n) — no cell state, so no tuple
+#   - no c_n in the output
+gru_classifier = nn.Sequential(
+    nn.Embedding(10000, 64),
+    # ... same structure, replace nn.LSTM with nn.GRU
+)
+# _, h_n = gru(x)        ← NOT (h_n, c_n) — just h_n directly!</span></code></pre></div>
+  </div>
+
+  <h2 class="sub">Handling Variable-Length Sequences with Padding</h2>
+  <p>In real datasets, sequences have different lengths. The standard approach is to pad shorter sequences to the length of the longest sequence in the batch with a special padding token (index 0), and then tell PyTorch to ignore those padded positions during the LSTM computation. This uses <ic>pack_padded_sequence</ic> and <ic>pad_packed_sequence</ic> — a pair of utilities that compress out the padding before feeding to the LSTM and restore the full padded shape afterward.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Variable-length sequences — packing and unpacking</span></div>
+    <div class="code-body"><pre><code><span class="kw">from</span> torch.nn.utils.rnn <span class="kw">import</span> pack_padded_sequence, pad_packed_sequence
+
+<span class="kw">class</span> <span class="cls">LSTMWithPacking</span>(nn.<span class="cls">Module</span>):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim, hidden_size, num_classes):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        self.lstm  = nn.<span class="cls">LSTM</span>(embed_dim, hidden_size, batch_first=<span class="kw">True</span>)
+        self.fc    = nn.<span class="cls">Linear</span>(hidden_size, num_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids, lengths):
+        <span class="st">"""
+        token_ids: (batch, max_len) — padded to the same length
+        lengths:   (batch,)         — actual length of each sequence
+        """</span>
+        x = self.<span class="fn">embed</span>(token_ids)            <span class="cm"># (batch, max_len, embed_dim)</span>
+
+        <span class="cm"># Pack: removes padding, tells LSTM where each sequence ends.
+        # enforce_sorted=False: allows batches in any order</span>
+        packed = <span class="fn">pack_padded_sequence</span>(x, lengths.cpu(),
+                                       batch_first=<span class="kw">True</span>,
+                                       enforce_sorted=<span class="kw">False</span>)
+
+        packed_out, (h_n, _) = self.<span class="fn">lstm</span>(packed)
+
+        <span class="cm"># Unpack: restores padded tensor (needed if you want per-step outputs)
+        # out shape: (batch, max_len, hidden) — padded positions are 0</span>
+        out, _ = <span class="fn">pad_packed_sequence</span>(packed_out, batch_first=<span class="kw">True</span>)
+
+        <span class="cm"># For classification, just use the final hidden state of each sequence</span>
+        <span class="kw">return</span> self.<span class="fn">fc</span>(h_n[-<span class="num">1</span>])               <span class="cm"># (batch, num_classes)</span></code></pre></div>
+  </div>
+
+  <div class="callout important">
+    <div class="callout-title">🔑 The One API Gotcha — LSTM Returns a Tuple, RNN/GRU Does Not</div>
+    <div class="callout-body">The single most common mistake when switching between <ic>nn.RNN</ic>, <ic>nn.LSTM</ic>, and <ic>nn.GRU</ic> is forgetting that LSTM returns a tuple <ic>(h_n, c_n)</ic> for the hidden state, while RNN and GRU return just <ic>h_n</ic>. The correct unpacking is <ic>out, (h_n, c_n) = lstm(x)</ic> for LSTM, but <ic>out, h_n = gru(x)</ic> for GRU. Getting this wrong gives a cryptic shape error that is confusing until you know the cause. Always double-check the output signature when switching between recurrent layer types.</div>
+  </div>
+
+  </div></div>
+</div>
+<!-- ══════ S10: APPLICATIONS ══════ -->
+<div class="section-block open" id="s10">
+  <div class="section-header" onclick="tog(this)">
+    <div class="section-title-group">
+      <div class="section-num" style="background:rgba(251,146,60,.15);color:var(--accent4)">10</div>
+      <div>
+        <div class="section-title">Applications, Variants &amp; What Comes Next</div>
+        <div class="section-sub">Sentiment analysis, NER, music generation — plus the remaining limitation that attention solves</div>
+      </div>
+    </div><div class="chevron">▾</div>
+  </div>
+  <div class="section-body"><div class="inner">
+
+  <h2 class="sub">Application 1 — Sentiment Analysis (Many-to-One)</h2>
+  <p>Sentiment analysis is the canonical LSTM classification task: read a review or tweet of arbitrary length and output a single label (positive/negative/neutral). The LSTM accumulates context as it reads each word — negation ("not great" differs from "great"), intensifiers ("absolutely terrible"), and long-range qualifications ("despite the terrible service, the food was outstanding") all require remembering earlier tokens when processing later ones. Vanilla RNNs fail on long reviews precisely because they cannot carry the negation context far enough forward; LSTMs handle this naturally.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · Sentiment analysis — complete training-ready LSTM pipeline</span></div>
+    <div class="code-body"><pre><code><span class="kw">import</span> torch, torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torch.nn.utils.rnn <span class="kw">import</span> pack_padded_sequence
+
+<span class="kw">class</span> <span class="cls">SentimentLSTM</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""
+    BiLSTM sentiment classifier with pretrained embedding option.
+    Using bidirectional so both "not" (early) and the adjective (later)
+    can inform each other — crucial for negation handling.
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, embed_dim=<span class="num">128</span>, hidden_size=<span class="num">256</span>,
+                 num_layers=<span class="num">2</span>, num_classes=<span class="num">3</span>, dropout=<span class="num">0.4</span>,
+                 pretrained_embeddings=<span class="kw">None</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        <span class="kw">if</span> pretrained_embeddings <span class="kw">is not None</span>:
+            <span class="cm"># Load GloVe or Word2Vec weights; freeze or fine-tune</span>
+            self.embed.weight.data.<span class="fn">copy_</span>(pretrained_embeddings)
+            self.embed.weight.requires_grad = <span class="kw">True</span>  <span class="cm"># fine-tune</span>
+
+        self.lstm = nn.<span class="cls">LSTM</span>(
+            embed_dim, hidden_size, num_layers=num_layers,
+            batch_first=<span class="kw">True</span>, bidirectional=<span class="kw">True</span>,
+            dropout=dropout <span class="kw">if</span> num_layers > <span class="num">1</span> <span class="kw">else</span> <span class="num">0.0</span>
+        )
+        self.drop = nn.<span class="cls">Dropout</span>(dropout)
+        <span class="cm"># hidden_size * 2: bidirectional concatenation</span>
+        self.fc   = nn.<span class="cls">Linear</span>(hidden_size * <span class="num">2</span>, num_classes)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids, lengths):
+        x = self.<span class="fn">embed</span>(token_ids)
+        packed = <span class="fn">pack_padded_sequence</span>(x, lengths.cpu(),
+                                       batch_first=<span class="kw">True</span>, enforce_sorted=<span class="kw">False</span>)
+        _, (h_n, _) = self.<span class="fn">lstm</span>(packed)
+        <span class="cm"># h_n shape: (num_layers * 2, batch, hidden) for bidirectional
+        # h_n[-2]: forward direction final layer
+        # h_n[-1]: backward direction final layer
+        # Concatenate both directions for the full context representation</span>
+        h_cat = torch.<span class="fn">cat</span>([h_n[-<span class="num">2</span>], h_n[-<span class="num">1</span>]], dim=<span class="num">1</span>)  <span class="cm"># (batch, hidden*2)</span>
+        <span class="kw">return</span> self.<span class="fn">fc</span>(self.<span class="fn">drop</span>(h_cat))
+
+<span class="cm"># Training</span>
+model     = <span class="cls">SentimentLSTM</span>(vocab_size=<span class="num">30000</span>)
+optimizer = torch.optim.<span class="cls">Adam</span>(model.<span class="fn">parameters</span>(), lr=<span class="num">1e-3</span>)
+criterion = nn.<span class="cls">CrossEntropyLoss</span>()
+
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>):
+    <span class="kw">for</span> token_ids, lengths, labels <span class="kw">in</span> train_loader:
+        optimizer.<span class="fn">zero_grad</span>()
+        logits = <span class="fn">model</span>(token_ids, lengths)
+        loss   = <span class="fn">criterion</span>(logits, labels)
+        loss.<span class="fn">backward</span>()
+        nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), <span class="num">5.0</span>)
+        optimizer.<span class="fn">step</span>()</code></pre></div>
+  </div>
+
+  <h2 class="sub">Application 2 — Named Entity Recognition (Many-to-Many)</h2>
+  <p>NER requires labelling every token in a sequence with a category — PERSON, ORGANISATION, LOCATION, DATE, or O (Other). This demands understanding context in both directions: the word "Washington" could be a person (George Washington), a place (Washington D.C.), or part of an organisation (Washington Post), and you often need to look at surrounding words to resolve this. A bidirectional LSTM is the standard architecture: the forward pass builds up left-context and the backward pass builds up right-context, and the concatenation of both hidden states at each position gives a rich, fully-contextualised representation for labelling.</p>
+
+  <div class="code-block">
+    <div class="code-header"><span class="code-lang">Python · NER with BiLSTM — per-token classification with CRF option</span></div>
+    <div class="code-body"><pre><code><span class="kw">class</span> <span class="cls">BiLSTM_NER</span>(nn.<span class="cls">Module</span>):
+    <span class="st">"""BiLSTM sequence tagger for Named Entity Recognition.
+    
+    Standard architecture: embed → BiLSTM → dropout → linear per token
+    For better boundary detection, a CRF layer can be added on top
+    (not shown here, but torchcrf implements it cleanly).
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, vocab_size, num_tags, embed_dim=<span class="num">100</span>,
+                 hidden_size=<span class="num">128</span>, num_layers=<span class="num">1</span>, dropout=<span class="num">0.5</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.embed = nn.<span class="cls">Embedding</span>(vocab_size, embed_dim, padding_idx=<span class="num">0</span>)
+        self.lstm  = nn.<span class="cls">LSTM</span>(embed_dim, hidden_size, num_layers=num_layers,
+                              batch_first=<span class="kw">True</span>, bidirectional=<span class="kw">True</span>,
+                              dropout=dropout <span class="kw">if</span> num_layers > <span class="num">1</span> <span class="kw">else</span> <span class="num">0.0</span>)
+        self.drop  = nn.<span class="cls">Dropout</span>(dropout)
+        self.fc    = nn.<span class="cls">Linear</span>(hidden_size * <span class="num">2</span>, num_tags)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(self, token_ids):
+        <span class="st">"""token_ids: (batch, seq_len) → logits: (batch, seq_len, num_tags)"""</span>
+        x = self.<span class="fn">embed</span>(token_ids)
+        out, _ = self.<span class="fn">lstm</span>(x)          <span class="cm"># (batch, seq, hidden*2)</span>
+        out = self.<span class="fn">drop</span>(out)
+        <span class="kw">return</span> self.<span class="fn">fc</span>(out)             <span class="cm"># (batch, seq, num_tags)</span>
+
+<span class="cm"># Loss: CrossEntropyLoss ignoring padding positions
+# Note: must mask out padding positions — use ignore_index=pad_tag_id</span>
+criterion = nn.<span class="cls">CrossEntropyLoss</span>(ignore_index=<span class="num">0</span>)
+<span class="cm"># logits (batch, seq, tags) → reshape to (batch*seq, tags) for loss</span>
+loss = <span class="fn">criterion</span>(logits.<span class="fn">view</span>(-<span class="num">1</span>, num_tags), targets.<span class="fn">view</span>(-<span class="num">1</span>))</code></pre></div>
+  </div>
+
+  <h2 class="sub">The Remaining Limitation — Why Attention is Still Needed</h2>
+  <p>LSTMs solve the vanishing gradient problem convincingly, but they do not solve everything. Two important limitations remain, and they directly motivate the next two pages of this module.</p>
+
+  <p><strong>The fixed-size bottleneck.</strong> In a sequence-to-sequence architecture (encoder reads a source sentence, decoder generates a translation), the entire source sentence must be compressed into the final hidden state h_T before decoding begins. For short sentences this is manageable, but for long or complex inputs — a paragraph, a document, a long audio recording — a fixed-size vector cannot hold enough information. The beginning of a long source sentence is systematically under-represented in h_T because the LSTM has processed hundreds of subsequent tokens since then. Translation quality degrades noticeably on sentences longer than ~30 words with a vanilla encoder-decoder.</p>
+
+  <p><strong>Sequential computation.</strong> Even with LSTMs, you cannot parallelise across time steps — step t+1 cannot begin until step t finishes, because h_t feeds into h_{t+1}. On modern GPU hardware with thousands of parallel cores, this sequential bottleneck severely limits throughput. Training an LSTM on a long document is hardware-inefficient in a deep sense — you are using a tiny fraction of available parallelism.</p>
+
+  <!-- <div class="next-page">
+    <div>
+      <div class="next-page-title">→ Page 3: Seq2Seq &amp; Attention — Solving the Bottleneck</div>
+      <div class="next-page-text">LSTM's encoder-decoder architecture works, but the fixed context vector is a bottleneck that chokes on long sequences. Page 3 derives the attention mechanism from first principles: instead of compressing all source information into one vector, the decoder learns to <em>query</em> all encoder hidden states at each decoding step, computing a weighted combination that highlights the most relevant parts of the source for the current output. This completely eliminates the bottleneck and makes long-sequence translation, captioning, and speech recognition tractable.</div>
+    </div>
+    <div style="font-size:2.5rem;flex-shrink:0">→</div>
+  </div>
+
+  </div></div> -->
+</div>
+
+<!-- ══════ FOOTER + JS ══════ -->
+<div class="footer">
+  Module IV · Sequential Models &amp; Recurrent Neural Networks &nbsp;·&nbsp; <strong>Page 2 of 4 — LSTM &amp; GRU</strong><br>
+  <span style="font-size:.75rem;margin-top:4px;display:block">Covers: motivation · cell state gradient highway · forget / input / output gates · full LSTM · GRU · LSTM vs GRU · PyTorch nn.LSTM · sentiment analysis · NER</span>
+</div>
+
+<script>
+function toggleTheme(){
+  const h = document.documentElement;
+  h.dataset.theme = h.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.getElementById('themeBtn').textContent = h.dataset.theme === 'dark' ? '☀️' : '🌙';
+}
+function tog(header){ header.parentElement.classList.toggle('open'); }
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('prog').style.width = pct + '%';
+});
+document.querySelectorAll('.section-header').forEach(h => {
+  h.addEventListener('click', () => {
+    setTimeout(() => { if(window.MathJax) MathJax.typesetPromise(); }, 50);
+  });
+});
+</script>
+</body>
+</html>

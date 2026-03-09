@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Neural Networks — Complete Course Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&display=swap');
+
+[data-theme="dark"]{--bg:#0d1117;--surface:#161b22;--surface2:#1f2937;--border:#2d3748;--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--hero-bg:linear-gradient(135deg,#0d1117 0%,#1a1535 50%,#1a1f35 50%,#0d1117 100%);--hero-glow:rgba(129,140,248,0.15);--card-hover-shadow:0 12px 32px rgba(0,0,0,.5);--p-color:#cbd5e1;}
+[data-theme="light"]{--bg:#f8fafc;--surface:#ffffff;--surface2:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-muted:#475569;--text-dim:#94a3b8;--hero-bg:linear-gradient(135deg,#fef3c7 0%,#fce7f3 25%,#e0f2fe 50%,#ddd6fe 75%,#fef3c7 100%);--hero-glow:rgba(129,140,248,0.2);--card-hover-shadow:0 12px 32px rgba(0,0,0,.15);--p-color:#334155;}
+
+:root{--accent:#818cf8;--accent2:#38bdf8;--accent3:#34d399;--accent4:#fb923c;--accent5:#f472b6;--accent6:#a78bfa;}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16px;transition:background .3s,color .3s;min-height:100vh;}
+
+.theme-btn{position:fixed;top:12px;right:16px;z-index:1001;background:var(--surface);border:1px solid var(--border);color:var(--text-muted);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+.hero{background:var(--hero-bg);border-bottom:1px solid var(--border);padding:100px 24px 80px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--hero-glow) 0%,transparent 70%);pointer-events:none;}
+.hero-badge{display:inline-block;background:rgba(129,140,248,.15);border:1px solid rgba(129,140,248,.35);color:var(--accent);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;padding:6px 18px;border-radius:99px;margin-bottom:20px;font-weight:800;}
+.hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:800;line-height:1.1;background:linear-gradient(135deg,var(--text) 20%,var(--accent) 50%,var(--accent2) 80%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:20px;}
+.hero p{color:var(--text-muted);font-size:1.15rem;max-width:850px;margin:0 auto 40px;line-height:1.75;}
+
+.stats{display:flex;justify-content:center;gap:40px;margin-top:40px;flex-wrap:wrap;}
+.stat-item{text-align:center;}
+.stat-number{font-size:2.5rem;font-weight:800;background:linear-gradient(135deg,var(--accent) 0%,var(--accent3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
+.stat-label{color:var(--text-muted);font-size:.85rem;margin-top:8px;font-weight:600;}
+
+.container{max-width:1300px;margin:0 auto;padding:80px 24px 100px;}
+
+.section-title{font-size:2.2rem;font-weight:800;color:var(--text);text-align:center;margin-bottom:20px;}
+.section-desc{text-align:center;color:var(--text-muted);font-size:1.05rem;max-width:750px;margin:0 auto 60px;line-height:1.75;}
+
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;margin-bottom:80px;}
+
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 32px;transition:all .35s;cursor:pointer;text-decoration:none;display:block;position:relative;overflow:hidden;}
+.module-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 0%,rgba(129,140,248,0.04) 100%);opacity:0;transition:opacity .35s;}
+.module-card:hover{transform:translateY(-6px);box-shadow:var(--card-hover-shadow);}
+.module-card:hover::before{opacity:1;}
+
+.module-number{font-size:.75rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px;display:inline-block;padding:6px 14px;border-radius:8px;}
+.module-icon{font-size:3rem;margin-bottom:20px;display:block;}
+.module-title{font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:14px;line-height:1.25;}
+.module-desc{color:var(--text-muted);font-size:.95rem;line-height:1.7;margin-bottom:24px;}
+.module-topics{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.topic-badge{font-size:.68rem;background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);padding:5px 11px;border-radius:6px;font-weight:600;}
+
+.module-status{font-size:.75rem;font-weight:700;padding:6px 12px;border-radius:6px;display:inline-block;margin-top:8px;}
+.status-available{background:rgba(52,211,153,.15);color:var(--accent3);border:1px solid rgba(52,211,153,.3);}
+.status-coming{background:rgba(251,146,60,.15);color:var(--accent4);border:1px solid rgba(251,146,60,.3);}
+
+.arrow{position:absolute;right:28px;bottom:28px;font-size:1.3rem;color:var(--text-dim);transition:transform .35s;}
+.module-card:hover .arrow{transform:translateX(6px);}
+
+.module-1{border-left:4px solid var(--accent6);}
+.module-1 .module-number{background:rgba(167,139,250,.15);color:var(--accent6);border:1px solid rgba(167,139,250,.3);}
+.module-1:hover{border-left-color:var(--accent6);border-color:rgba(167,139,250,.4);}
+.module-1:hover .arrow{color:var(--accent6);}
+
+.module-2{border-left:4px solid var(--accent);}
+.module-2 .module-number{background:rgba(129,140,248,.15);color:var(--accent);border:1px solid rgba(129,140,248,.3);}
+.module-2:hover{border-left-color:var(--accent);border-color:rgba(129,140,248,.4);}
+.module-2:hover .arrow{color:var(--accent);}
+
+.module-3{border-left:4px solid var(--accent2);}
+.module-3 .module-number{background:rgba(56,189,248,.15);color:var(--accent2);border:1px solid rgba(56,189,248,.3);}
+.module-3:hover{border-left-color:var(--accent2);border-color:rgba(56,189,248,.4);}
+.module-3:hover .arrow{color:var(--accent2);}
+
+.module-4{border-left:4px solid var(--accent);}
+.module-4 .module-number{background:rgba(129,140,248,.15);color:var(--accent);border:1px solid rgba(129,140,248,.3);}
+.module-4:hover{border-left-color:var(--accent);border-color:rgba(129,140,248,.4);}
+.module-4:hover .arrow{color:var(--accent);}
+
+.module-5{border-left:4px solid var(--accent5);}
+.module-5 .module-number{background:rgba(244,114,182,.15);color:var(--accent5);border:1px solid rgba(244,114,182,.3);}
+.module-5:hover{border-left-color:var(--accent5);border-color:rgba(244,114,182,.4);}
+.module-5:hover .arrow{color:var(--accent5);}
+
+.footer{text-align:center;padding:50px 24px;border-top:1px solid var(--border);color:var(--text-dim);font-size:.88rem;}
+.footer-title{font-size:1.2rem;font-weight:700;color:var(--text);margin-bottom:12px;}
+.footer-links{display:flex;justify-content:center;gap:24px;margin-top:20px;flex-wrap:wrap;}
+.footer-link{color:var(--text-muted);text-decoration:none;transition:color .2s;}
+.footer-link:hover{color:var(--accent);}
+
+@media(max-width:768px){
+  .hero{padding:70px 20px 50px;}
+  .hero h1{font-size:2.2rem;}
+  .stats{gap:24px;}
+  .stat-number{font-size:2rem;}
+  .container{padding:50px 16px 70px;}
+  .modules-grid{grid-template-columns:1fr;gap:20px;}
+  .section-title{font-size:1.8rem;}
+}
+</style>
+</head>
+<body>
+
+<button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+
+<div class="hero">
+  <div class="hero-badge">Amity University · 2024-2025</div>
+  <h1>Deep Neural Networks</h1>
+  <p>A comprehensive journey through modern deep learning — from neural network fundamentals to transformers, autoencoders, and generative models. Master the architectures powering today's AI revolution.</p>
+  
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-number">5</div>
+      <div class="stat-label">Modules</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">20+</div>
+      <div class="stat-label">Topics</div>
+    </div>
+    <!-- <div class="stat-item">
+      <div class="stat-number">∞</div>
+      <div class="stat-label">Possibilities</div>
+    </div> -->
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="section-title">Course Modules</div>
+  <div class="section-desc">Explore each module to dive deep into the mathematical foundations, architectural innovations, and hands-on PyTorch implementations that define modern deep learning.</div>
+
+  <div class="modules-grid">
+    
+    <!-- Module 1: Introduction to Deep Learning -->
+    <a href="module 1/index.html" class="module-card module-1">
+      <div class="module-number">Module I</div>
+      <div class="module-icon">🧮</div>
+      <div class="module-title">Introduction to Deep Learning</div>
+      <div class="module-desc">Begin your journey with neural network fundamentals, biological inspiration, perceptrons, MLPs, activation functions, gradient descent, and backpropagation. Explore real-world applications across industries.</div>
+      <div class="module-topics">
+        <span class="topic-badge">Perceptron</span>
+        <span class="topic-badge">MLP</span>
+        <span class="topic-badge">Backpropagation</span>
+        <span class="topic-badge">Gradient Descent</span>
+        <span class="topic-badge">Applications</span>
+      </div>
+      <div class="module-status status-coming">Coming Soon</div>
+      <div class="arrow">→</div>
+    </a>
+
+    <!-- Module 2: Model Parameter Optimization -->
+    <a href="module 2/index.html" class="module-card module-2">
+      <div class="module-number">Module II</div>
+      <div class="module-icon">🔧</div>
+      <div class="module-title">Model Parameter Optimization</div>
+      <div class="module-desc">Master loss functions, tackle overfitting with regularization (L1, L2, Dropout), explore advanced optimizers (Adam, RMSprop), batch normalization, and hyperparameter tuning strategies.</div>
+      <div class="module-topics">
+        <span class="topic-badge">Loss Functions</span>
+        <span class="topic-badge">Regularization</span>
+        <span class="topic-badge">Optimizers</span>
+        <span class="topic-badge">Batch Norm</span>
+        <span class="topic-badge">Hyperparameters</span>
+      </div>
+      <div class="module-status status-coming">Coming Soon</div>
+      <div class="arrow">→</div>
+    </a>
+
+    <!-- Module 3: CNNs and Transfer Learning -->
+    <a href="module 3/index.html" class="module-card module-3">
+      <div class="module-number">Module III</div>
+      <div class="module-icon">👁️</div>
+      <div class="module-title">CNNs & Transfer Learning</div>
+      <div class="module-desc">Master convolution operations (1D/2D/3D), parameter sharing, receptive fields, and pooling. Explore architectures from LeNet to GoogleNet. Learn transfer learning and fine-tuning for real-world tasks.</div>
+      <div class="module-topics">
+        <span class="topic-badge">Convolution</span>
+        <span class="topic-badge">LeNet to DenseNet</span>
+        <span class="topic-badge">Transfer Learning</span>
+        <span class="topic-badge">Fine-Tuning</span>
+      </div>
+      <div class="module-status status-available">Available</div>
+      <div class="arrow">→</div>
+    </a>
+
+    <!-- Module 4: Sequential Models and RNNs -->
+    <a href="module 4/index.html" class="module-card module-4">
+      <div class="module-number">Module IV</div>
+      <div class="module-icon">⚡</div>
+      <div class="module-title">Sequential Models & RNNs</div>
+      <div class="module-desc">Master RNNs, LSTMs, and GRUs for sequence modeling. Explore seq2seq for NLP, attention mechanisms, and transformers. Applications in speech recognition, machine translation, and video analysis.</div>
+      <div class="module-topics">
+        <span class="topic-badge">RNN</span>
+        <span class="topic-badge">LSTM/GRU</span>
+        <span class="topic-badge">Seq2Seq</span>
+        <span class="topic-badge">Attention</span>
+        <span class="topic-badge">Transformers</span>
+      </div>
+      <div class="module-status status-available">Available</div>
+      <div class="arrow">→</div>
+    </a>
+
+    <!-- Module 5: Autoencoders and Generative Networks -->
+    <a href="module 5/index.html" class="module-card module-5">
+      <div class="module-number">Module V</div>
+      <div class="module-icon">🎨</div>
+      <div class="module-title">Autoencoders & Generative Networks</div>
+      <div class="module-desc">Explore autoencoders, VAEs, and GANs (DCGAN, CycleGAN). Master image generation techniques and applications in computer vision and data augmentation.</div>
+      <div class="module-topics">
+        <span class="topic-badge">Autoencoders</span>
+        <span class="topic-badge">VAE</span>
+        <span class="topic-badge">GANs</span>
+        <span class="topic-badge">DCGAN</span>
+        <span class="topic-badge">CycleGAN</span>
+      </div>
+      <div class="module-status status-coming">Coming Soon</div>
+      <div class="arrow">→</div>
+    </a>
+
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-title">Deep Neural Networks Course</div>
+  <p>Amity University — Complete Learning Platform</p>
+  <div class="footer-links">
+    <a href="#" class="footer-link">Course Syllabus</a>
+    <a href="#" class="footer-link">Resources</a>
+    <a href="#" class="footer-link">GitHub</a>
+    <a href="#" class="footer-link">Contact</a>
+  </div>
+</div>
+
+<script>
+function toggleTheme(){
+  const html = document.documentElement;
+  const btn = document.getElementById('themeBtn');
+  const curr = html.getAttribute('data-theme');
+  const next = curr === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  btn.textContent = next === 'dark' ? '☀️' : '🌙';
+  localStorage.setItem('theme', next);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeBtn').textContent = saved === 'dark' ? '☀️' : '🌙';
+});
+</script>
+</body>
+</html>
