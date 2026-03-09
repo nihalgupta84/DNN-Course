@@ -9,11 +9,31 @@
   ],
   "routes": [
     {
+      "src": "/module%201/(.*)",
+      "dest": "/module 1/$1"
+    },
+    {
+      "src": "/module%202/(.*)",
+      "dest": "/module 2/$1"
+    },
+    {
+      "src": "/module%203/(.*)",
+      "dest": "/module 3/$1"
+    },
+    {
+      "src": "/module%204/(.*)",
+      "dest": "/module 4/$1"
+    },
+    {
+      "src": "/module%205/(.*)",
+      "dest": "/module 5/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
   ],
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "headers": [
     {
